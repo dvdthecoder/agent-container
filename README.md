@@ -321,6 +321,70 @@ any other provider. They are complementary, not competing.
 
 ---
 
+## Claude Code and Gemini CLI integration
+
+### Triggering workspaces from your CLI session (MCP)
+
+Both Claude Code and Gemini CLI support MCP (Model Context Protocol). The sandbox exposes an MCP
+server so developers can trigger runs, check status, and stop workspaces without leaving their
+editor session.
+
+```
+Developer in Claude Code:
+  "Fix the rate limiting bug in org/myapp"
+        │
+        ▼  Claude Code calls sandbox_run MCP tool
+  workspace boots → OpenCode edits → tests pass → PR opens
+        │
+        ▼
+  "Done. PR #42 opened: +67 −3. Tests: 24 passed."
+```
+
+Configure once and the sandbox becomes a native tool in any Claude Code or Gemini CLI session:
+
+```json
+// .claude/settings.json  (checked into repo — team gets this automatically)
+{
+  "mcpServers": {
+    "agent-container": {
+      "command": "python",
+      "args": ["-m", "agent_container.mcp.server"]
+    }
+  }
+}
+```
+
+Four tools are exposed: `sandbox_run`, `sandbox_list`, `sandbox_status`, `sandbox_stop`.
+
+**Without MCP:** both CLIs can already shell out to `agent-run` via their Bash tool. MCP is the
+upgrade — structured result, typed output, progress streaming, no raw terminal dump.
+
+### Claude Code / Gemini CLI as the coding agent inside the workspace
+
+OpenCode is the default agent backend, but Claude Code CLI and Gemini CLI can run inside the
+workspace instead — useful if your team already uses one of them and wants consistent tooling.
+
+```bash
+agent-run --task "Refactor auth middleware" --repo org/myapp --backend claude
+agent-run --task "Add input validation"     --repo org/myapp --backend gemini
+agent-run --task "Fix the flaky test"       --repo org/myapp --backend opencode
+```
+
+Each backend is a small adapter in `agent/backends/`. All produce the same `AgentTaskResult` —
+the rest of the pipeline (tests, PR, dashboard) is identical regardless of backend.
+
+| Backend | CLI installed in workspace | Model source |
+|---|---|---|
+| `opencode` | OpenCode | Any via `OPENAI_BASE_URL` (SGLang, Ollama, Anthropic) |
+| `claude` | Claude Code CLI (`@anthropic-ai/claude-code`) | Anthropic API |
+| `gemini` | Gemini CLI (`@google/gemini-cli`) | Google AI / Vertex AI |
+
+**Privacy note for `claude` backend:** Claude Code CLI sends prompts to Anthropic's API — code
+context leaves your network. Use `opencode` backend with SGLang if full air-gap is required.
+Gemini CLI supports Vertex AI for teams that need to stay within GCP.
+
+---
+
 ## Enterprise use (GitLab)
 
 Swap `gh` for `glab`. PRs become Merge Requests. Everything else is identical.
@@ -452,6 +516,7 @@ Never run e2e on every commit.
 | [M3: Dashboard](https://github.com/dvdthecoder/agent-container/milestone/3) | FastAPI SSE API, live dashboard UI |
 | [M4: Self-hosted LLM](https://github.com/dvdthecoder/agent-container/milestone/4) | Provider abstraction, SGLang + RadixAttention, Ollama/vLLM, Modal option |
 | [M5: CLI & Integration](https://github.com/dvdthecoder/agent-container/milestone/5) | agent-run CLI, e2e tests, examples |
+| [M6: CLI Integrations](https://github.com/dvdthecoder/agent-container/milestone/6) | MCP server, Claude Code + Gemini CLI as agent backends |
 
 ---
 
