@@ -19,9 +19,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
-    # Skip entirely if Daytona secret not configured yet
-    if: ${{ secrets.DAYTONA_API_KEY != '' }}
-
     env:
       DAYTONA_SERVER_URL: ${{ secrets.DAYTONA_SERVER_URL || 'http://localhost:3986' }}
       DAYTONA_API_KEY: ${{ secrets.DAYTONA_API_KEY }}
@@ -44,7 +41,11 @@ jobs:
       - name: Check Daytona reachability
         id: daytona-check
         run: |
-          if curl -sf --max-time 5 "$DAYTONA_SERVER_URL/health"; then
+          # Check secret at runtime rather than job-level if (secrets unreliable in job conditions)
+          if [ -z "$DAYTONA_API_KEY" ]; then
+            echo "reachable=false" >> $GITHUB_OUTPUT
+            echo "::warning::DAYTONA_API_KEY not set — integration tests skipped"
+          elif curl -sf --max-time 5 "$DAYTONA_SERVER_URL/health"; then
             echo "reachable=true" >> $GITHUB_OUTPUT
           else
             echo "reachable=false" >> $GITHUB_OUTPUT

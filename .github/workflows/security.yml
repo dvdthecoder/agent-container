@@ -79,6 +79,9 @@ jobs:
     name: Container image scan
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    # security-events write is required for SARIF upload — only available on
+    # GitHub Advanced Security (paid). Output to table format instead so results
+    # are visible in the run log on all plans.
     steps:
       - uses: actions/checkout@v4
 
@@ -87,13 +90,6 @@ jobs:
         with:
           scan-type: fs
           scan-ref: .
-          format: sarif
-          output: trivy-results.sarif
+          format: table
           severity: CRITICAL,HIGH
           exit-code: "1"
-
-      - name: Upload Trivy results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v3
-        if: always()
-        with:
-          sarif_file: trivy-results.sarif
