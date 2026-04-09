@@ -1,0 +1,20 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "agent-container"
+version = "0.1.0"
+description = "Secure containerised agent sandbox — Daytona + OpenCode + self-hosted LLM"
+requires-python = ">=3.11"
+dependencies = [
+    "daytona-sdk",
+    "fastapi",
+    "uvicorn[standard]",
+    "click",
+    "httpx",
+    "python-dotenv",
+]
+
+[project.scripts]
+agent-run = "agent_container.cli:cli"
