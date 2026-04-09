@@ -2,8 +2,6 @@
 
 import json
 
-import pytest
-
 from sandbox.result import AgentTaskResult, SuiteResult
 
 

@@ -31,9 +31,7 @@ class AgentTaskSpec:
                 raise ValueError(f"task_file not found: {self.task_file}")
 
         if not self.repo.startswith(("https://", "git@")):
-            raise ValueError(
-                f"'repo' must be a full URL (https:// or git@...), got: {self.repo!r}"
-            )
+            raise ValueError(f"'repo' must be a full URL (https:// or git@...), got: {self.repo!r}")
 
         if self.timeout_seconds < 1:
             raise ValueError(f"timeout_seconds must be >= 1, got {self.timeout_seconds}")

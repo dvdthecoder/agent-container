@@ -25,8 +25,9 @@ jobs:
         run: pip install -e ".[dev]"
 
       - name: pip-audit — known CVE check
-        run: pip-audit --strict --output pip-audit-report.json --format json
-        # --strict: fail on any vulnerability, not just critical
+        # --skip-editable: skip our own package (not on PyPI, can't be audited)
+        # --strict: fail on any vulnerability found in dependencies
+        run: pip-audit --strict --skip-editable --output pip-audit-report.json --format json
 
       - name: Upload audit report
         uses: actions/upload-artifact@v4

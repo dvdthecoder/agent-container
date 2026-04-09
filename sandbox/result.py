@@ -36,7 +36,7 @@ class AgentTaskResult:
     pr_url: str | None = None
     diff: str | None = None
     diff_stat: str | None = None
-    tests: TestResult | None = None
+    tests: SuiteResult | None = None
     duration_seconds: float = 0.0
     error: str | None = None
     backend: str = "opencode"
