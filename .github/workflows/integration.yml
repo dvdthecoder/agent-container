@@ -6,8 +6,8 @@ on:
   workflow_dispatch:
 
 # Integration tests use a stub agent — no LLM calls, no external API cost.
-# They require a self-hosted runner with Daytona installed and running.
-# If no self-hosted runner is available, the job is skipped gracefully.
+# They require Daytona to be running and DAYTONA_API_KEY to be set as a repo secret.
+# If the secret is absent the job skips cleanly — nothing breaks.
 
 concurrency:
   group: integration-${{ github.ref }}
@@ -16,18 +16,19 @@ concurrency:
 jobs:
   integration:
     name: Integration (stub agent)
-    # Uses a self-hosted runner tagged daytona — skip if not available
-    runs-on: [self-hosted, daytona]
+    runs-on: ubuntu-latest
     timeout-minutes: 15
 
+    # Skip entirely if Daytona secret not configured yet
+    if: ${{ secrets.DAYTONA_API_KEY != '' }}
+
     env:
-      DAYTONA_SERVER_URL: http://localhost:3986
+      DAYTONA_SERVER_URL: ${{ secrets.DAYTONA_SERVER_URL || 'http://localhost:3986' }}
       DAYTONA_API_KEY: ${{ secrets.DAYTONA_API_KEY }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      # Stub agent — no real LLM needed
       AGENT_BACKEND: stub
       OPENAI_API_KEY: local
-      OPENAI_BASE_URL: http://localhost:30000/v1   # not called in stub mode
+      OPENAI_BASE_URL: http://localhost:30000/v1
 
     steps:
       - uses: actions/checkout@v4
@@ -40,35 +41,43 @@ jobs:
       - name: Install dev dependencies
         run: pip install -e ".[dev]"
 
-      - name: Verify Daytona is reachable
+      - name: Check Daytona reachability
+        id: daytona-check
         run: |
-          curl -sf http://localhost:3986/health || \
-          (echo "Daytona not running on self-hosted runner — skipping integration tests" && exit 0)
+          if curl -sf --max-time 5 "$DAYTONA_SERVER_URL/health"; then
+            echo "reachable=true" >> $GITHUB_OUTPUT
+          else
+            echo "reachable=false" >> $GITHUB_OUTPUT
+            echo "::warning::Daytona not reachable at $DAYTONA_SERVER_URL — integration tests skipped"
+          fi
 
       - name: Run integration tests
+        if: steps.daytona-check.outputs.reachable == 'true'
         run: pytest tests/integration/ -v --tb=short --junitxml=junit-integration.xml
+
+      - name: Skip notice
+        if: steps.daytona-check.outputs.reachable == 'false'
+        run: echo "Integration tests skipped — set DAYTONA_SERVER_URL secret to a reachable instance"
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
-        if: always()
+        if: always() && steps.daytona-check.outputs.reachable == 'true'
         with:
           name: junit-integration
           path: junit-integration.xml
           retention-days: 14
 
-      - name: Verify no workspaces left dangling
-        if: always()
+      - name: Verify no dangling workspaces
+        if: always() && steps.daytona-check.outputs.reachable == 'true'
         run: |
-          # Confirm teardown guarantee — no workspace should survive a run
           python -c "
           import subprocess, json, sys
           result = subprocess.run(['daytona', 'list', '--json'], capture_output=True, text=True)
           workspaces = json.loads(result.stdout or '[]')
-          test_workspaces = [w for w in workspaces if w.get('name','').startswith('agent-')]
-          if test_workspaces:
-              print(f'WARN: {len(test_workspaces)} workspace(s) not torn down:')
-              for w in test_workspaces:
-                  print(f'  - {w[\"name\"]}')
+          leaked = [w for w in workspaces if w.get('name','').startswith('agent-')]
+          if leaked:
+              print(f'ERROR: {len(leaked)} workspace(s) not torn down:')
+              for w in leaked: print(f'  - {w[\"name\"]}')
               sys.exit(1)
           print('OK: no dangling workspaces')
           "
