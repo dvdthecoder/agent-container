@@ -60,7 +60,7 @@ jobs:
         run: echo "Integration tests skipped — set DAYTONA_SERVER_URL secret to a reachable instance"
 
       - name: Upload test results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always() && steps.daytona-check.outputs.reachable == 'true'
         with:
           name: junit-integration

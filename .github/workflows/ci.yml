@@ -51,7 +51,7 @@ jobs:
         continue-on-error: false
 
       - name: Upload bandit report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: bandit-report
@@ -89,7 +89,7 @@ jobs:
         run: pytest tests/unit/ -v --tb=short --junitxml=junit-unit-${{ matrix.python-version }}.xml
 
       - name: Upload test results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: junit-unit-py${{ matrix.python-version }}
