@@ -14,7 +14,52 @@ dependencies = [
     "click",
     "httpx",
     "python-dotenv",
+    "fastmcp",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "pytest-httpx",
+    "ruff>=0.11",
+    "bandit[toml]>=1.8",
+    "pip-audit>=2.7",
+    "detect-secrets>=1.5",
+    "pre-commit>=3.7",
 ]
 
 [project.scripts]
 agent-run = "agent_container.cli:cli"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "S", "B", "A"]
+ignore = [
+    "S101",   # assert — fine in tests
+    "S603",   # subprocess — used intentionally in agent runner
+    "S607",   # partial executable path — needed for workspace commands
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S", "B"]   # relax security rules in test code
+
+[tool.bandit]
+exclude_dirs = ["tests", ".venv"]
+skips = [
+    "B603",   # subprocess — intentional, inputs are controlled
+    "B607",   # partial executable — workspace CLI invocations
+]
+severity = "medium"   # fail on medium and above
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+markers = [
+    "unit: pure unit tests, no external services",
+    "integration: requires Daytona, uses stub agent",
+    "e2e: requires Daytona + real LLM, nightly only",
+]

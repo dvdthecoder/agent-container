@@ -1,0 +1,44 @@
+repos:
+  # ── Secret detection (runs first — block before anything else) ────────────────
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        args: ["--baseline", ".secrets.baseline"]
+        exclude: |
+          (?x)^(
+            \.env\.example|
+            tests/fixtures/.*
+          )$
+
+  # ── Basic file hygiene ────────────────────────────────────────────────────────
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-toml
+      - id: check-json
+      - id: check-added-large-files
+        args: ["--maxkb=500"]        # block accidental model weight commits
+      - id: check-merge-conflict
+      - id: detect-private-key       # belt-and-suspenders alongside detect-secrets
+      - id: no-commit-to-branch
+        args: ["--branch", "main"]   # force PR workflow, no direct pushes to main
+
+  # ── Python linting & formatting ───────────────────────────────────────────────
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.11.4
+    hooks:
+      - id: ruff
+        args: ["--fix"]
+      - id: ruff-format
+
+  # ── Python security (bandit) ──────────────────────────────────────────────────
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.8.3
+    hooks:
+      - id: bandit
+        args: ["-c", "pyproject.toml"]
+        files: ^(sandbox|agent|dashboard|mcp)/

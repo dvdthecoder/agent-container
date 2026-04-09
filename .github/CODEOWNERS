@@ -1,0 +1,8 @@
+# Global owner — required review on all PRs
+* @dvdthecoder
+
+# Security-sensitive paths require explicit review
+.github/workflows/    @dvdthecoder
+.pre-commit-config.yaml @dvdthecoder
+pyproject.toml        @dvdthecoder
+SECURITY.md           @dvdthecoder

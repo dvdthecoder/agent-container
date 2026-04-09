@@ -1,0 +1,99 @@
+name: E2E tests
+
+on:
+  schedule:
+    - cron: "0 2 * * *"    # 02:00 UTC daily
+  workflow_dispatch:
+    inputs:
+      backend:
+        description: Agent backend to test
+        required: false
+        default: opencode
+        type: choice
+        options: [opencode, claude, gemini]
+      model:
+        description: Model override (leave blank for default)
+        required: false
+        default: ""
+
+# E2E tests use a real LLM against the fixture repo.
+# They run on a self-hosted runner with Daytona + the inference server running.
+# Cost: ~$0.05-0.10 per run using claude-haiku-4-5.
+
+jobs:
+  e2e:
+    name: E2E — ${{ github.event.inputs.backend || 'opencode' }} backend
+    runs-on: [self-hosted, daytona]
+    timeout-minutes: 30
+
+    env:
+      DAYTONA_SERVER_URL: http://localhost:3986
+      DAYTONA_API_KEY: ${{ secrets.DAYTONA_API_KEY }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      AGENT_BACKEND: ${{ github.event.inputs.backend || 'opencode' }}
+
+      # Model config — use Haiku in CI (cheapest, fast, sufficient for fixture task)
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      OPENCODE_MODEL: ${{ github.event.inputs.model || 'claude-haiku-4-5-20251001' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dev dependencies
+        run: pip install -e ".[dev]"
+
+      - name: Verify Daytona is reachable
+        run: curl -sf http://localhost:3986/health
+
+      - name: Run E2E tests against fixture repo
+        run: |
+          pytest tests/e2e/ -v --tb=short \
+            --junitxml=junit-e2e.xml \
+            -k "fixture"
+        env:
+          FIXTURE_REPO: https://github.com/dvdthecoder/agent-container-fixture
+
+      - name: Assert no external API calls (self-hosted mode only)
+        if: env.OPENAI_BASE_URL != ''
+        run: |
+          # When using local inference, verify no traffic went to cloud APIs
+          python -c "
+          import os, sys
+          # This check relies on network logs captured during the test run.
+          # Placeholder — implement with mitmproxy or pytest-recording in a follow-up.
+          print('Network isolation check: placeholder — see issue #15')
+          "
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: junit-e2e
+          path: junit-e2e.xml
+          retention-days: 30
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "::error::E2E tests failed. Check artifacts for junit-e2e.xml"
+          # Add Slack/email notification here when team communication is configured
+
+      - name: Verify no workspaces left dangling
+        if: always()
+        run: |
+          python -c "
+          import subprocess, json, sys
+          result = subprocess.run(['daytona', 'list', '--json'], capture_output=True, text=True)
+          workspaces = json.loads(result.stdout or '[]')
+          test_workspaces = [w for w in workspaces if w.get('name','').startswith('agent-')]
+          if test_workspaces:
+              print(f'ERROR: {len(test_workspaces)} workspace(s) not torn down:')
+              for w in test_workspaces: print(f'  - {w[\"name\"]}')
+              sys.exit(1)
+          print('OK: no dangling workspaces')
+          "
