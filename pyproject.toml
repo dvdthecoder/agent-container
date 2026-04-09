@@ -8,10 +8,9 @@ packages = ["sandbox", "agent", "dashboard", "mcp"]
 [project]
 name = "agent-container"
 version = "0.1.0"
-description = "Secure containerised agent sandbox — Daytona + OpenCode + self-hosted LLM"
+description = "Secure containerised agent sandbox — devcontainer + OpenCode + self-hosted LLM"
 requires-python = ">=3.11"
 dependencies = [
-    "daytona-sdk",
     "fastapi",
     "uvicorn[standard]",
     "click",
@@ -63,6 +62,6 @@ asyncio_mode = "auto"
 testpaths = ["tests"]
 markers = [
     "unit: pure unit tests, no external services",
-    "integration: requires Daytona, uses stub agent",
-    "e2e: requires Daytona + real LLM, nightly only",
+    "integration: requires Docker + devcontainer CLI, uses stub agent",
+    "e2e: requires Docker + real LLM, nightly only",
 ]

@@ -1,0 +1,28 @@
+{
+  "name": "Agent Sandbox",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": { "version": "lts" },
+    "ghcr.io/devcontainers/features/python:1": { "version": "3.11" },
+    "ghcr.io/devcontainers/features/git:1": {}
+  },
+
+  "postCreateCommand": "npm install -g opencode-ai",
+
+  "remoteEnv": {
+    "OPENAI_BASE_URL": "${localEnv:OPENAI_BASE_URL}",
+    "OPENAI_API_KEY": "${localEnv:OPENAI_API_KEY}",
+    "OPENCODE_MODEL": "${localEnv:OPENCODE_MODEL}",
+    "ANTHROPIC_API_KEY": "${localEnv:ANTHROPIC_API_KEY}",
+    "GEMINI_API_KEY": "${localEnv:GEMINI_API_KEY}",
+    "GITHUB_TOKEN": "${localEnv:GITHUB_TOKEN}",
+    "GITLAB_TOKEN": "${localEnv:GITLAB_TOKEN}",
+    "GITLAB_URL": "${localEnv:GITLAB_URL}"
+  },
+
+  "containerEnv": {
+    "GIT_AUTHOR_NAME": "agent-sandbox",
+    "GIT_AUTHOR_EMAIL": "agent@sandbox.local"
+  }
+}
