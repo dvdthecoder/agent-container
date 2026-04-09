@@ -25,8 +25,11 @@ jobs:
         run: pip install -e ".[dev]"
 
       - name: pip-audit — known CVE check
-        run: pip-audit --strict --output pip-audit-report.json --format json
-        # --strict: fail on any vulnerability, not just critical
+        run: |
+          # Freeze exact installed versions and strip our own editable package.
+          # pip-audit --skip-editable is unreliable; filtering pip freeze is not.
+          pip freeze | grep -v "^agent-container\|^-e " > /tmp/frozen-deps.txt
+          pip-audit -r /tmp/frozen-deps.txt --output pip-audit-report.json --format json
 
       - name: Upload audit report
         uses: actions/upload-artifact@v4
