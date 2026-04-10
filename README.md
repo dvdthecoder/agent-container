@@ -45,26 +45,22 @@ PR is opened, and the sandbox is destroyed. The agent never touches your local m
                        ▼
 ┌──────────────────────────────────────────────────────────┐
 │  Modal — container compute                               │
-│  Each run gets a fresh container                         │
-│  Coding agent installed inside: opencode / claude /      │
-│  gemini CLI (configurable per task)                      │
+│  Each run gets a fresh ephemeral container               │
+│  Coding agent: opencode / claude CLI / gemini CLI        │
 │                                                          │
-│  Agent calls → OPENAI_BASE_URL  (pluggable, see below)  │
+│  Calls → Modal model endpoint (internal network)         │
 └──────────────────────┬───────────────────────────────────┘
-                       │  HTTP  (any OpenAI-compatible endpoint)
+                       │  Modal internal network
                        ▼
 ┌──────────────────────────────────────────────────────────┐
-│  Model endpoint — pick any:                              │
-│                                                          │
-│  Together.ai / Fireworks  pay-per-token, open models     │
-│  Modal GPU deployment     self-hosted on Modal, no infra │
-│  SGLang on own GPU server air-gap, enterprise on-prem    │
-│  Anthropic / Gemini API   simplest to get started        │
+│  Modal GPU — model serving                               │
+│  modal deploy modal/serve.py                             │
+│  Qwen3-Coder on A100 · scale-to-zero · pay per second   │
 └──────────────────────────────────────────────────────────┘
 ```
 
-The sandbox and the model are fully decoupled. The agent container only needs `OPENAI_BASE_URL` —
-it does not care where the model runs.
+Everything runs on Modal. Sandbox compute and model serving are both Modal resources communicating
+over Modal's internal network.
 
 ---
 
@@ -111,59 +107,16 @@ That's it. No Docker, no servers, no infrastructure setup.
 
 ## Model setup
 
-The coding agent calls `OPENAI_BASE_URL` — any OpenAI-compatible endpoint works. Pick the option
-that fits your team.
-
-### Option A — Together.ai / Fireworks (recommended to start)
-
-No GPU, no infrastructure. Pay per token. Open models, prompts go to their servers for inference
-only — not training.
-
-```bash
-OPENAI_BASE_URL=https://api.together.xyz/v1
-OPENAI_API_KEY=your-together-key
-OPENCODE_MODEL=Qwen/Qwen3-Coder-80B-Instruct
-```
-
-Cost: ~$0.05–$0.40 per agent run depending on task length.
-
-### Option B — Modal GPU deployment (self-hosted, no own hardware)
-
-Deploy an open model on Modal's GPU infrastructure. You get a stable HTTPS endpoint, scale-to-zero
-billing, and no model weights on provider servers after the container goes cold.
+The model runs on Modal GPU infrastructure alongside the sandbox. Deploy it once:
 
 ```bash
 modal deploy modal/serve.py
-# → https://your-org--qwen-coder.modal.run/v1
-
-OPENAI_BASE_URL=https://your-org--qwen-coder.modal.run/v1
-OPENAI_API_KEY=modal
-OPENCODE_MODEL=Qwen/Qwen3-Coder-80B
 ```
 
-### Option C — Self-hosted SGLang (air-gap, enterprise on-prem)
+That's it. The sandbox container calls the model over Modal's internal network automatically —
+no URL to configure, no external API key, no public internet hop.
 
-For regulated environments where prompts cannot leave your network. Run SGLang on your own GPU
-server (A100 80GB or 2× RTX 4090 minimum for Qwen3-Coder 80B).
-
-```bash
-OPENAI_BASE_URL=http://your-gpu-server:30000/v1
-OPENAI_API_KEY=local
-OPENCODE_MODEL=Qwen/Qwen3-Coder-80B
-```
-
-SGLang's RadixAttention caches the shared system prompt across all agent runs — 40–70% compute
-reduction at team scale compared to alternatives.
-
-### Option D — Anthropic / Gemini API
-
-```bash
-ANTHROPIC_API_KEY=sk-ant-...
-OPENCODE_MODEL=claude-sonnet-4-6
-# or
-GEMINI_API_KEY=...
-OPENCODE_MODEL=gemini-2.5-pro
-```
+Qwen3-Coder 80B on an A100. Scale-to-zero when idle.
 
 ---
 

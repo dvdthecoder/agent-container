@@ -23,7 +23,16 @@ modal token new
 # follow the browser prompt — sets MODAL_TOKEN_ID and MODAL_TOKEN_SECRET in ~/.modal.toml
 ```
 
-## 3. Configure
+## 3. Deploy the model
+
+```bash
+modal deploy modal/serve.py
+```
+
+This starts Qwen3-Coder on an A100 GPU inside Modal. The sandbox calls it automatically over
+Modal's internal network — nothing else to configure.
+
+## 4. Configure
 
 ```bash
 cp .env.example .env
@@ -38,14 +47,11 @@ MODAL_TOKEN_SECRET=as-...
 
 # GitHub
 GITHUB_TOKEN=ghp_...
-
-# Model — Together.ai is the quickest path (free trial credits available)
-OPENAI_BASE_URL=https://api.together.xyz/v1
-OPENAI_API_KEY=your-together-key
-OPENCODE_MODEL=Qwen/Qwen3-Coder-80B-Instruct
 ```
 
-## 4. Run your first task
+That's all that's required. The model endpoint is wired up inside Modal.
+
+## 6. Run your first task
 
 ```bash
 agent-run \
@@ -64,7 +70,7 @@ Output:
 PR: https://github.com/org/myapp/pull/42   +12 −3
 ```
 
-## 5. Start the dashboard (optional)
+## 7. Start the dashboard (optional)
 
 ```bash
 agent-run dashboard
