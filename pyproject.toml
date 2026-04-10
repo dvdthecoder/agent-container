@@ -8,9 +8,10 @@ packages = ["sandbox", "agent", "dashboard", "mcp"]
 [project]
 name = "agent-container"
 version = "0.1.0"
-description = "Secure containerised agent sandbox — devcontainer + OpenCode + self-hosted LLM"
+description = "Secure ephemeral agent sandbox — Modal + OpenCode + pluggable model endpoint"
 requires-python = ">=3.11"
 dependencies = [
+    "modal",
     "fastapi",
     "uvicorn[standard]",
     "click",
@@ -29,10 +30,11 @@ dev = [
     "pip-audit>=2.7",
     "detect-secrets>=1.5",
     "pre-commit>=3.7",
+    "mkdocs-material>=9.5",
 ]
 
 [project.scripts]
-agent-run = "agent_container.cli:cli"
+agent-run = "agent.cli:cli"
 
 [tool.ruff]
 line-length = 100
@@ -62,6 +64,6 @@ asyncio_mode = "auto"
 testpaths = ["tests"]
 markers = [
     "unit: pure unit tests, no external services",
-    "integration: requires Docker + devcontainer CLI, uses stub agent",
-    "e2e: requires Docker + real LLM, nightly only",
+    "integration: requires Modal token, uses stub agent",
+    "e2e: requires Modal token + real model endpoint, nightly only",
 ]

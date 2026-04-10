@@ -1,11 +1,8 @@
 # agent-container
 
 A secure, ephemeral sandbox for autonomous coding agents. Give it a task and a repo — it boots a
-fresh workspace, runs an AI coding agent inside it, tests the result, opens a PR, and destroys the
-workspace. Nothing persists. Nothing leaks.
-
-Built on [Daytona](https://daytona.io) for workspace orchestration and
-[OpenCode](https://opencode.ai) as the coding agent.
+fresh container on [Modal](https://modal.com), runs an AI coding agent inside it, opens a PR, and
+destroys the container. Nothing persists. Nothing leaks. No Docker required on your machine.
 
 ---
 
@@ -16,172 +13,202 @@ $ agent-run \
     --task "Add rate limiting to /api/login — max 5 requests/min per IP" \
     --repo https://github.com/org/myapp
 
-  booting workspace...
+  booting sandbox...        (Modal ephemeral container)
   cloning repo...
   running opencode...
-  running tests... 24 passed
   opening PR...
 
   ✓ Done in 2m 14s
   PR: https://github.com/org/myapp/pull/42   +67 −3
 ```
 
-A fresh Daytona workspace boots with the specified Docker image, the agent clones the repo and makes
-the changes, tests run to verify, a PR is opened, and the workspace is destroyed. The agent never
-touches your local machine.
+A Modal sandbox boots with the specified image, the agent clones the repo and makes the changes, a
+PR is opened, and the sandbox is destroyed. The agent never touches your local machine.
 
 ---
 
 ## Architecture
 
-### System layers
-
 ```
-┌──────────────────────────────────────────────────────────────────┐
-│  Browser — Agent Sandbox Dashboard  (localhost:8080)             │
-│  Live view of all running, completed, and failed agent tasks     │
-└────────────────────────────┬─────────────────────────────────────┘
-                             │ SSE + REST
-                             ▼
-┌──────────────────────────────────────────────────────────────────┐
-│  FastAPI dashboard server                                        │
-│  WorkspaceStore — in-memory run state, log ring buffer           │
-│  SSE streaming — phase changes + live logs to browser            │
-└────────────────────────────┬─────────────────────────────────────┘
-                             │
-                             ▼
-┌──────────────────────────────────────────────────────────────────┐
-│  DaytonaAgentSandbox — lifecycle orchestration                   │
-│  boot → clone → opencode → test → PR → teardown                  │
-│  Teardown runs in finally block — workspace never left dangling  │
-└────────────────────────────┬─────────────────────────────────────┘
-                             │ Daytona Python SDK
-                             ▼
-┌──────────────────────────────────────────────────────────────────┐
-│  Daytona OSS (self-hosted, localhost:3986)                       │
-│  One ephemeral workspace per agent run                           │
-│  Docker image specified per task — any language runtime          │
-│                                                                  │
-│  Each workspace calls → Inference Server (OPENAI_BASE_URL)       │
-└──────────────────────────────────────────────────────────────────┘
-                             │ HTTP (LAN / VPC / internet)
-                             ▼
-┌──────────────────────────────────────────────────────────────────┐
-│  Inference Server — Qwen3-Coder 80B                              │
-│                                                                  │
-│  SGLang (recommended) ── RadixAttention prefix tree              │
-│    shared KV cache across all agent runs                         │
-│    OpenCode system prompt computed once, reused indefinitely     │
-│                                                                  │
-│  vLLM (alternative) ── continuous batching, simpler cache        │
-│  Ollama (solo dev)  ── easiest setup, queues concurrent requests │
-│  Modal / serverless ── no hardware, scale-to-zero billing        │
-│  Together.ai        ── pay-per-token, no infra                   │
-└──────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────┐
+│  agent-run CLI  /  Dashboard (localhost:8080)            │
+│  Python API     /  MCP server (Claude Code, Gemini CLI)  │
+└──────────────────────┬───────────────────────────────────┘
+                       │
+                       ▼
+┌──────────────────────────────────────────────────────────┐
+│  ModalSandbox — ephemeral container per agent run        │
+│  boot → clone → run agent → diff → PR → destroy         │
+│  Destroy runs in finally — container never left dangling │
+└──────────────────────┬───────────────────────────────────┘
+                       │  modal.Sandbox (Python SDK)
+                       ▼
+┌──────────────────────────────────────────────────────────┐
+│  Modal — container compute                               │
+│  Each run gets a fresh container                         │
+│  Coding agent installed inside: opencode / claude /      │
+│  gemini CLI (configurable per task)                      │
+│                                                          │
+│  Agent calls → OPENAI_BASE_URL  (pluggable, see below)  │
+└──────────────────────┬───────────────────────────────────┘
+                       │  HTTP  (any OpenAI-compatible endpoint)
+                       ▼
+┌──────────────────────────────────────────────────────────┐
+│  Model endpoint — pick any:                              │
+│                                                          │
+│  Together.ai / Fireworks  pay-per-token, open models     │
+│  Modal GPU deployment     self-hosted on Modal, no infra │
+│  SGLang on own GPU server air-gap, enterprise on-prem    │
+│  Anthropic / Gemini API   simplest to get started        │
+└──────────────────────────────────────────────────────────┘
 ```
 
-### What runs inside each workspace
+The sandbox and the model are fully decoupled. The agent container only needs `OPENAI_BASE_URL` —
+it does not care where the model runs.
 
-```
-Step 1 — Setup
-  git clone <repo>
-  git checkout -b agent/<slug>-<timestamp>
-  install opencode + gh CLI (or skip if pre-baked in image)
+---
 
-Step 2 — Agent runs
-  opencode --print -m "<task prompt>"
-  streams output live to dashboard
+## Quickstart
 
-Step 3 — Tests
-  auto-detect runner: pytest / npm test / go test / cargo test / make test
-  capture pass/fail + output
+### 1. Install
 
-Step 4 — Collect and ship
-  git diff → unified diff string
-  git push + gh pr create → PR URL
-  workspace destroyed
+```bash
+pip install agent-container
 ```
 
-### File structure
+### 2. Configure
 
+```bash
+cp .env.example .env
 ```
-agent_container/
-├── sandbox/
-│   ├── config.py          # SandboxConfig — Daytona connection + defaults
-│   ├── spec.py            # AgentTaskSpec — task, repo, image, env, flags
-│   ├── result.py          # AgentTaskResult — pr_url, diff, tests, timing
-│   └── sandbox.py         # DaytonaAgentSandbox — boot/run/teardown lifecycle
-├── agent/
-│   ├── installer.py       # Install opencode + gh CLI inside workspace
-│   ├── runner.py          # Invoke opencode non-interactively
-│   ├── tester.py          # Auto-detect and run test suite
-│   └── git_ops.py         # clone, branch, diff, push, gh pr create
-├── dashboard/
-│   ├── app.py             # FastAPI app
-│   ├── store.py           # WorkspaceStore + RunState
-│   ├── router.py          # REST + SSE route handlers
-│   └── static/
-│       └── index.html     # Single-file dashboard UI (vanilla JS, no build step)
-├── cli.py                 # agent-run CLI entrypoint
-├── pyproject.toml
-└── .env.example
+
+Required:
+```bash
+# Modal — sandbox compute
+MODAL_TOKEN_ID=...
+MODAL_TOKEN_SECRET=...
+
+# Git provider
+GITHUB_TOKEN=ghp_...
+
+# Model endpoint — pick one (see Model Setup below)
+OPENAI_BASE_URL=https://api.together.xyz/v1
+OPENAI_API_KEY=your-together-key
+OPENCODE_MODEL=Qwen/Qwen3-Coder-80B-Instruct
+```
+
+### 3. Run
+
+```bash
+agent-run \
+  --repo https://github.com/org/myapp \
+  --task "Fix the off-by-one error in pagination"
+```
+
+That's it. No Docker, no servers, no infrastructure setup.
+
+---
+
+## Model setup
+
+The coding agent calls `OPENAI_BASE_URL` — any OpenAI-compatible endpoint works. Pick the option
+that fits your team.
+
+### Option A — Together.ai / Fireworks (recommended to start)
+
+No GPU, no infrastructure. Pay per token. Open models, prompts go to their servers for inference
+only — not training.
+
+```bash
+OPENAI_BASE_URL=https://api.together.xyz/v1
+OPENAI_API_KEY=your-together-key
+OPENCODE_MODEL=Qwen/Qwen3-Coder-80B-Instruct
+```
+
+Cost: ~$0.05–$0.40 per agent run depending on task length.
+
+### Option B — Modal GPU deployment (self-hosted, no own hardware)
+
+Deploy an open model on Modal's GPU infrastructure. You get a stable HTTPS endpoint, scale-to-zero
+billing, and no model weights on provider servers after the container goes cold.
+
+```bash
+modal deploy modal/serve.py
+# → https://your-org--qwen-coder.modal.run/v1
+
+OPENAI_BASE_URL=https://your-org--qwen-coder.modal.run/v1
+OPENAI_API_KEY=modal
+OPENCODE_MODEL=Qwen/Qwen3-Coder-80B
+```
+
+### Option C — Self-hosted SGLang (air-gap, enterprise on-prem)
+
+For regulated environments where prompts cannot leave your network. Run SGLang on your own GPU
+server (A100 80GB or 2× RTX 4090 minimum for Qwen3-Coder 80B).
+
+```bash
+OPENAI_BASE_URL=http://your-gpu-server:30000/v1
+OPENAI_API_KEY=local
+OPENCODE_MODEL=Qwen/Qwen3-Coder-80B
+```
+
+SGLang's RadixAttention caches the shared system prompt across all agent runs — 40–70% compute
+reduction at team scale compared to alternatives.
+
+### Option D — Anthropic / Gemini API
+
+```bash
+ANTHROPIC_API_KEY=sk-ant-...
+OPENCODE_MODEL=claude-sonnet-4-6
+# or
+GEMINI_API_KEY=...
+OPENCODE_MODEL=gemini-2.5-pro
 ```
 
 ---
 
-## Developer workflow
+## Agent backends
 
-### 1. One-time setup
+Three coding agents are supported. All produce the same `AgentTaskResult` — the pipeline
+(PR creation, dashboard, MCP) is identical regardless of backend.
 
 ```bash
-git clone https://github.com/dvdthecoder/agent-container
-cd agent-container
-pip install -e .
-
-cp .env.example .env
-# fill in DAYTONA_SERVER_URL, DAYTONA_API_KEY, GITHUB_TOKEN, and model config
-
-daytona serve   # start Daytona OSS server
+agent-run --backend opencode ...   # default — OpenCode via OPENAI_BASE_URL
+agent-run --backend claude  ...    # Claude Code CLI — Anthropic API
+agent-run --backend gemini  ...    # Gemini CLI — Google AI / Vertex AI
 ```
 
-### 2. Start the dashboard
+| Backend | What runs inside the sandbox | Model source |
+|---|---|---|
+| `opencode` | OpenCode CLI | Any via `OPENAI_BASE_URL` |
+| `claude` | Claude Code CLI | Anthropic API |
+| `gemini` | Gemini CLI | Google AI / Vertex AI |
+
+---
+
+## Dashboard
 
 ```bash
 agent-run dashboard
-# opens http://localhost:8080
+# → http://localhost:8080
 ```
 
-### 3. Fire a task
-
-```bash
-# from the CLI
-agent-run \
-  --task "Add rate limiting to /api/login" \
-  --repo https://github.com/org/myapp
-
-# or from the dashboard UI — click + New Run, fill in the form
-```
-
-### 4. Watch it run
-
-The dashboard shows each run as a card with a live phase indicator:
+Live view of all running, completed, and failed agent runs. Each run streams phase changes and log
+output in real time via Server-Sent Events. No page refresh needed.
 
 ```
-● BOOTING     cloning repo...
+● BOOTING     starting Modal sandbox...
 ● CLONING     git clone https://github.com/org/myapp
 ● RUNNING     [opencode] Reading api/login.py...
-◉ TESTING     pytest ... 24 passed in 3.4s
-↑ OPENING PR  gh pr create...
-✓ DONE        PR #42   +67 −3
+◉ DONE        PR #42 opened   +67 −3
 ```
 
-Logs stream in real time via Server-Sent Events. The workspace is destroyed the moment the run
-completes or fails.
+---
 
-### 5. Python API (for programmatic use)
+## Python API
 
 ```python
-from sandbox import DaytonaAgentSandbox, SandboxConfig, AgentTaskSpec
+from sandbox import ModalSandbox, SandboxConfig, AgentTaskSpec
 
 config = SandboxConfig.from_env()
 
@@ -192,318 +219,64 @@ spec = AgentTaskSpec(
     create_pr=True,
 )
 
-async with DaytonaAgentSandbox(config) as sandbox:
-    result = await sandbox.run(spec)
+result = ModalSandbox(config).run(spec)
 
-print(result.pr_url)        # https://github.com/org/myapp/pull/42
-print(result.diff_stat)     # +67 −3
-print(result.tests.passed)  # 24
+print(result.pr_url)      # https://github.com/org/myapp/pull/42
+print(result.diff_stat)   # +67 −3
 ```
 
 ---
 
-## Model configuration
+## MCP integration (Claude Code / Gemini CLI)
 
-The coding agent (OpenCode) needs an LLM. The workspace receives the model endpoint as an env var —
-the sandbox orchestrator has no direct dependency on any LLM provider.
-
-### Option A — Self-hosted (privacy-first, recommended for teams)
-
-Run [Qwen3-Coder 80B](https://huggingface.co/Qwen/Qwen3-Coder-80B) on a shared team inference
-server via SGLang. No code leaves your network.
-
-```bash
-# .env
-OPENAI_BASE_URL=http://192.168.1.50:30000/v1
-OPENAI_API_KEY=local
-OPENCODE_MODEL=Qwen/Qwen3-Coder-80B
-```
-
-Start the inference server:
-
-```bash
-# SGLang (recommended — best throughput + RadixAttention prefix caching)
-docker compose up inference-server
-
-# vLLM (alternative — simpler setup, good throughput, basic prefix cache)
-vllm serve Qwen/Qwen3-Coder-80B --tensor-parallel-size 2 --port 30000
-
-# Ollama (solo dev only — easiest, but queues concurrent requests)
-ollama pull qwen3-coder:80b && ollama serve
-```
-
-### Option B — Serverless open model (no GPU, pay-per-use)
-
-Use Together.ai or Fireworks.ai to run Qwen3-Coder without managing hardware. Same model, same
-privacy posture for the code (only the prompt leaves your network, not the repo structure).
-
-```bash
-OPENAI_BASE_URL=https://api.together.xyz/v1
-OPENAI_API_KEY=your-together-api-key
-OPENCODE_MODEL=Qwen/Qwen3-Coder-80B-Instruct
-```
-
-Cost: ~$0.05–0.40 per agent run depending on task length.
-
-### Option C — Cloud API (simplest to get started)
-
-```bash
-ANTHROPIC_API_KEY=sk-ant-...
-OPENCODE_MODEL=claude-sonnet-4-6
-```
-
-### Model selection rationale
-
-Qwen3-Coder 80B scores **70.6 on SWE-bench** (real code editing on real repos) and is purpose-built
-for software engineering tasks. It fits on a single A100 80GB or two RTX 4090s.
-[Onyx self-hosted LLM leaderboard](https://onyx.app/self-hosted-llm-leaderboard) is a useful
-reference for tracking how open models compare on coding tasks.
-
-### Inference server — SGLang and RadixAttention
-
-SGLang is the recommended inference server for this system. The reason is **RadixAttention** — its
-core innovation that directly reduces the cost of running agent workloads.
-
-**The problem:** every LLM request computes a KV cache (the model's working memory for the input).
-This is expensive. In a naive setup, every agent run recomputes the KV cache for the OpenCode
-system prompt from scratch — even though it's identical across every run.
-
-**What RadixAttention does:** maintains a radix tree (prefix trie) of all KV cache blocks across
-all requests. When a new request shares a prefix with anything already in the tree, it reuses those
-cached blocks. The tree is shared across concurrent requests and persists between runs.
-
-```
-Radix tree — what gets cached and reused:
-
-[OpenCode system prompt]──[repo A context]──[task 1 turn 1]
-                       │                 └──[task 2 turn 1]
-                       └──[repo B context]──[task 3 turn 1]
-```
-
-In an agent workload:
-- **OpenCode system prompt** (same for every run) → computed once, cached forever
-- **Repo context** (same if hitting the same repo) → shared across runs on that repo
-- **Task description** (unique per run) → always computed fresh
-
-In practice, 40–70% of token computation is eliminated on a busy team setup.
-
-**Throughput comparison on Qwen 72B, A100 80GB:**
-
-| Server | Tokens/sec | Prefix cache | Concurrent requests |
-|---|---|---|---|
-| Ollama | ~800 | Basic | Queued (one at a time) |
-| vLLM | ~2,400 | Simple match | Batched |
-| SGLang | ~5,000 | Radix tree | Batched + shared cache |
-
-SGLang also supports **structured output at the kernel level** — when OpenCode produces JSON
-results, valid structure is enforced during generation (not via retry), eliminating wasted tokens
-on malformed outputs.
-
-**SGLang is a drop-in swap for vLLM** — same OpenAI-compatible API, same env vars, higher
-throughput and better cache utilisation.
-
-### Model hosting topologies
-
-The inference server is just a URL injected into each Daytona workspace. Four topologies work with
-zero code changes — only the env var changes:
-
-| Topology | OPENAI_BASE_URL | Best for |
-|---|---|---|
-| Laptop (Ollama) | `http://host.docker.internal:11434/v1` | Solo dev with GPU |
-| Team server (LAN) | `http://192.168.1.50:11434/v1` | Team, shared GPU |
-| Cloud GPU (same VPC) | `http://10.0.1.50:11434/v1` | Cloud Daytona workspaces |
-| Modal / serverless | `https://org--model.modal.run/v1` | No hardware, scale-to-zero |
-
-**Daytona vs Modal for model hosting:** Daytona creates ephemeral dev environments (CPU, short-lived).
-It is not a GPU compute platform and cannot host a model the way Modal can. Modal is the right tool
-for serverless model hosting — Daytona workspaces call Modal's inference endpoint over HTTP, same as
-any other provider. They are complementary, not competing.
-
----
-
-## Claude Code and Gemini CLI integration
-
-### Triggering workspaces from your CLI session (MCP)
-
-Both Claude Code and Gemini CLI support MCP (Model Context Protocol). The sandbox exposes an MCP
-server so developers can trigger runs, check status, and stop workspaces without leaving their
-editor session.
-
-```
-Developer in Claude Code:
-  "Fix the rate limiting bug in org/myapp"
-        │
-        ▼  Claude Code calls sandbox_run MCP tool
-  workspace boots → OpenCode edits → tests pass → PR opens
-        │
-        ▼
-  "Done. PR #42 opened: +67 −3. Tests: 24 passed."
-```
-
-Configure once and the sandbox becomes a native tool in any Claude Code or Gemini CLI session:
+The sandbox exposes an MCP server so you can trigger runs directly from your editor session.
 
 ```json
-// .claude/settings.json  (checked into repo — team gets this automatically)
+// .claude/settings.json
 {
   "mcpServers": {
     "agent-container": {
       "command": "python",
-      "args": ["-m", "agent_container.mcp.server"]
+      "args": ["-m", "mcp.server"]
     }
   }
 }
 ```
 
-Four tools are exposed: `sandbox_run`, `sandbox_list`, `sandbox_status`, `sandbox_stop`.
-
-**Without MCP:** both CLIs can already shell out to `agent-run` via their Bash tool. MCP is the
-upgrade — structured result, typed output, progress streaming, no raw terminal dump.
-
-### Claude Code / Gemini CLI as the coding agent inside the workspace
-
-OpenCode is the default agent backend, but Claude Code CLI and Gemini CLI can run inside the
-workspace instead — useful if your team already uses one of them and wants consistent tooling.
-
-```bash
-agent-run --task "Refactor auth middleware" --repo org/myapp --backend claude
-agent-run --task "Add input validation"     --repo org/myapp --backend gemini
-agent-run --task "Fix the flaky test"       --repo org/myapp --backend opencode
+Then inside Claude Code:
+```
+"Fix the pagination bug in org/myapp"
+→ Claude calls sandbox_run MCP tool
+→ Modal sandbox boots, agent edits, PR opens
+→ "Done. PR #42: +67 −3"
 ```
 
-Each backend is a small adapter in `agent/backends/`. All produce the same `AgentTaskResult` —
-the rest of the pipeline (tests, PR, dashboard) is identical regardless of backend.
-
-| Backend | CLI installed in workspace | Model source |
-|---|---|---|
-| `opencode` | OpenCode | Any via `OPENAI_BASE_URL` (SGLang, Ollama, Anthropic) |
-| `claude` | Claude Code CLI (`@anthropic-ai/claude-code`) | Anthropic API |
-| `gemini` | Gemini CLI (`@google/gemini-cli`) | Google AI / Vertex AI |
-
-**Privacy note for `claude` backend:** Claude Code CLI sends prompts to Anthropic's API — code
-context leaves your network. Use `opencode` backend with SGLang if full air-gap is required.
-Gemini CLI supports Vertex AI for teams that need to stay within GCP.
+Tools exposed: `sandbox_run`, `sandbox_list`, `sandbox_status`, `sandbox_stop`.
 
 ---
 
-## Enterprise use (GitLab)
+## Enterprise / GitLab
 
-Swap `gh` for `glab`. PRs become Merge Requests. Everything else is identical.
+Swap `GITHUB_TOKEN` for `GITLAB_TOKEN`. PRs become Merge Requests. Everything else is identical.
 
 ```bash
 GITLAB_TOKEN=glpat-...
-# git_ops.py uses glab mr create instead of gh pr create
+GITLAB_URL=https://gitlab.yourcompany.com   # omit for gitlab.com
 ```
 
-### GitLab-native integration patterns
-
-**Issue-triggered runs** — label a GitLab issue `agent-run`, a webhook fires, the sandbox picks it
-up, creates a branch, opens an MR referencing the issue. Developer reviews and merges.
-
-**Cross-repo changes at scale** — the same task description run against 50 microservice repos
-produces 50 MRs in parallel. Systematic changes (dependency upgrades, security patches, API
-migrations) that would take a team weeks take an afternoon.
-
-**GitLab CI trigger**
-
-```yaml
-agent-fix:
-  stage: maintenance
-  trigger: manual
-  script:
-    - agent-run --task "$AGENT_TASK" --repo "$CI_PROJECT_URL"
-```
-
-**Security patching** — a CVE drops, security team labels all affected repos, MRs with the patch
-are open by morning.
-
-### Privacy guarantee (fully air-gapped)
-
-GitLab on-prem + Daytona on-prem + Qwen3-Coder on-prem = no line of code, no prompt, no diff
-ever touches the public internet. This is the correct architecture for regulated industries
-(finance, healthcare, government).
-
-Every agent action produces a GitLab MR with full diff, test results, and the original task prompt
-in the description — a complete audit trail. MRs require human approval before merge. The agent
-proposes, humans decide.
-
----
-
-## Cost analysis
-
-### Infrastructure cost centres
-
-**Inference server** (the significant one)
-
-| Setup | Upfront | Per-run cost | Break-even vs cloud API |
-|---|---|---|---|
-| Cloud API (Haiku) | $0 | ~$0.05–0.10 | N/A |
-| Cloud API (Sonnet) | $0 | ~$0.30–0.80 | N/A |
-| Together.ai (Qwen3) | $0 | ~$0.05–0.40 | N/A |
-| 2x RTX 4090 + SGLang | ~$3,200 | ~$0.001 | ~15 runs/day |
-| A100 80GB + SGLang | ~$12,000 | ~$0.003 | ~30 runs/day |
-| A100 80GB (cloud GPU) | $0 upfront | ~$0.08/run | varies |
-
-SGLang's RadixAttention reduces effective per-run compute cost by 40–70% compared to vLLM on
-agent workloads, because the OpenCode system prompt is cached in the radix tree and never
-recomputed. Break-even points shift earlier as a result.
-
-**Workspace compute** (negligible) — each workspace lives 2–5 minutes, 2–4 vCPU, 8GB RAM. Under
-$0.02/run on cloud. Near zero on self-hosted.
-
-### SGLang cost impact at enterprise scale (50 devs, 10 tasks/day each)
-
-| | Cloud API | Self-hosted + vLLM | Self-hosted + SGLang |
-|---|---|---|---|
-| Runs/day | 500 | 500 | 500 |
-| Effective tokens computed | 100% | 100% | ~40% (RadixAttention) |
-| Cost/day | ~$1,000 | ~$15 | ~$6 |
-| Cost/year | ~$365,000 | ~$40,000 | ~$18,000 |
-| GPUs needed | — | 2x A100 | 1x A100 |
-
-SGLang's prefix caching means fewer GPUs serve the same workload — or the same hardware serves
-2–3x more concurrent agent runs. Hardware pays for itself in 1–2 weeks at that volume.
+**Full air-gap setup**: GitLab on-prem + Modal in a private VPC + SGLang on-prem = no code, no
+prompt, no diff ever touches the public internet. Complete audit trail via MR descriptions (diff,
+test results, original task prompt). Human approval required before merge.
 
 ---
 
 ## Testing strategy
 
-### Test pyramid
-
-**Unit tests (free, every commit)**
-
-Tests that need no external services — config validation, dataclass serialisation, dashboard store
-logic, test runner detection heuristics, SSE event formatting.
-
-**Integration tests (near-zero cost, every PR)**
-
-Workspace lifecycle tests using a stub agent instead of OpenCode:
-
-```bash
-# stub_agent.sh — dropped into workspace instead of opencode
-echo "fix = True" >> math.py
-git add . && git commit -m "agent: apply fix"
-echo '{"status": "done"}'
-```
-
-Tests boot/teardown, file writes, env var injection, diff collection — without spending a token.
-Requires a Daytona instance accessible from CI.
-
-**End-to-end tests (low cost, nightly)**
-
-Full pipeline with a real model against a fixture repo. The fixture has a deliberate off-by-one bug
-and a failing test. The task is trivial enough that any capable model fixes it deterministically.
-
-Use `claude-haiku-4-5` in CI — ~$0.05–0.10/run. At nightly frequency: ~$3/month.
-Never run e2e on every commit.
-
-### CI cost summary
-
-| Layer | Monthly cost | Trigger |
-|---|---|---|
-| Unit | $0 | Every commit |
-| Integration (stub) | $0 + infra | Every PR |
-| E2e (Haiku) | ~$3 | Nightly |
-| E2e (local model) | ~$0 | On-demand |
+| Layer | What runs | Cost | Trigger |
+|---|---|---|---|
+| Unit | Config, spec, result, sandbox (mocked) | $0 | Every commit |
+| Integration | Full Modal sandbox lifecycle, stub agent | Modal compute only | Every PR |
+| E2e | Real model + fixture repo | ~$0.05/run | Nightly |
 
 ---
 
@@ -511,39 +284,22 @@ Never run e2e on every commit.
 
 | Milestone | Scope |
 |---|---|
-| [M1: Sandbox Core](https://github.com/dvdthecoder/agent-container/milestone/1) | Daytona lifecycle, config, spec, result |
-| [M2: Agent Internals](https://github.com/dvdthecoder/agent-container/milestone/2) | OpenCode runner, test detection, git ops |
-| [M3: Dashboard](https://github.com/dvdthecoder/agent-container/milestone/3) | FastAPI SSE API, live dashboard UI |
-| [M4: Self-hosted LLM](https://github.com/dvdthecoder/agent-container/milestone/4) | Provider abstraction, SGLang + RadixAttention, Ollama/vLLM, Modal option |
-| [M5: CLI & Integration](https://github.com/dvdthecoder/agent-container/milestone/5) | agent-run CLI, e2e tests, examples |
-| [M6: CLI Integrations](https://github.com/dvdthecoder/agent-container/milestone/6) | MCP server, Claude Code + Gemini CLI as agent backends |
+| M1: Core dataclasses | `SandboxConfig`, `AgentTaskSpec`, `AgentTaskResult` ✅ |
+| M2: Modal sandbox | `ModalSandbox` boot/run/teardown, CLI |
+| M3: Agent internals | OpenCode runner, test detection, git ops |
+| M4: Dashboard | FastAPI SSE API, live UI |
+| M5: Model serving | `modal/serve.py` — deploy open model on Modal GPU |
+| M6: MCP + backends | MCP server, Claude Code + Gemini CLI backends |
 
 ---
 
-## Environment variables
+## Documentation
 
-```bash
-# Daytona OSS
-DAYTONA_SERVER_URL=http://localhost:3986
-DAYTONA_API_KEY=your-daytona-api-key
+Full documentation at **[dvdthecoder.github.io/agent-container](https://dvdthecoder.github.io/agent-container)**
 
-# GitHub / GitLab (PR + MR creation inside workspace)
-GITHUB_TOKEN=ghp_...
-# GITLAB_TOKEN=glpat-...
-
-# Model provider — pick one mode:
-
-# Self-hosted via SGLang (privacy-first, recommended for teams)
-OPENAI_BASE_URL=http://192.168.1.50:30000/v1
-OPENAI_API_KEY=local
-OPENCODE_MODEL=Qwen/Qwen3-Coder-80B
-
-# Serverless open model (no GPU required)
-# OPENAI_BASE_URL=https://api.together.xyz/v1
-# OPENAI_API_KEY=your-together-key
-# OPENCODE_MODEL=Qwen/Qwen3-Coder-80B-Instruct
-
-# Cloud API (simplest to get started)
-# ANTHROPIC_API_KEY=sk-ant-...
-# OPENCODE_MODEL=claude-sonnet-4-6
-```
+- [Architecture](https://dvdthecoder.github.io/agent-container/architecture)
+- [Quickstart](https://dvdthecoder.github.io/agent-container/quickstart)
+- [Model setup](https://dvdthecoder.github.io/agent-container/models)
+- [Enterprise / GitLab](https://dvdthecoder.github.io/agent-container/enterprise)
+- [MCP integration](https://dvdthecoder.github.io/agent-container/mcp)
+- [Contributing](https://dvdthecoder.github.io/agent-container/contributing)
