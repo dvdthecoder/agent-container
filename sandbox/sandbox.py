@@ -47,33 +47,32 @@ class ModalSandbox:
         # Unique app per run — avoids collisions when multiple runs execute in parallel.
         app = modal.App.lookup(f"agent-container-{uuid.uuid4().hex[:8]}", create_if_missing=True)
         try:
-            sb = self._create(spec, app)
-            self._clone(sb, spec)
-            agent_output, exit_code = self._exec_agent(sb, spec)
-            diff, diff_stat = self._collect_diff(sb)
-        except Exception as exc:
-            duration = time.monotonic() - start
-            _terminate(sb)
+            try:
+                sb = self._create(spec, app)
+                self._clone(sb, spec)
+                agent_output, exit_code = self._exec_agent(sb, spec)
+                diff, diff_stat = self._collect_diff(sb)
+            except Exception as exc:
+                return AgentTaskResult(
+                    success=False,
+                    run_id=_run_id(sb),
+                    duration_seconds=time.monotonic() - start,
+                    error=str(exc),
+                    backend=spec.backend,
+                )
+
             return AgentTaskResult(
-                success=False,
+                success=exit_code == 0,
                 run_id=_run_id(sb),
-                duration_seconds=duration,
-                error=str(exc),
+                diff=diff,
+                diff_stat=diff_stat,
+                duration_seconds=time.monotonic() - start,
+                error=None if exit_code == 0 else agent_output,
                 backend=spec.backend,
             )
-
-        _terminate(sb)
-        duration = time.monotonic() - start
-
-        return AgentTaskResult(
-            success=exit_code == 0,
-            run_id=_run_id(sb),
-            diff=diff,
-            diff_stat=diff_stat,
-            duration_seconds=duration,
-            error=None if exit_code == 0 else agent_output,
-            backend=spec.backend,
-        )
+        finally:
+            # Always terminate — even on KeyboardInterrupt or other BaseException.
+            _terminate(sb)
 
     # ----------------------------------------------------------------- private
 
