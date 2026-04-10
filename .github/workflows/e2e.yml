@@ -1,9 +1,10 @@
 name: E2E tests
 
 on:
-  # Manual trigger only — no nightly schedule until secrets + Daytona are configured.
-  # Once DAYTONA_API_KEY and ANTHROPIC_API_KEY are set as repo secrets,
-  # uncomment the schedule block below to enable nightly runs.
+  # Nightly run against the real model endpoint.
+  schedule:
+    - cron: "0 2 * * *"   # 02:00 UTC daily (~$0.05–0.10 per run)
+
   workflow_dispatch:
     inputs:
       backend:
@@ -13,17 +14,14 @@ on:
         type: choice
         options: [opencode, claude, gemini]
       model:
-        description: Model override (blank = default)
+        description: Model override (blank = qwen3-coder from OPENCODE_MODEL)
         required: false
         default: ""
 
-  # schedule:
-  #   - cron: "0 2 * * *"   # uncomment when ready for nightly runs (~$0.05/night)
-
 # E2E tests use a real LLM against the fixture repo.
-# Requires: DAYTONA_API_KEY, ANTHROPIC_API_KEY (or OPENAI_BASE_URL for self-hosted),
-#           GITHUB_TOKEN (auto-provided).
-# Cost: ~$0.05–0.10 per run using claude-haiku-4-5.
+# Requires repo secrets: MODAL_TOKEN_ID, MODAL_TOKEN_SECRET,
+#   OPENAI_BASE_URL (Modal serve endpoint), OPENAI_API_KEY (= "modal"),
+#   OPENCODE_MODEL (= "qwen3-coder"), GITHUB_TOKEN (auto-provided).
 
 jobs:
   check-secrets:
@@ -34,14 +32,14 @@ jobs:
     steps:
       - id: check
         run: |
-          if [[ -n "${{ secrets.DAYTONA_API_KEY }}" && \
-                ( -n "${{ secrets.ANTHROPIC_API_KEY }}" || \
-                  -n "${{ secrets.OPENAI_BASE_URL }}" ) ]]; then
+          if [[ -n "${{ secrets.MODAL_TOKEN_ID }}" && \
+                -n "${{ secrets.MODAL_TOKEN_SECRET }}" && \
+                -n "${{ secrets.OPENAI_BASE_URL }}" ]]; then
             echo "has-secrets=true" >> $GITHUB_OUTPUT
             echo "Required secrets present — proceeding with E2E tests"
           else
             echo "has-secrets=false" >> $GITHUB_OUTPUT
-            echo "::warning::E2E skipped — set DAYTONA_API_KEY and ANTHROPIC_API_KEY (or OPENAI_BASE_URL) as repo secrets"
+            echo "::warning::E2E skipped — set MODAL_TOKEN_ID, MODAL_TOKEN_SECRET, OPENAI_BASE_URL as repo secrets"
           fi
 
   e2e:
@@ -52,13 +50,12 @@ jobs:
     timeout-minutes: 30
 
     env:
-      DAYTONA_SERVER_URL: ${{ secrets.DAYTONA_SERVER_URL || 'http://localhost:3986' }}
-      DAYTONA_API_KEY: ${{ secrets.DAYTONA_API_KEY }}
+      MODAL_TOKEN_ID: ${{ secrets.MODAL_TOKEN_ID }}
+      MODAL_TOKEN_SECRET: ${{ secrets.MODAL_TOKEN_SECRET }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      AGENT_BACKEND: ${{ github.event.inputs.backend || 'opencode' }}
-      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
       OPENAI_BASE_URL: ${{ secrets.OPENAI_BASE_URL }}
-      OPENCODE_MODEL: ${{ github.event.inputs.model || 'claude-haiku-4-5-20251001' }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY || 'modal' }}
+      OPENCODE_MODEL: ${{ github.event.inputs.model || secrets.OPENCODE_MODEL || 'qwen3-coder' }}
       FIXTURE_REPO: https://github.com/dvdthecoder/agent-container-fixture
 
     steps:
@@ -72,13 +69,8 @@ jobs:
       - name: Install dev dependencies
         run: pip install -e ".[dev]"
 
-      - name: Verify Daytona is reachable
-        run: |
-          curl -sf --max-time 10 "$DAYTONA_SERVER_URL/health" || \
-          (echo "::error::Daytona not reachable at $DAYTONA_SERVER_URL" && exit 1)
-
       - name: Run E2E tests
-        run: pytest tests/e2e/ -v --tb=short --junitxml=junit-e2e.xml -k "fixture"
+        run: pytest tests/integration/ tests/e2e/ -v --tb=short -m e2e --junitxml=junit-e2e.xml
 
       - name: Upload test results
         uses: actions/upload-artifact@v7
@@ -87,18 +79,3 @@ jobs:
           name: junit-e2e
           path: junit-e2e.xml
           retention-days: 30
-
-      - name: Verify no dangling workspaces
-        if: always()
-        run: |
-          python -c "
-          import subprocess, json, sys
-          result = subprocess.run(['daytona', 'list', '--json'], capture_output=True, text=True)
-          workspaces = json.loads(result.stdout or '[]')
-          leaked = [w for w in workspaces if w.get('name','').startswith('agent-')]
-          if leaked:
-              print(f'ERROR: {len(leaked)} workspace(s) not torn down:')
-              for w in leaked: print(f'  - {w[\"name\"]}')
-              sys.exit(1)
-          print('OK: no dangling workspaces')
-          "
