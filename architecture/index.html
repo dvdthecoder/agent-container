@@ -584,10 +584,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#pluggable-model-endpoint" class="md-nav__link">
+  <a href="#modal-for-model-serving" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Pluggable model endpoint
+        Modal for model serving
       
     </span>
   </a>
@@ -928,10 +928,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#pluggable-model-endpoint" class="md-nav__link">
+  <a href="#modal-for-model-serving" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Pluggable model endpoint
+        Modal for model serving
       
     </span>
   </a>
@@ -1024,23 +1024,24 @@
 <a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>                           │  modal.Sandbox (Python SDK)
 <a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>                           ▼
 <a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>┌──────────────────────────────────────────────────────────────────┐
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>│  Modal container — one per agent run, ephemeral                  │
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>│  Coding agent installed: opencode / claude CLI / gemini CLI      │
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>│  Git + gh / glab CLI for branch and PR operations               │
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>│                                                                  │
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>│  Agent calls → OPENAI_BASE_URL                                   │
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>└──────────────────────────┬───────────────────────────────────────┘
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>                           │  HTTP  (OpenAI-compatible)
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>                           ▼
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>┌──────────────────────────────────────────────────────────────────┐
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>│  Model endpoint — fully pluggable                                │
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>│                                                                  │
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>│  Together.ai / Fireworks   open models, pay per token            │
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>│  Modal GPU deployment      self-hosted open model, no hardware   │
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>│  SGLang on own server      air-gap, enterprise on-prem           │
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>│  Anthropic / Gemini API    simplest to start                     │
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>└──────────────────────────────────────────────────────────────────┘
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>│  Modal — container compute                                       │
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>│  Each run gets a fresh ephemeral container                       │
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>│  Coding agent installed: opencode / claude CLI / gemini CLI      │
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>│  Git + gh / glab CLI for branch and PR operations               │
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>│                                                                  │
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>│  Agent calls → Modal model endpoint (internal network)           │
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>└──────────────────────────┬───────────────────────────────────────┘
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>                           │  Modal internal network
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>                           ▼
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>┌──────────────────────────────────────────────────────────────────┐
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>│  Modal GPU — model serving                                       │
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>│  modal deploy modal/serve.py  →  stable endpoint                 │
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>│  Qwen3-Coder (or any open model) on A100                         │
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>│  Scale-to-zero when idle, billed per GPU second                  │
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>└──────────────────────────────────────────────────────────────────┘
 </code></pre></div>
+<p>Everything runs on Modal. The sandbox container and the model are both Modal resources — they
+communicate over Modal's internal network without touching the public internet.</p>
 <h2 id="key-design-decisions">Key design decisions<a class="headerlink" href="#key-design-decisions" title="Permanent link">&para;</a></h2>
 <h3 id="modal-for-the-sandbox">Modal for the sandbox<a class="headerlink" href="#modal-for-the-sandbox" title="Permanent link">&para;</a></h3>
 <p>Every agent run gets a fresh <code>modal.Sandbox</code> — a short-lived container on Modal's infrastructure.
@@ -1051,11 +1052,11 @@ This means:</p>
 <li><strong>Parallel runs don't conflict.</strong> Each run has its own isolated filesystem.</li>
 <li><strong>Scale to zero.</strong> You pay only for the seconds the container is running.</li>
 </ul>
-<h3 id="pluggable-model-endpoint">Pluggable model endpoint<a class="headerlink" href="#pluggable-model-endpoint" title="Permanent link">&para;</a></h3>
-<p>The agent container knows nothing about the model. It injects <code>OPENAI_BASE_URL</code>, <code>OPENAI_API_KEY</code>,
-and <code>OPENCODE_MODEL</code> as environment variables into the container. The coding agent picks them up.</p>
-<p>This means you can switch model providers with a single env var change — no code changes, no
-rebuilds. See <a href="../models/">Model Setup</a> for options.</p>
+<h3 id="modal-for-model-serving">Modal for model serving<a class="headerlink" href="#modal-for-model-serving" title="Permanent link">&para;</a></h3>
+<p>The model runs on Modal GPU infrastructure alongside the sandbox. <code>modal deploy modal/serve.py</code>
+deploys Qwen3-Coder once and gives you a stable internal endpoint. The sandbox container calls
+it over Modal's internal network — no public internet hop, no external API key needed.</p>
+<p>Scale-to-zero when idle. Billed per GPU second. No hardware to manage.</p>
 <h3 id="coding-agent-as-a-plugin">Coding agent as a plugin<a class="headerlink" href="#coding-agent-as-a-plugin" title="Permanent link">&para;</a></h3>
 <p>OpenCode is the default backend, but Claude Code CLI and Gemini CLI can run inside the container
 instead. All backends produce the same <code>AgentTaskResult</code> — the rest of the pipeline is identical.

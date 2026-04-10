@@ -604,10 +604,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#option-a-togetherai-fireworks-recommended-to-start" class="md-nav__link">
+  <a href="#deploy-the-model" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Option A — Together.ai / Fireworks (recommended to start)
+        Deploy the model
       
     </span>
   </a>
@@ -615,10 +615,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#option-b-modal-gpu-deployment-self-hosted-no-own-hardware" class="md-nav__link">
+  <a href="#why-qwen3-coder" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Option B — Modal GPU deployment (self-hosted, no own hardware)
+        Why Qwen3-Coder
       
     </span>
   </a>
@@ -626,10 +626,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#option-c-self-hosted-sglang-air-gap-enterprise-on-prem" class="md-nav__link">
+  <a href="#why-modal-for-the-model" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Option C — Self-hosted SGLang (air-gap, enterprise on-prem)
+        Why Modal for the model
       
     </span>
   </a>
@@ -637,21 +637,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#option-d-anthropic-gemini-api" class="md-nav__link">
+  <a href="#agent-backends-and-model-coupling" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Option D — Anthropic / Gemini API
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#model-recommendations" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Model recommendations
+        Agent backends and model coupling
       
     </span>
   </a>
@@ -855,10 +844,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#option-a-togetherai-fireworks-recommended-to-start" class="md-nav__link">
+  <a href="#deploy-the-model" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Option A — Together.ai / Fireworks (recommended to start)
+        Deploy the model
       
     </span>
   </a>
@@ -866,10 +855,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#option-b-modal-gpu-deployment-self-hosted-no-own-hardware" class="md-nav__link">
+  <a href="#why-qwen3-coder" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Option B — Modal GPU deployment (self-hosted, no own hardware)
+        Why Qwen3-Coder
       
     </span>
   </a>
@@ -877,10 +866,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#option-c-self-hosted-sglang-air-gap-enterprise-on-prem" class="md-nav__link">
+  <a href="#why-modal-for-the-model" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Option C — Self-hosted SGLang (air-gap, enterprise on-prem)
+        Why Modal for the model
       
     </span>
   </a>
@@ -888,21 +877,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#option-d-anthropic-gemini-api" class="md-nav__link">
+  <a href="#agent-backends-and-model-coupling" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Option D — Anthropic / Gemini API
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#model-recommendations" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Model recommendations
+        Agent backends and model coupling
       
     </span>
   </a>
@@ -930,153 +908,55 @@
 
 
 <h1 id="model-setup">Model Setup<a class="headerlink" href="#model-setup" title="Permanent link">&para;</a></h1>
-<p>The agent container is model-agnostic. It injects three environment variables into the sandbox
-container and the coding agent picks them up:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nv">OPENAI_BASE_URL</span><span class="o">=</span>...<span class="w">    </span><span class="c1"># any OpenAI-compatible endpoint</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nv">OPENAI_API_KEY</span><span class="o">=</span>...<span class="w">     </span><span class="c1"># API key or placeholder (&quot;local&quot;, &quot;modal&quot;, etc.)</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="nv">OPENCODE_MODEL</span><span class="o">=</span>...<span class="w">     </span><span class="c1"># model identifier</span>
+<p>The model runs on Modal GPU infrastructure, deployed once and called by the sandbox over Modal's
+internal network.</p>
+<h2 id="deploy-the-model">Deploy the model<a class="headerlink" href="#deploy-the-model" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>modal<span class="w"> </span>deploy<span class="w"> </span>modal/serve.py
 </code></pre></div>
-<p>Pick the option that fits your team.</p>
-<hr />
-<h2 id="option-a-togetherai-fireworks-recommended-to-start">Option A — Together.ai / Fireworks (recommended to start)<a class="headerlink" href="#option-a-togetherai-fireworks-recommended-to-start" title="Permanent link">&para;</a></h2>
-<p>No GPU, no infrastructure. Pay per token. Both providers run open models (Qwen3-Coder, DeepSeek-Coder)
-on their own GPU clusters. Your prompts go to their servers for inference only — not training, not
-fine-tuning.</p>
-<div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">Together.ai</label><label for="__tabbed_1_2">Fireworks.ai</label></div>
-<div class="tabbed-content">
-<div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nv">OPENAI_BASE_URL</span><span class="o">=</span>https://api.together.xyz/v1
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nv">OPENAI_API_KEY</span><span class="o">=</span>your-together-key
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="nv">OPENCODE_MODEL</span><span class="o">=</span>Qwen/Qwen3-Coder-80B-Instruct
-</code></pre></div>
-</div>
-<div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nv">OPENAI_BASE_URL</span><span class="o">=</span>https://api.fireworks.ai/inference/v1
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nv">OPENAI_API_KEY</span><span class="o">=</span>your-fireworks-key
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="nv">OPENCODE_MODEL</span><span class="o">=</span>accounts/fireworks/models/qwen3-coder-80b-instruct
-</code></pre></div>
-</div>
-</div>
-</div>
-<p><strong>Cost</strong>: ~$0.05–$0.40 per agent run depending on task length.</p>
-<hr />
-<h2 id="option-b-modal-gpu-deployment-self-hosted-no-own-hardware">Option B — Modal GPU deployment (self-hosted, no own hardware)<a class="headerlink" href="#option-b-modal-gpu-deployment-self-hosted-no-own-hardware" title="Permanent link">&para;</a></h2>
-<p>Deploy an open model on Modal's GPU infrastructure. You control the deployment, the model weights
-never leave Modal's isolated container, and billing is per GPU second with scale-to-zero.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># deploy once</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>modal<span class="w"> </span>deploy<span class="w"> </span>modal/serve.py
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="c1"># output: https://your-org--qwen-coder.modal.run/v1</span>
-</code></pre></div>
-<p>Then:
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nv">OPENAI_BASE_URL</span><span class="o">=</span>https://your-org--qwen-coder.modal.run/v1
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="nv">OPENAI_API_KEY</span><span class="o">=</span>modal
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="nv">OPENCODE_MODEL</span><span class="o">=</span>Qwen/Qwen3-Coder-80B
-</code></pre></div></p>
-<p><strong>Cold start</strong>: ~45–60s for an 80B model on A100. Subsequent requests are fast (model stays warm
-for a configurable idle period). Scale-to-zero when not in use.</p>
-<p><strong>Cost</strong>: ~$2.80/hr for an A100 80GB on Modal. At ~3 minutes per run, that's ~$0.14/run if the
-container is warm. Cheaper if you run batches.</p>
-<hr />
-<h2 id="option-c-self-hosted-sglang-air-gap-enterprise-on-prem">Option C — Self-hosted SGLang (air-gap, enterprise on-prem)<a class="headerlink" href="#option-c-self-hosted-sglang-air-gap-enterprise-on-prem" title="Permanent link">&para;</a></h2>
-<p>For regulated environments where prompts cannot leave your network at all. Run SGLang on your own
-GPU server.</p>
-<p><strong>Hardware requirement</strong>: A100 80GB or 2× RTX 4090 minimum for Qwen3-Coder 80B.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># on your GPU server</span>
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>pip<span class="w"> </span>install<span class="w"> </span>sglang
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>python<span class="w"> </span>-m<span class="w"> </span>sglang.launch_server<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">  </span>--model<span class="w"> </span>Qwen/Qwen3-Coder-80B<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">  </span>--port<span class="w"> </span><span class="m">30000</span><span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="w">  </span>--tensor-parallel-size<span class="w"> </span><span class="m">2</span>
-<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>
-<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="c1"># in .env</span>
-<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="nv">OPENAI_BASE_URL</span><span class="o">=</span>http://your-gpu-server:30000/v1
-<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="nv">OPENAI_API_KEY</span><span class="o">=</span><span class="nb">local</span>
-<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="nv">OPENCODE_MODEL</span><span class="o">=</span>Qwen/Qwen3-Coder-80B
-</code></pre></div>
-<p><strong>Why SGLang over vLLM for agent workloads</strong>: SGLang's RadixAttention maintains a shared KV cache
-tree across all requests. The OpenCode system prompt (identical for every run) is computed once and
-cached. At team scale (hundreds of runs/day), this eliminates 40–70% of total compute vs. vLLM.</p>
+<p>This starts Qwen3-Coder on an A100 GPU and exposes an internal Modal endpoint. The sandbox
+container calls it automatically — no URL configuration needed, it's wired up inside Modal's
+network.</p>
+<p>Scale-to-zero when idle. You pay only for GPU seconds while the model is actually processing a
+request.</p>
+<h2 id="why-qwen3-coder">Why Qwen3-Coder<a class="headerlink" href="#why-qwen3-coder" title="Permanent link">&para;</a></h2>
+<p>Qwen3-Coder 80B scores <strong>70.6 on SWE-bench</strong> — the standard benchmark for real code editing on
+real repositories. It is purpose-built for software engineering tasks: reading large codebases,
+understanding context, making targeted edits, writing tests.</p>
+<p>It fits on a single A100 80GB, which is what <code>modal/serve.py</code> provisions.</p>
+<h2 id="why-modal-for-the-model">Why Modal for the model<a class="headerlink" href="#why-modal-for-the-model" title="Permanent link">&para;</a></h2>
+<ul>
+<li>No GPU hardware to buy or manage</li>
+<li>Same infrastructure as the sandbox — one platform, one bill, one set of credentials</li>
+<li>Internal network between sandbox and model — no public internet hop, lower latency</li>
+<li>Scale-to-zero: costs nothing when no agent runs are happening</li>
+</ul>
+<h2 id="agent-backends-and-model-coupling">Agent backends and model coupling<a class="headerlink" href="#agent-backends-and-model-coupling" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
-<th>Server</th>
-<th>Relative throughput</th>
-<th>Prefix cache</th>
-<th>Concurrent requests</th>
+<th>Backend</th>
+<th>Model</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Ollama</td>
-<td>1×</td>
-<td>Basic</td>
-<td>Queued</td>
+<td><code>opencode</code></td>
+<td>Qwen3-Coder via Modal (default)</td>
 </tr>
 <tr>
-<td>vLLM</td>
-<td>3×</td>
-<td>Simple match</td>
-<td>Batched</td>
+<td><code>claude</code></td>
+<td>Anthropic API (Claude Code CLI reads <code>ANTHROPIC_API_KEY</code>)</td>
 </tr>
 <tr>
-<td>SGLang</td>
-<td>6×</td>
-<td>Radix tree (shared)</td>
-<td>Batched + shared</td>
+<td><code>gemini</code></td>
+<td>Google AI / Vertex (Gemini CLI reads <code>GEMINI_API_KEY</code>)</td>
 </tr>
 </tbody>
 </table>
-<hr />
-<h2 id="option-d-anthropic-gemini-api">Option D — Anthropic / Gemini API<a class="headerlink" href="#option-d-anthropic-gemini-api" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># Claude backend</span>
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="nv">ANTHROPIC_API_KEY</span><span class="o">=</span>sk-ant-...
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="nv">OPENCODE_MODEL</span><span class="o">=</span>claude-sonnet-4-6
-<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>
-<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="c1"># Gemini backend</span>
-<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="nv">GEMINI_API_KEY</span><span class="o">=</span>...
-<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="nv">OPENCODE_MODEL</span><span class="o">=</span>gemini-2.5-pro
-</code></pre></div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>When using the <code>claude</code> or <code>gemini</code> agent backend (not OpenCode), the relevant API key is
-read directly by the CLI inside the container — <code>OPENAI_BASE_URL</code> is not used.</p>
-</div>
-<hr />
-<h2 id="model-recommendations">Model recommendations<a class="headerlink" href="#model-recommendations" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>Use case</th>
-<th>Recommended model</th>
-<th>Why</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Best coding quality</td>
-<td>Qwen3-Coder 80B</td>
-<td>70.6 SWE-bench, purpose-built for code</td>
-</tr>
-<tr>
-<td>Faster / cheaper</td>
-<td>Qwen2.5-Coder 14B</td>
-<td>Good quality, 5× cheaper to run</td>
-</tr>
-<tr>
-<td>No open model</td>
-<td>Claude Sonnet 4.6</td>
-<td>Best proprietary coding model</td>
-</tr>
-<tr>
-<td>Budget CI runs</td>
-<td>Claude Haiku 4.5</td>
-<td>~$0.05/run, sufficient for e2e tests</td>
-</tr>
-</tbody>
-</table>
-<p>The <a href="https://onyx.app/self-hosted-llm-leaderboard">Onyx self-hosted LLM leaderboard</a> is a useful
-reference for tracking how open models compare on real coding tasks.</p>
+<p>The <code>opencode</code> backend is the default and recommended path — it uses the Modal-hosted model,
+keeping everything within Modal's infrastructure.</p>
+<p>The <code>claude</code> and <code>gemini</code> backends are available for teams already standardised on those CLIs.
+When using them, prompts go to Anthropic or Google respectively.</p>
 
 
 
