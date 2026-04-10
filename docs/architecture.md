@@ -18,23 +18,25 @@
                            │  modal.Sandbox (Python SDK)
                            ▼
 ┌──────────────────────────────────────────────────────────────────┐
-│  Modal container — one per agent run, ephemeral                  │
+│  Modal — container compute                                       │
+│  Each run gets a fresh ephemeral container                       │
 │  Coding agent installed: opencode / claude CLI / gemini CLI      │
 │  Git + gh / glab CLI for branch and PR operations               │
 │                                                                  │
-│  Agent calls → OPENAI_BASE_URL                                   │
+│  Agent calls → Modal model endpoint (internal network)           │
 └──────────────────────────┬───────────────────────────────────────┘
-                           │  HTTP  (OpenAI-compatible)
+                           │  Modal internal network
                            ▼
 ┌──────────────────────────────────────────────────────────────────┐
-│  Model endpoint — fully pluggable                                │
-│                                                                  │
-│  Together.ai / Fireworks   open models, pay per token            │
-│  Modal GPU deployment      self-hosted open model, no hardware   │
-│  SGLang on own server      air-gap, enterprise on-prem           │
-│  Anthropic / Gemini API    simplest to start                     │
+│  Modal GPU — model serving                                       │
+│  modal deploy modal/serve.py  →  stable endpoint                 │
+│  Qwen3-Coder (or any open model) on A100                         │
+│  Scale-to-zero when idle, billed per GPU second                  │
 └──────────────────────────────────────────────────────────────────┘
 ```
+
+Everything runs on Modal. The sandbox container and the model are both Modal resources — they
+communicate over Modal's internal network without touching the public internet.
 
 ## Key design decisions
 
@@ -48,13 +50,13 @@ This means:
 - **Parallel runs don't conflict.** Each run has its own isolated filesystem.
 - **Scale to zero.** You pay only for the seconds the container is running.
 
-### Pluggable model endpoint
+### Modal for model serving
 
-The agent container knows nothing about the model. It injects `OPENAI_BASE_URL`, `OPENAI_API_KEY`,
-and `OPENCODE_MODEL` as environment variables into the container. The coding agent picks them up.
+The model runs on Modal GPU infrastructure alongside the sandbox. `modal deploy modal/serve.py`
+deploys Qwen3-Coder once and gives you a stable internal endpoint. The sandbox container calls
+it over Modal's internal network — no public internet hop, no external API key needed.
 
-This means you can switch model providers with a single env var change — no code changes, no
-rebuilds. See [Model Setup](models.md) for options.
+Scale-to-zero when idle. Billed per GPU second. No hardware to manage.
 
 ### Coding agent as a plugin
 
