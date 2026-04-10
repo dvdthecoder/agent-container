@@ -200,6 +200,29 @@ def test_spec_env_passed_as_modal_secret(mock_create):
 
 
 @patch("sandbox.sandbox.modal.Sandbox.create")
+def test_config_env_merged_with_spec_env(mock_create):
+    """config.container_env() is merged with spec.env; spec takes precedence."""
+    sb = MagicMock()
+    mock_create.return_value = sb
+    sb.exec.return_value = _make_proc()
+
+    config = SandboxConfig(
+        openai_base_url="https://serve.modal.run/v1",
+        openai_api_key="modal",
+        github_token="ghp_abc",
+    )
+
+    with patch("sandbox.sandbox.modal.Secret.from_dict") as mock_secret:
+        mock_secret.return_value = MagicMock()
+        ModalSandbox(config).run(_spec(env={"CUSTOM_VAR": "custom"}))
+
+    merged = mock_secret.call_args[0][0]
+    assert merged["OPENAI_BASE_URL"] == "https://serve.modal.run/v1"
+    assert merged["GITHUB_TOKEN"] == "ghp_abc"
+    assert merged["CUSTOM_VAR"] == "custom"
+
+
+@patch("sandbox.sandbox.modal.Sandbox.create")
 def test_empty_env_passes_no_secrets(mock_create):
     sb = MagicMock()
     mock_create.return_value = sb

@@ -6,7 +6,6 @@ import shlex
 import time
 
 import modal
-
 from sandbox.config import ConfigError, SandboxConfig
 from sandbox.result import AgentTaskResult
 from sandbox.spec import AgentTaskSpec
@@ -78,10 +77,13 @@ class ModalSandbox:
         image = _BASE_IMAGE
         if spec.image:
             image = modal.Image.from_registry(spec.image)
+        # Merge config-level env vars (model endpoint, git tokens) with
+        # any task-specific overrides from spec.env.
+        env = {**self.config.container_env(), **spec.env}
         return modal.Sandbox.create(
             image=image,
             timeout=spec.timeout_seconds,
-            secrets=[modal.Secret.from_dict(spec.env)] if spec.env else [],
+            secrets=[modal.Secret.from_dict(env)] if env else [],
         )
 
     def _clone(self, sb: modal.Sandbox, spec: AgentTaskSpec) -> None:
