@@ -11,7 +11,6 @@ from sandbox.config import ConfigError, SandboxConfig
 from sandbox.result import AgentTaskResult
 from sandbox.spec import AgentTaskSpec
 
-
 # Base image — git + Node (for opencode) + Python pre-installed.
 # Built once by Modal and cached; subsequent runs reuse the cached layer.
 _BASE_IMAGE = (
