@@ -1,44 +1,38 @@
-"""DevContainer-based agent sandbox: boot → exec → teardown."""
+"""Modal-based agent sandbox: boot → exec → teardown."""
 
 from __future__ import annotations
 
 import shlex
-import shutil
-import subprocess
-import tempfile
 import time
-from pathlib import Path
+
+import modal
 
 from sandbox.config import ConfigError, SandboxConfig
 from sandbox.result import AgentTaskResult
 from sandbox.spec import AgentTaskSpec
 
-# Name given to our fallback devcontainer spec inside a workspace that
-# doesn't already ship a .devcontainer directory.
-_DEVCONTAINER_DIR = ".devcontainer"
-_DEVCONTAINER_JSON = "devcontainer.json"
-
-# Source of the project-level default spec (relative to this file's package root)
-_DEFAULT_SPEC = Path(__file__).parent.parent / _DEVCONTAINER_DIR / _DEVCONTAINER_JSON
-
-
-def _devcontainer_bin() -> list[str]:
-    """Return the argv prefix for the devcontainer CLI."""
-    if shutil.which("devcontainer"):
-        return ["devcontainer"]
-    return ["npx", "--yes", "@devcontainers/cli"]
+# Base image — git + Node (for opencode) + Python pre-installed.
+# Built once by Modal and cached; subsequent runs reuse the cached layer.
+_BASE_IMAGE = (
+    modal.Image.debian_slim(python_version="3.11")
+    .apt_install("git", "curl")
+    .run_commands(
+        "curl -fsSL https://deb.nodesource.com/setup_lts.x | bash -",
+        "apt-get install -y nodejs",
+        "npm install -g opencode-ai",
+    )
+)
 
 
-class DevContainerSandbox:
-    """Run an agent task inside an ephemeral dev container.
+class ModalSandbox:
+    """Run an agent task inside an ephemeral Modal sandbox.
 
     Lifecycle per call to :meth:`run`:
-      1. Clone repo into a temporary directory
-      2. Ensure ``.devcontainer/devcontainer.json`` exists (copy default if absent)
-      3. ``devcontainer up``  — build image + start container
-      4. ``devcontainer exec`` — run the coding agent
-      5. Collect ``git diff`` output
-      6. ``devcontainer down`` — stop + remove container (always, even on failure)
+      1. Create a Modal sandbox with the configured image
+      2. Clone the target repo inside the sandbox
+      3. Run the coding agent (opencode / claude / gemini / stub)
+      4. Collect ``git diff`` output
+      5. Terminate the sandbox (always, even on failure)
     """
 
     def __init__(self, config: SandboxConfig) -> None:
@@ -48,33 +42,29 @@ class DevContainerSandbox:
 
     def run(self, spec: AgentTaskSpec) -> AgentTaskResult:
         start = time.monotonic()
-        tmpdir = tempfile.mkdtemp(prefix="agent-sandbox-")
-        workspace = Path(tmpdir)
+        sb: modal.Sandbox | None = None
         try:
-            self._clone(spec, workspace)
-            self._ensure_devcontainer(workspace, spec)
-            self._up(workspace)
-            try:
-                agent_output, exit_code = self._exec_agent(workspace, spec)
-                diff, diff_stat = self._collect_diff(workspace)
-            finally:
-                self._down(workspace)
+            sb = self._create(spec)
+            self._clone(sb, spec)
+            agent_output, exit_code = self._exec_agent(sb, spec)
+            diff, diff_stat = self._collect_diff(sb)
         except Exception as exc:
             duration = time.monotonic() - start
+            _terminate(sb)
             return AgentTaskResult(
                 success=False,
-                run_id=workspace.name,
+                run_id=_run_id(sb),
                 duration_seconds=duration,
                 error=str(exc),
                 backend=spec.backend,
             )
-        finally:
-            _rmtree(workspace)
 
+        _terminate(sb)
         duration = time.monotonic() - start
+
         return AgentTaskResult(
             success=exit_code == 0,
-            run_id=workspace.name,
+            run_id=_run_id(sb),
             diff=diff,
             diff_stat=diff_stat,
             duration_seconds=duration,
@@ -84,87 +74,55 @@ class DevContainerSandbox:
 
     # ----------------------------------------------------------------- private
 
-    def _clone(self, spec: AgentTaskSpec, workspace: Path) -> None:
-        _run(
-            [
-                "git",
-                "clone",
-                "--branch",
-                spec.base_branch,
-                "--depth",
-                "1",
-                spec.repo,
-                str(workspace),
-            ],
-            timeout=120,
-            error_prefix="git clone failed",
-        )
-
-    def _ensure_devcontainer(self, workspace: Path, spec: AgentTaskSpec) -> None:
-        dc_dir = workspace / _DEVCONTAINER_DIR
-        if (dc_dir / _DEVCONTAINER_JSON).exists():
-            return  # repo ships its own spec — use it as-is
-        dc_dir.mkdir(exist_ok=True)
-        image = spec.resolved_image(self.config.default_image)
-        _write_minimal_spec(dc_dir / _DEVCONTAINER_JSON, image)
-
-    def _up(self, workspace: Path) -> None:
-        _run(
-            [*_devcontainer_bin(), "up", "--workspace-folder", str(workspace)],
-            timeout=300,
-            error_prefix="devcontainer up failed",
-        )
-
-    def _exec_agent(self, workspace: Path, spec: AgentTaskSpec) -> tuple[str, int]:
-        task = spec.resolved_task()
-        cmd = _agent_command(spec.backend, task)
-        result = subprocess.run(
-            [*_devcontainer_bin(), "exec", "--workspace-folder", str(workspace), *cmd],
-            capture_output=True,
-            text=True,
+    def _create(self, spec: AgentTaskSpec) -> modal.Sandbox:
+        image = _BASE_IMAGE
+        if spec.image:
+            image = modal.Image.from_registry(spec.image)
+        return modal.Sandbox.create(
+            image=image,
             timeout=spec.timeout_seconds,
+            secrets=[modal.Secret.from_dict(spec.env)] if spec.env else [],
         )
-        combined = (result.stdout + result.stderr).strip()
-        return combined, result.returncode
 
-    def _collect_diff(self, workspace: Path) -> tuple[str, str]:
-        diff = subprocess.run(
-            ["git", "diff", "HEAD"],
-            cwd=workspace,
-            capture_output=True,
-            text=True,
-            timeout=30,
-        ).stdout
-        stat = subprocess.run(
-            ["git", "diff", "--stat", "HEAD"],
-            cwd=workspace,
-            capture_output=True,
-            text=True,
-            timeout=30,
-        ).stdout
+    def _clone(self, sb: modal.Sandbox, spec: AgentTaskSpec) -> None:
+        proc = sb.exec(
+            "git",
+            "clone",
+            "--branch",
+            spec.base_branch,
+            "--depth",
+            "1",
+            spec.repo,
+            "/workspace",
+        )
+        proc.wait()
+        if proc.returncode != 0:
+            raise ConfigError(f"git clone failed:\n{proc.stderr.read()}")
+
+    def _exec_agent(self, sb: modal.Sandbox, spec: AgentTaskSpec) -> tuple[str, int]:
+        cmd = _agent_command(spec.backend, spec.resolved_task())
+        proc = sb.exec(*cmd, workdir="/workspace")
+        output = proc.stdout.read()
+        proc.wait()
+        return output, proc.returncode
+
+    def _collect_diff(self, sb: modal.Sandbox) -> tuple[str, str]:
+        diff_proc = sb.exec("git", "diff", "HEAD", workdir="/workspace")
+        diff = diff_proc.stdout.read()
+        diff_proc.wait()
+
+        stat_proc = sb.exec("git", "diff", "--stat", "HEAD", workdir="/workspace")
+        stat = stat_proc.stdout.read()
+        stat_proc.wait()
+
         return diff, stat.strip()
-
-    def _down(self, workspace: Path) -> None:
-        # Best-effort: don't let teardown failure mask the real result
-        subprocess.run(
-            [*_devcontainer_bin(), "down", "--workspace-folder", str(workspace)],
-            capture_output=True,
-            timeout=60,
-        )
 
 
 # ------------------------------------------------------------------ helpers
 
 
-def _run(cmd: list[str], *, timeout: int, error_prefix: str) -> None:
-    result = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
-    if result.returncode != 0:
-        detail = (result.stderr or result.stdout).strip()
-        raise ConfigError(f"{error_prefix}:\n{detail}")
-
-
 def _agent_command(backend: str, task: str) -> list[str]:
-    """Return the argv to run the coding agent inside the container."""
+    """Return the argv to run the coding agent inside the sandbox."""
     if backend == "opencode":
         return ["opencode", "--print", "-m", task]
     if backend == "claude":
@@ -172,20 +130,24 @@ def _agent_command(backend: str, task: str) -> list[str]:
     if backend == "gemini":
         return ["gemini", "--yolo", "-p", task]
     if backend == "stub":
-        # Used in integration tests — echoes the task, exits 0, makes no changes
         return ["sh", "-c", f"echo {shlex.quote(task)}"]
     raise ValueError(f"Unknown backend: {backend!r}")
 
 
-def _write_minimal_spec(path: Path, image: str) -> None:
-    path.write_text(
-        f'{{\n  "name": "agent-sandbox",\n  "image": "{image}"\n}}\n',
-        encoding="utf-8",
-    )
+def _terminate(sb: modal.Sandbox | None) -> None:
+    """Terminate sandbox, ignoring errors (best-effort cleanup)."""
+    if sb is None:
+        return
+    try:
+        sb.terminate()
+    except Exception:  # noqa: S110
+        pass  # best-effort — don't let teardown errors propagate
 
 
-def _rmtree(path: Path) -> None:
-    """Remove a directory tree, ignoring errors (best-effort cleanup)."""
-    import shutil as _shutil
-
-    _shutil.rmtree(path, ignore_errors=True)
+def _run_id(sb: modal.Sandbox | None) -> str:
+    if sb is None:
+        return "unknown"
+    try:
+        return sb.object_id
+    except Exception:  # noqa: S110
+        return "unknown"
