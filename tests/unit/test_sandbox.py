@@ -18,6 +18,13 @@ def _config() -> SandboxConfig:
     return SandboxConfig()
 
 
+@pytest.fixture(autouse=True)
+def mock_app_lookup():
+    """Prevent modal.App.lookup from hitting the Modal API in unit tests."""
+    with patch("sandbox.sandbox.modal.App.lookup", return_value=MagicMock()):
+        yield
+
+
 def _make_proc(stdout: str = "", returncode: int = 0) -> MagicMock:
     proc = MagicMock()
     proc.stdout.read.return_value = stdout

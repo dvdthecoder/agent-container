@@ -4,11 +4,13 @@ from __future__ import annotations
 
 import shlex
 import time
+import uuid
 
 import modal
 from sandbox.config import ConfigError, SandboxConfig
 from sandbox.result import AgentTaskResult
 from sandbox.spec import AgentTaskSpec
+
 
 # Base image — git + Node (for opencode) + Python pre-installed.
 # Built once by Modal and cached; subsequent runs reuse the cached layer.
@@ -42,8 +44,10 @@ class ModalSandbox:
     def run(self, spec: AgentTaskSpec) -> AgentTaskResult:
         start = time.monotonic()
         sb: modal.Sandbox | None = None
+        # Unique app per run — avoids collisions when multiple runs execute in parallel.
+        app = modal.App.lookup(f"agent-container-{uuid.uuid4().hex[:8]}", create_if_missing=True)
         try:
-            sb = self._create(spec)
+            sb = self._create(spec, app)
             self._clone(sb, spec)
             agent_output, exit_code = self._exec_agent(sb, spec)
             diff, diff_stat = self._collect_diff(sb)
@@ -73,7 +77,7 @@ class ModalSandbox:
 
     # ----------------------------------------------------------------- private
 
-    def _create(self, spec: AgentTaskSpec) -> modal.Sandbox:
+    def _create(self, spec: AgentTaskSpec, app: modal.App) -> modal.Sandbox:
         image = _BASE_IMAGE
         if spec.image:
             image = modal.Image.from_registry(spec.image)
@@ -84,6 +88,7 @@ class ModalSandbox:
             image=image,
             timeout=spec.timeout_seconds,
             secrets=[modal.Secret.from_dict(env)] if env else [],
+            app=app,
         )
 
     def _clone(self, sb: modal.Sandbox, spec: AgentTaskSpec) -> None:
