@@ -45,6 +45,14 @@ class SandboxConfig:
             gitlab_token=os.getenv("GITLAB_TOKEN", "").strip(),
         )
 
+    def token_for(self, provider_name: str) -> str:
+        """Return the stored access token for *provider_name*, or '' if not configured."""
+        if provider_name == "github":
+            return self.github_token
+        if provider_name == "gitlab":
+            return self.gitlab_token
+        return ""
+
     def container_env(self) -> dict[str, str]:
         """Environment variables to inject into every sandbox container."""
         env: dict[str, str] = {}
