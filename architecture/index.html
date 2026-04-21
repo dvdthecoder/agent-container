@@ -1034,9 +1034,9 @@
 <a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>                           │  Modal internal network
 <a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>                           ▼
 <a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>┌──────────────────────────────────────────────────────────────────┐
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>│  Modal GPU — model serving                                       │
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>│  Modal GPU — SGLang inference server                             │
 <a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>│  modal deploy modal/serve.py  →  stable endpoint                 │
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>│  Qwen3-Coder (or any open model) on A100                         │
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>│  Qwen3-Coder on A100 · RadixAttention prefix caching             │
 <a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>│  Scale-to-zero when idle, billed per GPU second                  │
 <a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>└──────────────────────────────────────────────────────────────────┘
 </code></pre></div>
@@ -1056,6 +1056,10 @@ This means:</p>
 <p>The model runs on Modal GPU infrastructure alongside the sandbox. <code>modal deploy modal/serve.py</code>
 deploys Qwen3-Coder once and gives you a stable internal endpoint. The sandbox container calls
 it over Modal's internal network — no public internet hop, no external API key needed.</p>
+<p>The inference server is <a href="https://github.com/sgl-project/sglang">SGLang</a>. Its <strong>RadixAttention</strong>
+automatically caches shared KV prefixes across requests. Agent runs that share a system prompt and
+repo context (the common case) hit the prefix cache on every run after the first, improving
+throughput and reducing per-token latency under concurrent load.</p>
 <p>Scale-to-zero when idle. Billed per GPU second. No hardware to manage.</p>
 <h3 id="coding-agent-as-a-plugin">Coding agent as a plugin<a class="headerlink" href="#coding-agent-as-a-plugin" title="Permanent link">&para;</a></h3>
 <p>OpenCode is the default backend, but Claude Code CLI and Gemini CLI can run inside the container
