@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+import json
 import shlex
 import time
 import uuid
+from datetime import datetime, timezone
 
 import modal
 from sandbox.config import ConfigError, SandboxConfig
+from sandbox.providers import RepoProvider, detect_provider
 from sandbox.result import AgentTaskResult
 from sandbox.spec import AgentTaskSpec
 
@@ -51,6 +54,12 @@ class ModalSandbox:
                 self._clone(sb, spec)
                 agent_output, exit_code = self._exec_agent(sb, spec)
                 diff, diff_stat = self._collect_diff(sb)
+
+                branch: str | None = None
+                pr_url: str | None = None
+                if exit_code == 0 and diff and spec.create_pr:
+                    branch, pr_url = self._push_and_pr(sb, spec)
+
             except Exception as exc:
                 return AgentTaskResult(
                     success=False,
@@ -63,6 +72,8 @@ class ModalSandbox:
             return AgentTaskResult(
                 success=exit_code == 0,
                 run_id=_run_id(sb),
+                branch=branch,
+                pr_url=pr_url,
                 diff=diff,
                 diff_stat=diff_stat,
                 duration_seconds=time.monotonic() - start,
@@ -122,8 +133,102 @@ class ModalSandbox:
 
         return diff, stat.strip()
 
+    def _push_and_pr(self, sb: modal.Sandbox, spec: AgentTaskSpec) -> tuple[str, str | None]:
+        """Stage, commit, push on a new branch, and open a PR / MR via the provider API.
+
+        Returns ``(branch_name, pr_url)``.  ``pr_url`` is ``None`` when the host is
+        unsupported or the access token is not configured.
+        """
+        branch = _branch_name(spec.backend)
+
+        try:
+            provider = detect_provider(spec.repo)
+        except ValueError:
+            return branch, None  # unsupported host — skip push and PR
+
+        token = self.config.token_for(provider.name)
+        if not token:
+            return branch, None  # no token — skip push and PR
+
+        # git identity is required to create a commit inside the container.
+        self._git(sb, ["config", "user.email", "agent@agent-container"])
+        self._git(sb, ["config", "user.name", "Agent Container"])
+
+        self._git(sb, ["checkout", "-b", branch])
+        self._git(sb, ["add", "-A"])
+        self._git(sb, ["commit", "-m", f"agent: {spec.resolved_task()[:72]}"])
+
+        # Rewrite the remote URL to embed the token so `git push` can authenticate.
+        authed_url = provider.authed_remote(spec.repo, token)
+        self._git(sb, ["remote", "set-url", "origin", authed_url])
+
+        push_proc = sb.exec("git", "push", "origin", branch, workdir="/workspace")
+        push_proc.wait()
+        if push_proc.returncode != 0:
+            raise ConfigError(f"git push failed:\n{push_proc.stderr.read()}")
+
+        owner, repo_name = provider.parse_repo(spec.repo)
+        pr_url = self._open_pr(sb, provider, owner, repo_name, branch, spec)
+        return branch, pr_url
+
+    def _open_pr(
+        self,
+        sb: modal.Sandbox,
+        provider: RepoProvider,
+        owner: str,
+        repo_name: str,
+        branch: str,
+        spec: AgentTaskSpec,
+    ) -> str | None:
+        """Open a PR / MR via the provider REST API. Returns the PR / MR URL."""
+        task = spec.resolved_task()
+        payload = json.dumps(provider.pr_payload(
+            title=task[:72],
+            head_branch=branch,
+            base_branch=spec.base_branch,
+            body=f"Automated change by agent-container (`{spec.backend}`).\n\n**Task:**\n{task}",
+        ))
+
+        # Write the payload to a temp file so we don't need to quote JSON inside a
+        # shell command string — `printf '%s'` treats the argument verbatim.
+        write_proc = sb.exec(
+            "sh", "-c",
+            f"printf '%s' {shlex.quote(payload)} > /tmp/pr_payload.json",
+        )
+        write_proc.wait()
+
+        # Build the curl command with provider-specific headers.
+        # Headers may reference container env vars (e.g. $GITHUB_TOKEN) which the
+        # shell expands because the whole command runs under `sh -c`.
+        header_flags = " ".join(f'-H "{h}"' for h in provider.pr_headers())
+        api_url = provider.pr_api_url(owner, repo_name)
+        curl_proc = sb.exec(
+            "sh", "-c",
+            f"curl -sf -X POST {header_flags} {api_url} -d @/tmp/pr_payload.json",
+        )
+        response = curl_proc.stdout.read()
+        curl_proc.wait()
+        if curl_proc.returncode != 0:
+            raise ConfigError(f"PR creation failed:\n{curl_proc.stderr.read()}")
+
+        data = json.loads(response)
+        return data.get(provider.pr_url_field())
+
+    def _git(self, sb: modal.Sandbox, args: list[str]) -> None:
+        """Run a git sub-command in /workspace, raising ConfigError on non-zero exit."""
+        proc = sb.exec("git", *args, workdir="/workspace")
+        proc.wait()
+        if proc.returncode != 0:
+            raise ConfigError(f"git {args[0]} failed:\n{proc.stderr.read()}")
+
 
 # ------------------------------------------------------------------ helpers
+
+
+def _branch_name(backend: str) -> str:
+    """Return a deterministic, time-stamped branch name for an agent run."""
+    ts = datetime.now(tz=timezone.utc).strftime("%Y%m%d-%H%M%S")
+    return f"agent/{backend}-{ts}"
 
 
 def _agent_command(backend: str, task: str) -> list[str]:

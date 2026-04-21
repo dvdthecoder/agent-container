@@ -53,9 +53,9 @@ PR is opened, and the sandbox is destroyed. The agent never touches your local m
                        │  Modal internal network
                        ▼
 ┌──────────────────────────────────────────────────────────┐
-│  Modal GPU — model serving                               │
+│  Modal GPU — SGLang inference server                     │
 │  modal deploy modal/serve.py                             │
-│  Qwen3-Coder on A100 · scale-to-zero · pay per second   │
+│  Qwen3-Coder on A100 · RadixAttention · scale-to-zero   │
 └──────────────────────────────────────────────────────────┘
 ```
 
@@ -107,7 +107,8 @@ That's it. No Docker, no servers, no infrastructure setup.
 
 ## Model setup
 
-The model runs on Modal GPU infrastructure alongside the sandbox. Deploy it once:
+The model runs on Modal GPU infrastructure alongside the sandbox, served by
+[SGLang](https://github.com/sgl-project/sglang). Deploy it once:
 
 ```bash
 modal deploy modal/serve.py
@@ -116,7 +117,8 @@ modal deploy modal/serve.py
 That's it. The sandbox container calls the model over Modal's internal network automatically —
 no URL to configure, no external API key, no public internet hop.
 
-Qwen3-Coder 80B on an A100. Scale-to-zero when idle.
+Qwen3-Coder on A100 via SGLang. RadixAttention caches shared repo context across agent runs.
+Scale-to-zero when idle.
 
 ---
 

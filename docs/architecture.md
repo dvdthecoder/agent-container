@@ -28,9 +28,9 @@
                            │  Modal internal network
                            ▼
 ┌──────────────────────────────────────────────────────────────────┐
-│  Modal GPU — model serving                                       │
+│  Modal GPU — SGLang inference server                             │
 │  modal deploy modal/serve.py  →  stable endpoint                 │
-│  Qwen3-Coder (or any open model) on A100                         │
+│  Qwen3-Coder on A100 · RadixAttention prefix caching             │
 │  Scale-to-zero when idle, billed per GPU second                  │
 └──────────────────────────────────────────────────────────────────┘
 ```
@@ -55,6 +55,11 @@ This means:
 The model runs on Modal GPU infrastructure alongside the sandbox. `modal deploy modal/serve.py`
 deploys Qwen3-Coder once and gives you a stable internal endpoint. The sandbox container calls
 it over Modal's internal network — no public internet hop, no external API key needed.
+
+The inference server is [SGLang](https://github.com/sgl-project/sglang). Its **RadixAttention**
+automatically caches shared KV prefixes across requests. Agent runs that share a system prompt and
+repo context (the common case) hit the prefix cache on every run after the first, improving
+throughput and reducing per-token latency under concurrent load.
 
 Scale-to-zero when idle. Billed per GPU second. No hardware to manage.
 

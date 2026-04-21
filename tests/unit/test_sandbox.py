@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from sandbox.config import SandboxConfig
-from sandbox.sandbox import ModalSandbox, _agent_command
+from sandbox.sandbox import ModalSandbox, _agent_command, _branch_name
 from sandbox.spec import AgentTaskSpec
 
 
@@ -50,14 +50,127 @@ def test_run_success_returns_result(mock_create):
 
     sb.exec.side_effect = [clone_proc, agent_proc, diff_proc, stat_proc]
 
-    result = ModalSandbox(_config()).run(_spec())
+    # create_pr=False so the test doesn't need to mock PR exec calls.
+    result = ModalSandbox(_config()).run(_spec(create_pr=False))
 
     assert result.success is True
     assert result.run_id == "sb-abc123"
     assert result.diff == "diff --git a/f b/f\n+fix"
     assert result.diff_stat == "1 file changed"
+    assert result.branch is None
+    assert result.pr_url is None
     assert result.error is None
     assert result.backend == "opencode"
+    sb.terminate.assert_called_once()
+
+
+@patch("sandbox.sandbox.modal.Sandbox.create")
+def test_run_creates_pr_when_agent_produces_diff(mock_create):
+    sb = MagicMock()
+    sb.object_id = "sb-pr"
+    mock_create.return_value = sb
+
+    clone_proc = _make_proc(returncode=0)
+    agent_proc = _make_proc(stdout="done", returncode=0)
+    diff_proc = _make_proc(stdout="diff --git a/f b/f\n+fix")
+    stat_proc = _make_proc(stdout=" 1 file changed")
+    # _push_and_pr: git config×2, checkout, add, commit, remote set-url, push
+    pr_git_procs = [_make_proc() for _ in range(7)]
+    write_payload_proc = _make_proc()
+    curl_proc = _make_proc(stdout='{"html_url": "https://github.com/org/repo/pull/42"}')
+
+    sb.exec.side_effect = [
+        clone_proc, agent_proc, diff_proc, stat_proc,
+        *pr_git_procs,
+        write_payload_proc, curl_proc,
+    ]
+
+    config = SandboxConfig(github_token="ghp_test")
+    result = ModalSandbox(config).run(
+        _spec(repo="https://github.com/org/repo", create_pr=True)
+    )
+
+    assert result.success is True
+    assert result.branch is not None
+    assert result.branch.startswith("agent/opencode-")
+    assert result.pr_url == "https://github.com/org/repo/pull/42"
+    sb.terminate.assert_called_once()
+
+
+@patch("sandbox.sandbox.modal.Sandbox.create")
+def test_run_skips_pr_when_no_diff(mock_create):
+    sb = MagicMock()
+    mock_create.return_value = sb
+    sb.exec.return_value = _make_proc()  # diff stdout="" → falsy
+
+    result = ModalSandbox(_config()).run(_spec(create_pr=True))
+
+    assert result.success is True
+    assert result.branch is None
+    assert result.pr_url is None
+
+
+@patch("sandbox.sandbox.modal.Sandbox.create")
+def test_run_skips_pr_when_create_pr_false(mock_create):
+    sb = MagicMock()
+    mock_create.return_value = sb
+    clone_proc = _make_proc()
+    agent_proc = _make_proc(stdout="done")
+    diff_proc = _make_proc(stdout="diff --git a/f b/f\n+fix")
+    stat_proc = _make_proc(stdout=" 1 file changed")
+    sb.exec.side_effect = [clone_proc, agent_proc, diff_proc, stat_proc]
+
+    result = ModalSandbox(_config()).run(_spec(create_pr=False))
+
+    assert result.branch is None
+    assert result.pr_url is None
+
+
+@patch("sandbox.sandbox.modal.Sandbox.create")
+def test_run_skips_pr_when_no_github_token(mock_create):
+    """No GITHUB_TOKEN — provider is detected but token check fails fast; no git ops run."""
+    sb = MagicMock()
+    sb.object_id = "sb-no-token"
+    mock_create.return_value = sb
+
+    clone_proc = _make_proc()
+    agent_proc = _make_proc(stdout="done")
+    diff_proc = _make_proc(stdout="diff --git a/f b/f\n+fix")
+    stat_proc = _make_proc(stdout=" 1 file changed")
+    # Provider is detected and token is missing before any git exec — only 4 calls total.
+    sb.exec.side_effect = [clone_proc, agent_proc, diff_proc, stat_proc]
+
+    result = ModalSandbox(SandboxConfig()).run(
+        _spec(repo="https://github.com/org/repo", create_pr=True)
+    )
+
+    assert result.success is True
+    assert result.branch is not None  # branch name is still generated
+    assert result.pr_url is None
+
+
+@patch("sandbox.sandbox.modal.Sandbox.create")
+def test_push_failure_returns_failed_result(mock_create):
+    sb = MagicMock()
+    sb.object_id = "sb-push-fail"
+    mock_create.return_value = sb
+
+    clone_proc = _make_proc()
+    agent_proc = _make_proc(stdout="done")
+    diff_proc = _make_proc(stdout="diff --git a/f b/f\n+fix")
+    stat_proc = _make_proc(stdout=" 1 file changed")
+    git_procs = [_make_proc() for _ in range(6)]
+    push_proc = _make_proc(returncode=1)
+    push_proc.stderr.read.return_value = "remote: Permission denied"
+    sb.exec.side_effect = [clone_proc, agent_proc, diff_proc, stat_proc, *git_procs, push_proc]
+
+    config = SandboxConfig(github_token="ghp_test")
+    result = ModalSandbox(config).run(
+        _spec(repo="https://github.com/org/repo", create_pr=True)
+    )
+
+    assert result.success is False
+    assert "git push failed" in result.error
     sb.terminate.assert_called_once()
 
 
@@ -239,3 +352,15 @@ def test_empty_env_passes_no_secrets(mock_create):
 
     _, kwargs = mock_create.call_args
     assert kwargs["secrets"] == []
+
+
+# ------------------------------------------------------------------ branch name
+
+
+def test_branch_name_format():
+    branch = _branch_name("opencode")
+    assert branch.startswith("agent/opencode-")
+    # timestamp portion: YYYYMMDD-HHMMSS
+    ts_part = branch[len("agent/opencode-"):]
+    assert len(ts_part) == 15
+    assert ts_part[8] == "-"
