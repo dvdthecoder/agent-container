@@ -16,6 +16,7 @@ class AgentTaskSpec:
     env: dict[str, str] = field(default_factory=dict)
     timeout_seconds: int = 300
     create_pr: bool = True
+    run_tests: bool = True      # auto-detect and run the project test suite
     backend: str = "opencode"  # opencode | claude | gemini
 
     def __post_init__(self) -> None:
