@@ -1,17 +1,22 @@
-"""Modal-based agent sandbox: boot → exec → teardown."""
+"""Modal-based agent sandbox: boot → exec → teardown.
+
+ModalSandbox is the orchestrator.  Domain logic lives in dedicated modules:
+  agent.git_ops  — clone, diff, push, PR
+  agent.runner   — invoke the coding agent backend
+  agent.tester   — detect and run the project test suite
+  agent.backends — per-backend command construction
+"""
 
 from __future__ import annotations
 
-import json
-import shlex
 import time
 import uuid
-from datetime import datetime, timezone
 
 import modal
-from sandbox.config import ConfigError, SandboxConfig
-from sandbox.providers import RepoProvider, detect_provider
-from sandbox.result import AgentTaskResult
+from agent import git_ops, runner, tester
+from agent.backends import get_backend
+from sandbox.config import SandboxConfig
+from sandbox.result import AgentTaskResult, SuiteResult
 from sandbox.spec import AgentTaskSpec
 
 # Base image — git + Node (for opencode) + Python pre-installed.
@@ -32,10 +37,12 @@ class ModalSandbox:
 
     Lifecycle per call to :meth:`run`:
       1. Create a Modal sandbox with the configured image
-      2. Clone the target repo inside the sandbox
-      3. Run the coding agent (opencode / claude / gemini / stub)
-      4. Collect ``git diff`` output
-      5. Terminate the sandbox (always, even on failure)
+      2. Clone the target repo
+      3. Run the coding agent backend
+      4. Run the project test suite (if ``spec.run_tests`` is True)
+      5. Collect ``git diff`` output
+      6. Push branch and open PR (if ``spec.create_pr`` is True and diff is non-empty)
+      7. Terminate the sandbox (always, even on failure)
     """
 
     def __init__(self, config: SandboxConfig) -> None:
@@ -51,14 +58,28 @@ class ModalSandbox:
         try:
             try:
                 sb = self._create(spec, app)
-                self._clone(sb, spec)
-                agent_output, exit_code = self._exec_agent(sb, spec)
-                diff, diff_stat = self._collect_diff(sb)
+                git_ops.clone(sb, spec.repo, spec.base_branch)
+
+                backend = get_backend(spec.backend)
+                agent_output, exit_code = runner.run_agent(sb, backend, spec.resolved_task())
+
+                suite: SuiteResult | None = None
+                if exit_code == 0 and spec.run_tests:
+                    suite = tester.detect_and_run(sb)
+
+                diff, diff_stat = git_ops.collect_diff(sb)
 
                 branch: str | None = None
                 pr_url: str | None = None
                 if exit_code == 0 and diff and spec.create_pr:
-                    branch, pr_url = self._push_and_pr(sb, spec)
+                    branch, pr_url = git_ops.push_and_pr(
+                        sb,
+                        repo=spec.repo,
+                        base_branch=spec.base_branch,
+                        backend=spec.backend,
+                        task=spec.resolved_task(),
+                        config=self.config,
+                    )
 
             except Exception as exc:
                 return AgentTaskResult(
@@ -76,6 +97,7 @@ class ModalSandbox:
                 pr_url=pr_url,
                 diff=diff,
                 diff_stat=diff_stat,
+                tests=suite,
                 duration_seconds=time.monotonic() - start,
                 error=None if exit_code == 0 else agent_output,
                 backend=spec.backend,
@@ -100,148 +122,8 @@ class ModalSandbox:
             app=app,
         )
 
-    def _clone(self, sb: modal.Sandbox, spec: AgentTaskSpec) -> None:
-        proc = sb.exec(
-            "git",
-            "clone",
-            "--branch",
-            spec.base_branch,
-            "--depth",
-            "1",
-            spec.repo,
-            "/workspace",
-        )
-        proc.wait()
-        if proc.returncode != 0:
-            raise ConfigError(f"git clone failed:\n{proc.stderr.read()}")
-
-    def _exec_agent(self, sb: modal.Sandbox, spec: AgentTaskSpec) -> tuple[str, int]:
-        cmd = _agent_command(spec.backend, spec.resolved_task())
-        proc = sb.exec(*cmd, workdir="/workspace")
-        output = proc.stdout.read()
-        proc.wait()
-        return output, proc.returncode
-
-    def _collect_diff(self, sb: modal.Sandbox) -> tuple[str, str]:
-        diff_proc = sb.exec("git", "diff", "HEAD", workdir="/workspace")
-        diff = diff_proc.stdout.read()
-        diff_proc.wait()
-
-        stat_proc = sb.exec("git", "diff", "--stat", "HEAD", workdir="/workspace")
-        stat = stat_proc.stdout.read()
-        stat_proc.wait()
-
-        return diff, stat.strip()
-
-    def _push_and_pr(self, sb: modal.Sandbox, spec: AgentTaskSpec) -> tuple[str, str | None]:
-        """Stage, commit, push on a new branch, and open a PR / MR via the provider API.
-
-        Returns ``(branch_name, pr_url)``.  ``pr_url`` is ``None`` when the host is
-        unsupported or the access token is not configured.
-        """
-        branch = _branch_name(spec.backend)
-
-        try:
-            provider = detect_provider(spec.repo)
-        except ValueError:
-            return branch, None  # unsupported host — skip push and PR
-
-        token = self.config.token_for(provider.name)
-        if not token:
-            return branch, None  # no token — skip push and PR
-
-        # git identity is required to create a commit inside the container.
-        self._git(sb, ["config", "user.email", "agent@agent-container"])
-        self._git(sb, ["config", "user.name", "Agent Container"])
-
-        self._git(sb, ["checkout", "-b", branch])
-        self._git(sb, ["add", "-A"])
-        self._git(sb, ["commit", "-m", f"agent: {spec.resolved_task()[:72]}"])
-
-        # Rewrite the remote URL to embed the token so `git push` can authenticate.
-        authed_url = provider.authed_remote(spec.repo, token)
-        self._git(sb, ["remote", "set-url", "origin", authed_url])
-
-        push_proc = sb.exec("git", "push", "origin", branch, workdir="/workspace")
-        push_proc.wait()
-        if push_proc.returncode != 0:
-            raise ConfigError(f"git push failed:\n{push_proc.stderr.read()}")
-
-        owner, repo_name = provider.parse_repo(spec.repo)
-        pr_url = self._open_pr(sb, provider, owner, repo_name, branch, spec)
-        return branch, pr_url
-
-    def _open_pr(
-        self,
-        sb: modal.Sandbox,
-        provider: RepoProvider,
-        owner: str,
-        repo_name: str,
-        branch: str,
-        spec: AgentTaskSpec,
-    ) -> str | None:
-        """Open a PR / MR via the provider REST API. Returns the PR / MR URL."""
-        task = spec.resolved_task()
-        payload = json.dumps(provider.pr_payload(
-            title=task[:72],
-            head_branch=branch,
-            base_branch=spec.base_branch,
-            body=f"Automated change by agent-container (`{spec.backend}`).\n\n**Task:**\n{task}",
-        ))
-
-        # Write the payload to a temp file so we don't need to quote JSON inside a
-        # shell command string — `printf '%s'` treats the argument verbatim.
-        write_proc = sb.exec(
-            "sh", "-c",
-            f"printf '%s' {shlex.quote(payload)} > /tmp/pr_payload.json",
-        )
-        write_proc.wait()
-
-        # Build the curl command with provider-specific headers.
-        # Headers may reference container env vars (e.g. $GITHUB_TOKEN) which the
-        # shell expands because the whole command runs under `sh -c`.
-        header_flags = " ".join(f'-H "{h}"' for h in provider.pr_headers())
-        api_url = provider.pr_api_url(owner, repo_name)
-        curl_proc = sb.exec(
-            "sh", "-c",
-            f"curl -sf -X POST {header_flags} {api_url} -d @/tmp/pr_payload.json",
-        )
-        response = curl_proc.stdout.read()
-        curl_proc.wait()
-        if curl_proc.returncode != 0:
-            raise ConfigError(f"PR creation failed:\n{curl_proc.stderr.read()}")
-
-        data = json.loads(response)
-        return data.get(provider.pr_url_field())
-
-    def _git(self, sb: modal.Sandbox, args: list[str]) -> None:
-        """Run a git sub-command in /workspace, raising ConfigError on non-zero exit."""
-        proc = sb.exec("git", *args, workdir="/workspace")
-        proc.wait()
-        if proc.returncode != 0:
-            raise ConfigError(f"git {args[0]} failed:\n{proc.stderr.read()}")
-
 
 # ------------------------------------------------------------------ helpers
-
-
-def _branch_name(backend: str) -> str:
-    """Return a deterministic, time-stamped branch name for an agent run."""
-    ts = datetime.now(tz=timezone.utc).strftime("%Y%m%d-%H%M%S")
-    return f"agent/{backend}-{ts}"
-
-
-def _agent_command(backend: str, task: str) -> list[str]:
-    """Return the argv to run the coding agent inside the sandbox."""
-    if backend == "opencode":
-        return ["opencode", "--print", "-m", task]
-    if backend == "claude":
-        return ["claude", "--print", task]
-    if backend == "gemini":
-        return ["gemini", "--yolo", "-p", task]
-    if backend == "stub":
-        return ["sh", "-c", f"echo {shlex.quote(task)}"]
-    raise ValueError(f"Unknown backend: {backend!r}")
 
 
 def _terminate(sb: modal.Sandbox | None) -> None:

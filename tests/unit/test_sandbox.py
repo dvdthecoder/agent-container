@@ -5,12 +5,13 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from sandbox.config import SandboxConfig
-from sandbox.sandbox import ModalSandbox, _agent_command, _branch_name
+from sandbox.sandbox import ModalSandbox
 from sandbox.spec import AgentTaskSpec
 
 
 def _spec(**kwargs) -> AgentTaskSpec:
-    defaults = dict(repo="https://github.com/org/repo", task="fix it")
+    # run_tests=False keeps side_effect lists predictable — tester tests are in test_tester.py
+    defaults = dict(repo="https://github.com/org/repo", task="fix it", run_tests=False)
     return AgentTaskSpec(**{**defaults, **kwargs})
 
 
@@ -275,34 +276,6 @@ def test_sandbox_create_failure_returns_failed_result(_mock_create):
     assert "Modal API error" in result.error
 
 
-# ------------------------------------------------------------------ agent commands
-
-
-@pytest.mark.parametrize(
-    "backend, expected_start",
-    [
-        ("opencode", ["opencode", "--print", "-m"]),
-        ("claude", ["claude", "--print"]),
-        ("gemini", ["gemini", "--yolo", "-p"]),
-        ("stub", ["sh", "-c"]),
-    ],
-)
-def test_agent_command_dispatch(backend, expected_start):
-    cmd = _agent_command(backend, "fix it")
-    assert cmd[: len(expected_start)] == expected_start
-
-
-def test_agent_command_unknown_backend_raises():
-    with pytest.raises(ValueError, match="Unknown backend"):
-        _agent_command("gpt-pilot", "fix it")
-
-
-def test_agent_command_stub_quotes_task():
-    cmd = _agent_command("stub", "task with 'quotes'")
-    # sh -c arg must safely contain the task
-    assert "task with" in cmd[-1]
-
-
 # ------------------------------------------------------------------ env vars
 
 
@@ -354,13 +327,4 @@ def test_empty_env_passes_no_secrets(mock_create):
     assert kwargs["secrets"] == []
 
 
-# ------------------------------------------------------------------ branch name
-
-
-def test_branch_name_format():
-    branch = _branch_name("opencode")
-    assert branch.startswith("agent/opencode-")
-    # timestamp portion: YYYYMMDD-HHMMSS
-    ts_part = branch[len("agent/opencode-"):]
-    assert len(ts_part) == 15
-    assert ts_part[8] == "-"
+# branch_name and agent command tests live in test_git_ops.py and test_backends.py
