@@ -116,18 +116,27 @@ make lint               # ruff check
 
 ## Model setup
 
-The model runs on Modal GPU infrastructure alongside the sandbox, served by
-[SGLang](https://github.com/sgl-project/sglang). Deploy it once:
+Two options — both work with zero code changes:
 
+**Option A — MiniMax M2.5 hosted API** (recommended, no GPU setup):
 ```bash
-modal deploy modal/serve.py
+OPENAI_BASE_URL=https://api.minimax.chat/v1
+OPENAI_API_KEY=your-minimax-api-key   # platform.minimax.chat
+OPENCODE_MODEL=MiniMax-M2.5
 ```
 
-That's it. The sandbox container calls the model over Modal's internal network automatically —
-no URL to configure, no external API key, no public internet hop.
+**Option B — Self-hosted on Modal GPU** (full control, scale-to-zero):
+```bash
+# Qwen3-Coder (default)
+modal deploy modal/serve.py
 
-Qwen3-Coder on A100 via SGLang. RadixAttention caches shared repo context across agent runs.
-Scale-to-zero when idle.
+# MiniMax M2.5 on 8× A100 80GB
+SERVE_PROFILE=minimax modal deploy modal/serve.py
+```
+
+MiniMax M2.5 is currently **#1 on SWE-bench** — the standard benchmark for real-repo code editing.
+It uses a MoE architecture (~45B active params, 1M context). See [Model setup](docs/models.md) for
+full profile table and GPU requirements.
 
 ---
 
