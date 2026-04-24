@@ -97,6 +97,7 @@ def dashboard(host: str, port: int) -> None:
     """Start the web dashboard."""
     try:
         import uvicorn
+
         from dashboard.app import app  # type: ignore[import-not-found]
     except ImportError:
         click.echo("Dashboard dependencies not installed.", err=True)
