@@ -975,9 +975,9 @@ OpenAI-compatible model endpoint.</p>
 <a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="nv">OPENAI_API_KEY</span><span class="o">=</span>...
 <a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="nv">OPENCODE_MODEL</span><span class="o">=</span>...
 </code></pre></div>
-<p><strong>Best for</strong>: teams wanting the highest quality results. Point <code>OPENAI_BASE_URL</code> at MiniMax's hosted
-API for the #1 SWE-bench model with zero GPU setup, or at a self-hosted SGLang endpoint for full
-air-gap deployments. The model is fully under your control.</p>
+<p><strong>Best for</strong>: teams wanting the best quality-to-cost ratio. Point <code>OPENAI_BASE_URL</code> at DeepSeek's
+API (<code>deepseek-v4-pro</code>) for ~74% aider score at ~$1–3/run, or at a self-hosted SGLang endpoint
+for full air-gap deployments. The model is fully under your control.</p>
 <p>Invoked inside the container as:
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>opencode<span class="w"> </span>--print<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;&lt;task prompt&gt;&quot;</span>
 </code></pre></div></p>
@@ -1042,7 +1042,7 @@ backend keeps prompts within your GCP project.</p>
 </tr>
 <tr>
 <td>Recommended model</td>
-<td>MiniMax-M2.5 (#1 SWE-bench)</td>
+<td>deepseek-v4-pro (~74% aider)</td>
 <td>Claude Sonnet 4.5</td>
 <td>Gemini 2.5 Pro</td>
 </tr>

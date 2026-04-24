@@ -1002,7 +1002,7 @@
 <li>Python 3.11+</li>
 <li>A <a href="https://modal.com">Modal</a> account (free tier works)</li>
 <li>A GitHub personal access token</li>
-<li>A MiniMax API key — get one at <a href="https://platform.minimax.io">platform.minimax.io</a> (recommended)
+<li>A DeepSeek API key — get one at <a href="https://platform.deepseek.com">platform.deepseek.com</a> (recommended)
   or any other OpenAI-compatible model endpoint</li>
 </ul>
 <h2 id="1-install">1. Install<a class="headerlink" href="#1-install" title="Permanent link">&para;</a></h2>
@@ -1024,17 +1024,17 @@
 <a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="c1"># GitHub</span>
 <a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="nv">GITHUB_TOKEN</span><span class="o">=</span>ghp_...
 <a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>
-<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="c1"># Model — MiniMax M2.5 hosted API (recommended, no GPU setup)</span>
-<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="nv">OPENAI_BASE_URL</span><span class="o">=</span>https://api.minimax.io/v1
-<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="nv">OPENAI_API_KEY</span><span class="o">=</span>your-minimax-api-key
-<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="nv">OPENCODE_MODEL</span><span class="o">=</span>MiniMax-M2.5
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="c1"># Model — DeepSeek V4 Pro (recommended: ~74% aider score, ~$1-3/run, 1M context)</span>
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="nv">OPENAI_BASE_URL</span><span class="o">=</span>https://api.deepseek.com/v1
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="nv">OPENAI_API_KEY</span><span class="o">=</span>your-deepseek-api-key
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="nv">OPENCODE_MODEL</span><span class="o">=</span>deepseek-v4-pro
 </code></pre></div>
 <div class="admonition tip">
 <p class="admonition-title">Self-hosted model (optional)</p>
 <p>To run the model on your own Modal GPU instead:
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>modal<span class="w"> </span>deploy<span class="w"> </span>modal/serve.py<span class="w">            </span><span class="c1"># Qwen3-Coder 8B (test)</span>
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="nv">SERVE_PROFILE</span><span class="o">=</span>prod<span class="w"> </span>modal<span class="w"> </span>deploy<span class="w"> </span>...<span class="w">    </span><span class="c1"># Qwen3-Coder 80B</span>
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="nv">SERVE_PROFILE</span><span class="o">=</span>minimax<span class="w"> </span>modal<span class="w"> </span>deploy<span class="w"> </span>...<span class="w"> </span><span class="c1"># MiniMax M2.5 on 8× A100</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nv">SERVE_PROFILE</span><span class="o">=</span>minimax<span class="w"> </span>modal<span class="w"> </span>deploy<span class="w"> </span>modal/serve.py<span class="w">  </span><span class="c1"># MiniMax M2.5, 8× A100</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="nv">SERVE_PROFILE</span><span class="o">=</span>prod<span class="w">    </span>modal<span class="w"> </span>deploy<span class="w"> </span>modal/serve.py<span class="w">  </span><span class="c1"># Qwen3-Coder 80B</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>modal<span class="w"> </span>deploy<span class="w"> </span>modal/serve.py<span class="w">                        </span><span class="c1"># Qwen3-Coder 8B (test)</span>
 </code></pre></div>
 Then set <code>OPENAI_BASE_URL</code> to the printed endpoint URL.</p>
 </div>
