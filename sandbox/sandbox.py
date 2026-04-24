@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import time
 import uuid
+from collections.abc import Callable
 
 import modal
 from agent import git_ops, runner, tester
@@ -50,21 +51,46 @@ class ModalSandbox:
 
     # ------------------------------------------------------------------ public
 
-    def run(self, spec: AgentTaskSpec) -> AgentTaskResult:
+    def run(
+        self,
+        spec: AgentTaskSpec,
+        on_event: Callable[[str, dict], None] | None = None,
+    ) -> AgentTaskResult:
+        """Run the agent pipeline.
+
+        Args:
+            spec: Task specification.
+            on_event: Optional callback invoked as ``on_event(event_type, payload)``
+                      at each lifecycle transition.  Used by the dashboard to stream
+                      progress without coupling sandbox logic to FastAPI.
+        """
+        def _emit(event_type: str, **payload) -> None:
+            if on_event is not None:
+                try:
+                    on_event(event_type, payload)
+                except Exception:
+                    pass  # never let dashboard callbacks crash the run
+
         start = time.monotonic()
         sb: modal.Sandbox | None = None
         # Unique app per run — avoids collisions when multiple runs execute in parallel.
         app = modal.App.lookup(f"agent-container-{uuid.uuid4().hex[:8]}", create_if_missing=True)
         try:
             try:
+                _emit("phase", phase="BOOTING")
                 sb = self._create(spec, app)
+
+                _emit("phase", phase="CLONING")
                 git_ops.clone(sb, spec.repo, spec.base_branch)
 
+                _emit("phase", phase="RUNNING")
                 backend = get_backend(spec.backend)
                 agent_output, exit_code = runner.run_agent(sb, backend, spec.resolved_task())
+                _emit("log", text=agent_output)
 
                 suite: SuiteResult | None = None
                 if exit_code == 0 and spec.run_tests:
+                    _emit("phase", phase="TESTING")
                     suite = tester.detect_and_run(sb)
 
                 diff, diff_stat = git_ops.collect_diff(sb)
@@ -72,6 +98,7 @@ class ModalSandbox:
                 branch: str | None = None
                 pr_url: str | None = None
                 if exit_code == 0 and diff and spec.create_pr:
+                    _emit("phase", phase="PR")
                     branch, pr_url = git_ops.push_and_pr(
                         sb,
                         repo=spec.repo,
@@ -82,15 +109,17 @@ class ModalSandbox:
                     )
 
             except Exception as exc:
-                return AgentTaskResult(
+                result = AgentTaskResult(
                     success=False,
                     run_id=_run_id(sb),
                     duration_seconds=time.monotonic() - start,
                     error=str(exc),
                     backend=spec.backend,
                 )
+                _emit("done", success=False, error=str(exc), result=result)
+                return result
 
-            return AgentTaskResult(
+            result = AgentTaskResult(
                 success=exit_code == 0,
                 run_id=_run_id(sb),
                 branch=branch,
@@ -102,6 +131,15 @@ class ModalSandbox:
                 error=None if exit_code == 0 else agent_output,
                 backend=spec.backend,
             )
+            _emit(
+                "done",
+                success=result.success,
+                pr_url=pr_url,
+                diff_stat=diff_stat,
+                error=result.error,
+                result=result,
+            )
+            return result
         finally:
             # Always terminate — even on KeyboardInterrupt or other BaseException.
             _terminate(sb)
