@@ -5,35 +5,68 @@ directly from Claude Code or Gemini CLI sessions — without leaving your editor
 
 ## Setup
 
+Both `.claude/settings.json` and `.gemini/settings.json` are already checked into this repo.
+Clone the repo, fill in your tokens, and the tools appear automatically.
+
 === "Claude Code"
 
-    Add to `.claude/settings.json` in your repo (checked in — team gets this automatically):
+    `.claude/settings.json` (already in the repo):
 
     ```json
     {
       "mcpServers": {
         "agent-container": {
-          "command": "python",
-          "args": ["-m", "mcp.server"]
+          "command": "python3",
+          "args": ["-m", "mcp_server.server"],
+          "env": {
+            "MODAL_TOKEN_ID": "",
+            "MODAL_TOKEN_SECRET": "",
+            "GITHUB_TOKEN": "",
+            "OPENAI_BASE_URL": "",
+            "OPENAI_API_KEY": ""
+          }
         }
       }
     }
+    ```
+
+    Verify with:
+    ```bash
+    claude mcp list
+    # agent-container   python3 -m mcp_server.server
     ```
 
 === "Gemini CLI"
 
-    Add to `~/.gemini/settings.json`:
+    `.gemini/settings.json` (already in the repo):
 
     ```json
     {
       "mcpServers": {
         "agent-container": {
-          "command": "python",
-          "args": ["-m", "mcp.server"]
+          "command": "python3",
+          "args": ["-m", "mcp_server.server"],
+          "env": {
+            "MODAL_TOKEN_ID": "",
+            "MODAL_TOKEN_SECRET": "",
+            "GITHUB_TOKEN": "",
+            "OPENAI_BASE_URL": "",
+            "OPENAI_API_KEY": ""
+          }
         }
       }
     }
     ```
+
+## Start the server standalone
+
+```bash
+make mcp
+# or: python3 -m mcp_server.server
+
+# SSE mode (remote / multi-client)
+python3 -m mcp_server.server --transport sse --port 8001
+```
 
 ## Usage
 
@@ -45,7 +78,7 @@ You:     "Fix the pagination bug in org/myapp"
 Claude:  I'll run that in the agent sandbox.
          [calls sandbox_run]
 
-         Done. PR #42 opened on branch agent/fix-pagination-20260410.
+         Done. PR #42 opened on branch agent/opencode-20260424-120000.
          +12 −3 in api/pagination.py. Tests: 24 passed.
 
          Want me to review the diff before it merges?
@@ -55,10 +88,10 @@ Claude:  I'll run that in the agent sandbox.
 
 | Tool | Description |
 |---|---|
-| `sandbox_run` | Start an agent task. Returns run ID immediately. |
-| `sandbox_status` | Get the current status of a run. |
-| `sandbox_list` | List all recent runs with status and PR links. |
-| `sandbox_stop` | Stop a running task and destroy its sandbox. |
+| `sandbox_run` | Boot a sandbox, run the agent, return the result. |
+| `sandbox_status` | Get the current phase + event log for a run. |
+| `sandbox_list` | List all runs (active, completed, failed) sorted newest-first. |
+| `sandbox_stop` | Cancel a running task and mark it terminal. |
 
 ### `sandbox_run` parameters
 
@@ -67,8 +100,9 @@ Claude:  I'll run that in the agent sandbox.
   "repo": "https://github.com/org/myapp",
   "task": "Fix the off-by-one in paginate()",
   "backend": "opencode",
-  "branch": "main",
+  "base_branch": "main",
   "create_pr": true,
+  "run_tests": true,
   "timeout_seconds": 300
 }
 ```
@@ -78,9 +112,9 @@ Claude:  I'll run that in the agent sandbox.
 Both CLIs can trigger runs via their Bash tool without any MCP setup:
 
 ```bash
-# inside a Claude Code session
-$ agent-run --repo https://github.com/org/myapp --task "Fix the login bug"
+# inside a Claude Code or Gemini CLI session
+agent-run --repo https://github.com/org/myapp --task "Fix the login bug"
 ```
 
-MCP is the upgrade: structured typed output, progress streaming, and no raw terminal dump in
+MCP is the upgrade: structured typed output, progress notifications, and no raw terminal dump in
 the conversation.

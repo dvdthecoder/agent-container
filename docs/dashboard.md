@@ -5,8 +5,9 @@ The dashboard is a live admin view of all agent runs — running, completed, and
 ## Start
 
 ```bash
-agent-run dashboard
-# → http://localhost:8080
+make dashboard
+# or: uvicorn dashboard.app:app --reload --port 8000
+# → http://localhost:8000
 ```
 
 ## What you see
