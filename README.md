@@ -103,6 +103,15 @@ agent-run \
 
 That's it. No Docker, no servers, no infrastructure setup.
 
+### Common commands
+
+```bash
+make test               # run unit tests
+make dashboard          # start live dashboard at http://localhost:8000
+make mcp                # start MCP server (stdio) for Claude Code / Gemini CLI
+make lint               # ruff check
+```
+
 ---
 
 ## Model setup
@@ -144,8 +153,8 @@ agent-run --backend gemini  ...    # Gemini CLI — Google AI / Vertex AI
 ## Dashboard
 
 ```bash
-agent-run dashboard
-# → http://localhost:8080
+make dashboard
+# → http://localhost:8000
 ```
 
 Live view of all running, completed, and failed agent runs. Each run streams phase changes and log
@@ -187,12 +196,19 @@ print(result.diff_stat)   # +67 −3
 The sandbox exposes an MCP server so you can trigger runs directly from your editor session.
 
 ```json
-// .claude/settings.json
+// .claude/settings.json  (already checked in — fill in your tokens)
 {
   "mcpServers": {
     "agent-container": {
-      "command": "python",
-      "args": ["-m", "mcp.server"]
+      "command": "python3",
+      "args": ["-m", "mcp_server.server"],
+      "env": {
+        "MODAL_TOKEN_ID": "",
+        "MODAL_TOKEN_SECRET": "",
+        "GITHUB_TOKEN": "",
+        "OPENAI_BASE_URL": "",
+        "OPENAI_API_KEY": ""
+      }
     }
   }
 }
@@ -225,26 +241,33 @@ test results, original task prompt). Human approval required before merge.
 
 ---
 
-## Testing strategy
+## Testing
+
+```bash
+make test               # unit tests — no external services, always free
+make test-integration   # Modal sandbox lifecycle with stub agent (no LLM)
+make test-e2e           # nightly — real model against fixture repo
+```
 
 | Layer | What runs | Cost | Trigger |
 |---|---|---|---|
-| Unit | Config, spec, result, sandbox (mocked) | $0 | Every commit |
-| Integration | Full Modal sandbox lifecycle, stub agent | Modal compute only | Every PR |
-| E2e | Real model + fixture repo | ~$0.05/run | Nightly |
+| Unit | All modules fully mocked | $0 | Every commit |
+| Integration | Real Modal sandbox, stub agent | Modal compute only | Every PR |
+| E2E | Real Modal sandbox + real model | ~$0.05/run | Nightly |
 
 ---
 
 ## Milestones
 
-| Milestone | Scope |
-|---|---|
-| M1: Core dataclasses | `SandboxConfig`, `AgentTaskSpec`, `AgentTaskResult` ✅ |
-| M2: Modal sandbox | `ModalSandbox` boot/run/teardown, CLI |
-| M3: Agent internals | OpenCode runner, test detection, git ops |
-| M4: Dashboard | FastAPI SSE API, live UI |
-| M5: Model serving | `modal/serve.py` — deploy open model on Modal GPU |
-| M6: MCP + backends | MCP server, Claude Code + Gemini CLI backends |
+| Milestone | Scope | Status |
+|---|---|---|
+| M1: Core dataclasses | `SandboxConfig`, `AgentTaskSpec`, `AgentTaskResult` | ✅ |
+| M2: Modal sandbox | `ModalSandbox` boot/run/teardown, CLI | ✅ |
+| M3: Agent internals | Backends, runner, tester, git ops, GitHub/GitLab providers | ✅ |
+| M4: Dashboard | FastAPI SSE API, live terminal UI | ✅ |
+| M5: Model serving | `modal/serve.py` — SGLang + Qwen3-Coder on Modal GPU | ✅ |
+| M6: MCP + backends | MCP server, Claude Code + Gemini CLI backends | ✅ |
+| M7: Hardening | CI workflows, examples, docs | ✅ |
 
 ---
 
