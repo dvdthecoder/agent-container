@@ -35,8 +35,9 @@ OPENAI_API_KEY=...
 OPENCODE_MODEL=...
 ```
 
-**Best for**: teams using self-hosted or third-party models (Together.ai, Modal GPU, SGLang).
-OpenCode routes all calls through `OPENAI_BASE_URL`, so the model is fully under your control.
+**Best for**: teams wanting the highest quality results. Point `OPENAI_BASE_URL` at MiniMax's hosted
+API for the #1 SWE-bench model with zero GPU setup, or at a self-hosted SGLang endpoint for full
+air-gap deployments. The model is fully under your control.
 
 Invoked inside the container as:
 ```bash
@@ -95,8 +96,8 @@ backend keeps prompts within your GCP project.
 |---|---|---|---|
 | Model | Any via `OPENAI_BASE_URL` | Anthropic API | Google AI / Vertex |
 | Open source | ✅ | ❌ | ✅ |
-| Air-gap capable | ✅ (with SGLang) | ❌ | ✅ (Vertex AI) |
-| SWE-bench (best model) | 70.6 (Qwen3-Coder) | 72.5 (Claude Sonnet) | ~65 (Gemini 2.5 Pro) |
+| Air-gap capable | ✅ (with SGLang or MiniMax) | ❌ | ✅ (Vertex AI) |
+| Recommended model | MiniMax-M2.5 (#1 SWE-bench) | Claude Sonnet 4.5 | Gemini 2.5 Pro |
 
 ---
 

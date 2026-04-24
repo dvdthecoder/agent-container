@@ -46,7 +46,7 @@ Your terminal / dashboard / Claude Code session
         ↓
   Coding agent   ← OpenCode / Claude Code CLI / Gemini CLI
         ↓
-  Model endpoint ← pluggable: Together.ai / Modal GPU / SGLang / Anthropic
+  Model endpoint ← pluggable: MiniMax API / Modal GPU / SGLang / Anthropic
         ↓
   GitHub / GitLab PR
 ```

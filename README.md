@@ -31,7 +31,7 @@ PR is opened, and the sandbox is destroyed. The agent never touches your local m
 
 ```
 ┌──────────────────────────────────────────────────────────┐
-│  agent-run CLI  /  Dashboard (localhost:8080)            │
+│  agent-run CLI  /  Dashboard (localhost:8000)            │
 │  Python API     /  MCP server (Claude Code, Gemini CLI)  │
 └──────────────────────┬───────────────────────────────────┘
                        │
@@ -53,9 +53,9 @@ PR is opened, and the sandbox is destroyed. The agent never touches your local m
                        │  Modal internal network
                        ▼
 ┌──────────────────────────────────────────────────────────┐
-│  Modal GPU — SGLang inference server                     │
-│  modal deploy modal/serve.py                             │
-│  Qwen3-Coder on A100 · RadixAttention · scale-to-zero   │
+│  Model endpoint — pluggable                              │
+│  MiniMax M2.5 hosted API  (recommended)                  │
+│  or: modal deploy modal/serve.py  (SGLang, scale-to-0)  │
 └──────────────────────────────────────────────────────────┘
 ```
 
@@ -87,10 +87,10 @@ MODAL_TOKEN_SECRET=...
 # Git provider
 GITHUB_TOKEN=ghp_...
 
-# Model endpoint — pick one (see Model Setup below)
-OPENAI_BASE_URL=https://api.together.xyz/v1
-OPENAI_API_KEY=your-together-key
-OPENCODE_MODEL=Qwen/Qwen3-Coder-80B-Instruct
+# Model endpoint — MiniMax M2.5 hosted API (recommended)
+OPENAI_BASE_URL=https://api.minimax.io/v1
+OPENAI_API_KEY=your-minimax-api-key
+OPENCODE_MODEL=MiniMax-M2.5
 ```
 
 ### 3. Run
