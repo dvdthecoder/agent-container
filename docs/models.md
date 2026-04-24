@@ -1,44 +1,85 @@
 # Model Setup
 
-The model runs on Modal GPU infrastructure, deployed once and called by the sandbox over Modal's
-internal network. The inference server is [SGLang](https://github.com/sgl-project/sglang) —
-an open-source, high-performance serving framework built for agent and reasoning workloads.
-
-## Deploy the model
+The sandbox passes three env vars into every container run:
 
 ```bash
-modal deploy modal/serve.py
+OPENAI_BASE_URL=...   # any OpenAI-compatible endpoint
+OPENAI_API_KEY=...    # key for that endpoint
+OPENCODE_MODEL=...    # model name the endpoint accepts
 ```
 
-This starts Qwen3-Coder on an A100 GPU and exposes an internal Modal endpoint. The sandbox
-container calls it automatically — no URL configuration needed, it's wired up inside Modal's
-network.
+That's the full coupling. Any OpenAI-compatible inference server works — hosted or self-hosted.
 
-Scale-to-zero when idle. You pay only for GPU seconds while the model is actually processing a
-request.
+---
 
-## Profiles
+## Recommended: MiniMax M2.5
 
-`modal/serve.py` ships with two profiles:
+MiniMax M2.5 is currently the top-ranked model on [SWE-bench](https://swebench.com) — the
+standard benchmark for autonomous code editing on real repositories.
 
-| Profile | Model | GPU | Context | Use case |
+| Property | Value |
+|---|---|
+| Architecture | MoE + Lightning Attention |
+| Active params | ~45B (out of 456B total) |
+| Context window | 1 000 000 tokens |
+| SWE-bench score | **#1 as of 2026-04** |
+
+### Route A — Hosted API (fastest setup, no GPU cost)
+
+Get an API key at **platform.minimax.chat**, then set three env vars:
+
+```bash
+OPENAI_BASE_URL=https://api.minimax.chat/v1
+OPENAI_API_KEY=your-minimax-api-key
+OPENCODE_MODEL=MiniMax-M2.5
+```
+
+Done. No deployment step — `agent-run` calls the MiniMax API directly from inside the
+sandbox container.
+
+### Route B — Self-hosted on Modal GPU (full control, 1M context)
+
+```bash
+SERVE_PROFILE=minimax modal deploy modal/serve.py
+```
+
+Modal deploys SGLang on 8× A100 80GB with tensor parallelism. After deployment:
+
+```bash
+OPENAI_BASE_URL=https://your-org--agent-container-serve.modal.run/v1
+OPENAI_API_KEY=modal
+OPENCODE_MODEL=minimax-m2.5
+```
+
+!!! note "Cold start"
+    The MiniMax profile uses 8× A100 80GB — cold start takes ~10 minutes on first deploy.
+    Set `SCALEDOWN_WINDOW=600` (default) to keep it warm between runs.
+
+---
+
+## Profiles (self-hosted)
+
+`modal/serve.py` ships with three profiles, selected via `SERVE_PROFILE`:
+
+| Profile | Model | GPU | Context | Best for |
 |---|---|---|---|---|
-| `test` (default) | Qwen3-Coder 8B | A10G | 32 k | Development, CI, low-cost runs |
-| `prod` | Qwen3-Coder 80B | 2× A100 80GB | 128 k | Production, large repos |
+| `test` (default) | Qwen3-Coder 8B | A10G | 32 k | Development, CI, cheap iteration |
+| `prod` | Qwen3-Coder 80B | 2× A100 80GB | 128 k | Production Qwen3 runs |
+| `minimax` | MiniMax M2.5 | 8× A100 80GB | 1 M | Best quality, large repo context |
 
 ```bash
-# test profile (default)
-modal deploy modal/serve.py
-
-# production profile
-SERVE_PROFILE=prod modal deploy modal/serve.py
+modal deploy modal/serve.py                        # test
+SERVE_PROFILE=prod modal deploy modal/serve.py     # prod
+SERVE_PROFILE=minimax modal deploy modal/serve.py  # minimax
 ```
+
+---
 
 ## Why SGLang
 
 SGLang's **RadixAttention** automatically caches shared KV prefixes across requests using a radix
 tree. Agent runs against the same repo repeatedly re-use the cached representation of the system
-prompt and repo context — only the task-specific tokens need to be computed from scratch.
+prompt and repo context — only the task-specific tokens are computed from scratch.
 
 This matters for agent-container because:
 
@@ -49,35 +90,15 @@ This matters for agent-container because:
 Benchmarks show ~29% higher throughput vs vLLM on prefix-heavy workloads (H100, ShareGPT-style).
 For purely unique-prompt workloads the gap closes, but the agent pattern is prefix-heavy by nature.
 
-SGLang also exposes the same OpenAI-compatible API as vLLM — no changes to the sandbox, CLI, or
-any calling code are required when switching between inference backends.
-
-## Why Qwen3-Coder
-
-Qwen3-Coder 80B scores **70.6 on SWE-bench** — the standard benchmark for real code editing on
-real repositories. It is purpose-built for software engineering tasks: reading large codebases,
-understanding context, making targeted edits, writing tests.
-
-The 80B model fits on 2× A100 80GB with tensor parallelism (`--tp 2`), which is what the `prod`
-profile provisions. The 8B test model fits on a single A10G.
-
-## Why Modal for the model
-
-- No GPU hardware to buy or manage
-- Same infrastructure as the sandbox — one platform, one bill, one set of credentials
-- Internal network between sandbox and model — no public internet hop, lower latency
-- Scale-to-zero: costs nothing when no agent runs are happening
+---
 
 ## Agent backends and model coupling
 
-| Backend | Model |
+| Backend | Model source |
 |---|---|
-| `opencode` | Qwen3-Coder via Modal SGLang endpoint (default) |
-| `claude` | Anthropic API (Claude Code CLI reads `ANTHROPIC_API_KEY`) |
-| `gemini` | Google AI / Vertex (Gemini CLI reads `GEMINI_API_KEY`) |
+| `opencode` | Any endpoint via `OPENAI_BASE_URL` — MiniMax, Qwen3, or self-hosted |
+| `claude` | Anthropic API (`ANTHROPIC_API_KEY`) |
+| `gemini` | Google AI / Vertex (`GEMINI_API_KEY`) |
 
-The `opencode` backend is the default and recommended path — it uses the Modal-hosted model,
-keeping everything within Modal's infrastructure.
-
-The `claude` and `gemini` backends are available for teams already standardised on those CLIs.
-When using them, prompts go to Anthropic or Google respectively.
+The `opencode` backend is the default. It uses whatever endpoint `OPENAI_BASE_URL` points to —
+swap the three env vars to change models with zero code changes.
