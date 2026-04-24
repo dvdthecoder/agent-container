@@ -22,7 +22,7 @@ from typing import Protocol, runtime_checkable
 class RepoProvider(Protocol):
     """Structural interface for a git hosting provider."""
 
-    name: str           # short identifier, e.g. "github" or "gitlab"
+    name: str  # short identifier, e.g. "github" or "gitlab"
     token_env_var: str  # container env var that holds the access token
 
     def matches(self, repo: str) -> bool:
@@ -45,9 +45,7 @@ class RepoProvider(Protocol):
         """curl ``-H`` values.  May reference container env vars (e.g. ``$GITHUB_TOKEN``)."""
         ...
 
-    def pr_payload(
-        self, title: str, head_branch: str, base_branch: str, body: str
-    ) -> dict:
+    def pr_payload(self, title: str, head_branch: str, base_branch: str, body: str) -> dict:
         """JSON payload for the PR / MR creation request."""
         ...
 
@@ -70,18 +68,18 @@ class GitHubProvider:
 
     def authed_remote(self, repo: str, token: str) -> str:
         if repo.startswith("https://github.com/"):
-            rest = repo[len("https://"):]
+            rest = repo[len("https://") :]
             return f"https://x-access-token:{token}@{rest}"
         if repo.startswith("git@github.com:"):
-            path = repo[len("git@github.com:"):]
+            path = repo[len("git@github.com:") :]
             return f"https://x-access-token:{token}@github.com/{path}"
         raise ValueError(f"Not a GitHub URL: {repo!r}")
 
     def parse_repo(self, repo: str) -> tuple[str, str]:
         if repo.startswith("https://github.com/"):
-            path = repo[len("https://github.com/"):].rstrip("/").removesuffix(".git")
+            path = repo[len("https://github.com/") :].rstrip("/").removesuffix(".git")
         elif repo.startswith("git@github.com:"):
-            path = repo[len("git@github.com:"):].removesuffix(".git")
+            path = repo[len("git@github.com:") :].removesuffix(".git")
         else:
             raise ValueError(f"Not a GitHub URL: {repo!r}")
         owner, name = path.split("/", 1)
@@ -97,9 +95,7 @@ class GitHubProvider:
             "Accept: application/vnd.github+json",
         ]
 
-    def pr_payload(
-        self, title: str, head_branch: str, base_branch: str, body: str
-    ) -> dict:
+    def pr_payload(self, title: str, head_branch: str, base_branch: str, body: str) -> dict:
         return {"title": title, "head": head_branch, "base": base_branch, "body": body}
 
     def pr_url_field(self) -> str:
@@ -120,18 +116,18 @@ class GitLabProvider:
 
     def authed_remote(self, repo: str, token: str) -> str:
         if repo.startswith("https://gitlab.com/"):
-            rest = repo[len("https://"):]
+            rest = repo[len("https://") :]
             return f"https://oauth2:{token}@{rest}"
         if repo.startswith("git@gitlab.com:"):
-            path = repo[len("git@gitlab.com:"):]
+            path = repo[len("git@gitlab.com:") :]
             return f"https://oauth2:{token}@gitlab.com/{path}"
         raise ValueError(f"Not a GitLab URL: {repo!r}")
 
     def parse_repo(self, repo: str) -> tuple[str, str]:
         if repo.startswith("https://gitlab.com/"):
-            path = repo[len("https://gitlab.com/"):].rstrip("/").removesuffix(".git")
+            path = repo[len("https://gitlab.com/") :].rstrip("/").removesuffix(".git")
         elif repo.startswith("git@gitlab.com:"):
-            path = repo[len("git@gitlab.com:"):].removesuffix(".git")
+            path = repo[len("git@gitlab.com:") :].removesuffix(".git")
         else:
             raise ValueError(f"Not a GitLab URL: {repo!r}")
         owner, name = path.split("/", 1)
@@ -148,9 +144,7 @@ class GitLabProvider:
             "Content-Type: application/json",
         ]
 
-    def pr_payload(
-        self, title: str, head_branch: str, base_branch: str, body: str
-    ) -> dict:
+    def pr_payload(self, title: str, head_branch: str, base_branch: str, body: str) -> dict:
         return {
             "title": title,
             "source_branch": head_branch,
@@ -174,6 +168,4 @@ def detect_provider(repo: str) -> RepoProvider:
         if provider.matches(repo):
             return provider
     supported = ", ".join(p.name for p in _PROVIDERS)
-    raise ValueError(
-        f"Unsupported repository host (supported: {supported}). Got: {repo!r}"
-    )
+    raise ValueError(f"Unsupported repository host (supported: {supported}). Got: {repo!r}")

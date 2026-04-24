@@ -64,6 +64,7 @@ class ModalSandbox:
                       at each lifecycle transition.  Used by the dashboard to stream
                       progress without coupling sandbox logic to FastAPI.
         """
+
         def _emit(event_type: str, **payload) -> None:
             if on_event is not None:
                 try:

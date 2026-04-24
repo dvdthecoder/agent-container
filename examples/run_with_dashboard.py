@@ -38,7 +38,7 @@ def _run() -> None:
     spec = AgentTaskSpec(
         repo=REPO,
         task=TASK,
-        backend="stub",     # stub agent — no LLM tokens spent
+        backend="stub",  # stub agent — no LLM tokens spent
         create_pr=False,
         run_tests=False,
         timeout_seconds=120,

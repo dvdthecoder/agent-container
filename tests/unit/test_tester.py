@@ -143,15 +143,18 @@ def test_go_failure_uses_exit_code():
 # ------------------------------------------------------------------ _parse_counts
 
 
-@pytest.mark.parametrize("runner, output, exit_code, expected", [
-    ("pytest", "5 passed in 0.3s",          0, (5, 0)),
-    ("pytest", "3 passed, 2 failed in 0.5s", 1, (3, 2)),
-    ("pytest", "no output at all",           0, (1, 0)),
-    ("pytest", "no output at all",           1, (0, 1)),
-    ("npm",    "Tests: 4 passed, 1 failed",  1, (4, 1)),
-    ("cargo",  "3 passed; 1 failed; 0 ignored", 1, (3, 1)),
-    ("go",     "ok  github.com/...",         0, (1, 0)),
-    ("go",     "FAIL\t...",                  1, (0, 1)),
-])
+@pytest.mark.parametrize(
+    "runner, output, exit_code, expected",
+    [
+        ("pytest", "5 passed in 0.3s", 0, (5, 0)),
+        ("pytest", "3 passed, 2 failed in 0.5s", 1, (3, 2)),
+        ("pytest", "no output at all", 0, (1, 0)),
+        ("pytest", "no output at all", 1, (0, 1)),
+        ("npm", "Tests: 4 passed, 1 failed", 1, (4, 1)),
+        ("cargo", "3 passed; 1 failed; 0 ignored", 1, (3, 1)),
+        ("go", "ok  github.com/...", 0, (1, 0)),
+        ("go", "FAIL\t...", 1, (0, 1)),
+    ],
+)
 def test_parse_counts(runner, output, exit_code, expected):
     assert _parse_counts(runner, output, exit_code) == expected

@@ -25,7 +25,7 @@ def _make_proc(stdout: str = "", stderr: str = "", returncode: int = 0) -> Magic
 def test_branch_name_format():
     br = branch_name("opencode")
     assert br.startswith("agent/opencode-")
-    ts = br[len("agent/opencode-"):]
+    ts = br[len("agent/opencode-") :]
     assert len(ts) == 15  # YYYYMMDD-HHMMSS
     assert ts[8] == "-"
 
@@ -45,8 +45,14 @@ def test_clone_success():
     clone(sb, "https://github.com/org/repo", "main")
 
     sb.exec.assert_called_once_with(
-        "git", "clone", "--branch", "main", "--depth", "1",
-        "https://github.com/org/repo", "/workspace",
+        "git",
+        "clone",
+        "--branch",
+        "main",
+        "--depth",
+        "1",
+        "https://github.com/org/repo",
+        "/workspace",
     )
 
 
@@ -168,7 +174,9 @@ def test_push_failure_raises_config_error():
 
 def test_gitlab_push_and_pr():
     sb = MagicMock()
-    sb.exec.side_effect = _pr_procs(pr_response='{"web_url": "https://gitlab.com/org/repo/-/merge_requests/5"}')
+    sb.exec.side_effect = _pr_procs(
+        pr_response='{"web_url": "https://gitlab.com/org/repo/-/merge_requests/5"}'
+    )
 
     br, pr_url = push_and_pr(
         sb,

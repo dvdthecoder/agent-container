@@ -81,15 +81,17 @@ def test_run_creates_pr_when_agent_produces_diff(mock_create):
     curl_proc = _make_proc(stdout='{"html_url": "https://github.com/org/repo/pull/42"}')
 
     sb.exec.side_effect = [
-        clone_proc, agent_proc, diff_proc, stat_proc,
+        clone_proc,
+        agent_proc,
+        diff_proc,
+        stat_proc,
         *pr_git_procs,
-        write_payload_proc, curl_proc,
+        write_payload_proc,
+        curl_proc,
     ]
 
     config = SandboxConfig(github_token="ghp_test")
-    result = ModalSandbox(config).run(
-        _spec(repo="https://github.com/org/repo", create_pr=True)
-    )
+    result = ModalSandbox(config).run(_spec(repo="https://github.com/org/repo", create_pr=True))
 
     assert result.success is True
     assert result.branch is not None
@@ -166,9 +168,7 @@ def test_push_failure_returns_failed_result(mock_create):
     sb.exec.side_effect = [clone_proc, agent_proc, diff_proc, stat_proc, *git_procs, push_proc]
 
     config = SandboxConfig(github_token="ghp_test")
-    result = ModalSandbox(config).run(
-        _spec(repo="https://github.com/org/repo", create_pr=True)
-    )
+    result = ModalSandbox(config).run(_spec(repo="https://github.com/org/repo", create_pr=True))
 
     assert result.success is False
     assert "git push failed" in result.error

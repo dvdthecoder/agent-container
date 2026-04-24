@@ -143,8 +143,7 @@ async def sandbox_status(run_id: str) -> dict:
     d = state.to_dict()
     # Include safe subset of events (no embedded AgentTaskResult objects).
     d["events"] = [
-        {k: v for k, v in ev.items() if k != "result"}
-        for ev in store.events_from(run_id, 0)
+        {k: v for k, v in ev.items() if k != "result"} for ev in store.events_from(run_id, 0)
     ]
     return d
 

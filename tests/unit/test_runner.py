@@ -47,12 +47,15 @@ def test_non_zero_exit_code_returned_as_is():
 # ------------------------------------------------------------------ command dispatch
 
 
-@pytest.mark.parametrize("backend, expected_argv_start", [
-    (OpenCodeBackend(),  ["opencode", "--print", "-m"]),
-    (ClaudeCodeBackend(), ["claude", "--print"]),
-    (GeminiBackend(),    ["gemini", "--yolo", "-p"]),
-    (StubBackend(),      ["sh", "-c"]),
-])
+@pytest.mark.parametrize(
+    "backend, expected_argv_start",
+    [
+        (OpenCodeBackend(), ["opencode", "--print", "-m"]),
+        (ClaudeCodeBackend(), ["claude", "--print"]),
+        (GeminiBackend(), ["gemini", "--yolo", "-p"]),
+        (StubBackend(), ["sh", "-c"]),
+    ],
+)
 def test_exec_called_with_backend_command(backend, expected_argv_start):
     sb = _make_sb()
     run_agent(sb, backend, "my task")

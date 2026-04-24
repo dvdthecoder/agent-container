@@ -13,9 +13,15 @@ from agent.backends.stub import StubBackend
 # ------------------------------------------------------------------ Protocol
 
 
-@pytest.mark.parametrize("backend_cls", [
-    OpenCodeBackend, ClaudeCodeBackend, GeminiBackend, StubBackend,
-])
+@pytest.mark.parametrize(
+    "backend_cls",
+    [
+        OpenCodeBackend,
+        ClaudeCodeBackend,
+        GeminiBackend,
+        StubBackend,
+    ],
+)
 def test_satisfies_protocol(backend_cls):
     assert isinstance(backend_cls(), AgentBackend)
 
@@ -49,12 +55,15 @@ def test_stub_command_safely_quotes_task():
     assert "task with" in cmd[-1]
 
 
-@pytest.mark.parametrize("backend_name, expected_prefix", [
-    ("opencode", ["opencode", "--print", "-m"]),
-    ("claude",   ["claude", "--print"]),
-    ("gemini",   ["gemini", "--yolo", "-p"]),
-    ("stub",     ["sh", "-c"]),
-])
+@pytest.mark.parametrize(
+    "backend_name, expected_prefix",
+    [
+        ("opencode", ["opencode", "--print", "-m"]),
+        ("claude", ["claude", "--print"]),
+        ("gemini", ["gemini", "--yolo", "-p"]),
+        ("stub", ["sh", "-c"]),
+    ],
+)
 def test_command_prefix(backend_name, expected_prefix):
     backend = get_backend(backend_name)
     cmd = backend.command("task")
@@ -64,19 +73,28 @@ def test_command_prefix(backend_name, expected_prefix):
 # ------------------------------------------------------------------ names
 
 
-@pytest.mark.parametrize("backend_cls, expected_name", [
-    (OpenCodeBackend,  "opencode"),
-    (ClaudeCodeBackend, "claude"),
-    (GeminiBackend,    "gemini"),
-    (StubBackend,      "stub"),
-])
+@pytest.mark.parametrize(
+    "backend_cls, expected_name",
+    [
+        (OpenCodeBackend, "opencode"),
+        (ClaudeCodeBackend, "claude"),
+        (GeminiBackend, "gemini"),
+        (StubBackend, "stub"),
+    ],
+)
 def test_name_attribute(backend_cls, expected_name):
     assert backend_cls().name == expected_name
 
 
-@pytest.mark.parametrize("backend_cls", [
-    OpenCodeBackend, ClaudeCodeBackend, GeminiBackend, StubBackend,
-])
+@pytest.mark.parametrize(
+    "backend_cls",
+    [
+        OpenCodeBackend,
+        ClaudeCodeBackend,
+        GeminiBackend,
+        StubBackend,
+    ],
+)
 def test_display_name_is_non_empty_string(backend_cls):
     assert isinstance(backend_cls().display_name, str)
     assert backend_cls().display_name

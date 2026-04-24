@@ -29,9 +29,12 @@ def branch_name(backend: str) -> str:
 def clone(sb: modal.Sandbox, repo: str, base_branch: str) -> None:
     """Clone *repo* at *base_branch* into ``/workspace`` inside the sandbox."""
     proc = sb.exec(
-        "git", "clone",
-        "--branch", base_branch,
-        "--depth", "1",
+        "git",
+        "clone",
+        "--branch",
+        base_branch,
+        "--depth",
+        "1",
         repo,
         "/workspace",
     )
@@ -122,16 +125,19 @@ def _open_pr(
     workdir: str,
 ) -> str | None:
     """Open a PR / MR via the provider REST API. Returns the PR / MR URL."""
-    payload = json.dumps(provider.pr_payload(
-        title=task[:72],
-        head_branch=br,
-        base_branch=base_branch,
-        body=f"Automated change by agent-container (`{backend}`).\n\n**Task:**\n{task}",
-    ))
+    payload = json.dumps(
+        provider.pr_payload(
+            title=task[:72],
+            head_branch=br,
+            base_branch=base_branch,
+            body=f"Automated change by agent-container (`{backend}`).\n\n**Task:**\n{task}",
+        )
+    )
 
     # Write payload to a temp file so we don't need to quote JSON in a shell string.
     write_proc = sb.exec(
-        "sh", "-c",
+        "sh",
+        "-c",
         f"printf '%s' {shlex.quote(payload)} > /tmp/pr_payload.json",
     )
     write_proc.wait()
@@ -142,7 +148,8 @@ def _open_pr(
     header_flags = " ".join(f'-H "{h}"' for h in provider.pr_headers())
     api_url = provider.pr_api_url(owner, repo_name)
     curl_proc = sb.exec(
-        "sh", "-c",
+        "sh",
+        "-c",
         f"curl -sf -X POST {header_flags} {api_url} -d @/tmp/pr_payload.json",
     )
     response = curl_proc.stdout.read()

@@ -21,17 +21,17 @@ _DETECT_CONDITIONS: list[tuple[str, str]] = [
         " || ([ -f pyproject.toml ] && grep -q 'tool.pytest' pyproject.toml 2>/dev/null)"
         " || (find . -maxdepth 2 -name 'test_*.py' | grep -q . 2>/dev/null)",
     ),
-    ("npm",   "[ -f package.json ]"),
+    ("npm", "[ -f package.json ]"),
     ("cargo", "[ -f Cargo.toml ]"),
-    ("go",    "[ -f go.mod ]"),
+    ("go", "[ -f go.mod ]"),
 ]
 
 # Command to run for each runner (executed in /workspace).
 _RUN_COMMANDS: dict[str, list[str]] = {
     "pytest": ["python", "-m", "pytest", "--tb=short", "-q"],
-    "npm":    ["npm", "test", "--", "--no-coverage"],
-    "cargo":  ["cargo", "test"],
-    "go":     ["go", "test", "./..."],
+    "npm": ["npm", "test", "--", "--no-coverage"],
+    "cargo": ["cargo", "test"],
+    "go": ["go", "test", "./..."],
 }
 
 # ── Public API ────────────────────────────────────────────────────────────────
@@ -58,10 +58,7 @@ def detect_and_run(
 def _detect_runner(sb: modal.Sandbox, workdir: str) -> str | None:
     """Return the name of the first matching test runner, or ``None``."""
     # Build a single sh -c command that echoes the runner name or "none".
-    branches = " ".join(
-        f"if {cond}; then echo {name}; el"
-        for name, cond in _DETECT_CONDITIONS
-    )
+    branches = " ".join(f"if {cond}; then echo {name}; el" for name, cond in _DETECT_CONDITIONS)
     # Close the if-elif chain.
     script = branches + "se echo none; fi"
 

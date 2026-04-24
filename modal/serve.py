@@ -50,11 +50,11 @@ if SERVE_PROFILE == "minimax":
     MODEL_ID = "MiniMaxAI/MiniMax-M2.5"
     SERVED_MODEL_NAME = "minimax-m2.5"
     GPU: str | modal.gpu.A100 = modal.gpu.A100(count=8, size="80GB")
-    CONTEXT_LENGTH = 1_000_000          # 1M context — use what you need, cap for cost
+    CONTEXT_LENGTH = 1_000_000  # 1M context — use what you need, cap for cost
     TP_SIZE = 8
-    SCALEDOWN_WINDOW = 600              # stay warm 10 min — cold start is expensive at 8×
-    STARTUP_TIMEOUT = 600               # large model + 8 GPUs need longer to initialise
-    MEM_FRACTION = 0.90                 # MoE keeps fewer weights resident per device
+    SCALEDOWN_WINDOW = 600  # stay warm 10 min — cold start is expensive at 8×
+    STARTUP_TIMEOUT = 600  # large model + 8 GPUs need longer to initialise
+    MEM_FRACTION = 0.90  # MoE keeps fewer weights resident per device
 
 elif SERVE_PROFILE == "prod":
     MODEL_ID = "Qwen/Qwen3-Coder-80B-Instruct"
@@ -108,14 +108,23 @@ image = (
 def serve() -> None:
     """Start SGLang OpenAI-compatible server inside the Modal container."""
     cmd = [
-        "python", "-m", "sglang.launch_server",
-        "--model", MODEL_ID,
-        "--download-dir", "/model-cache",
-        "--served-model-name", SERVED_MODEL_NAME,
-        "--host", "0.0.0.0",  # noqa: S104 — container-internal binding
-        "--port", "8000",
-        "--context-length", str(CONTEXT_LENGTH),
-        "--mem-fraction-static", str(MEM_FRACTION),
+        "python",
+        "-m",
+        "sglang.launch_server",
+        "--model",
+        MODEL_ID,
+        "--download-dir",
+        "/model-cache",
+        "--served-model-name",
+        SERVED_MODEL_NAME,
+        "--host",
+        "0.0.0.0",  # noqa: S104 — container-internal binding
+        "--port",
+        "8000",
+        "--context-length",
+        str(CONTEXT_LENGTH),
+        "--mem-fraction-static",
+        str(MEM_FRACTION),
         "--trust-remote-code",
     ]
     if TP_SIZE > 1:

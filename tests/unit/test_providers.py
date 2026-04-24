@@ -29,34 +29,46 @@ def test_gitlab_satisfies_protocol():
 # ------------------------------------------------------------------ matches
 
 
-@pytest.mark.parametrize("repo", [
-    "https://github.com/org/repo",
-    "git@github.com:org/repo.git",
-])
+@pytest.mark.parametrize(
+    "repo",
+    [
+        "https://github.com/org/repo",
+        "git@github.com:org/repo.git",
+    ],
+)
 def test_github_matches(repo):
     assert _gh.matches(repo) is True
 
 
-@pytest.mark.parametrize("repo", [
-    "https://gitlab.com/org/repo",
-    "git@gitlab.com:org/repo.git",
-])
+@pytest.mark.parametrize(
+    "repo",
+    [
+        "https://gitlab.com/org/repo",
+        "git@gitlab.com:org/repo.git",
+    ],
+)
 def test_github_does_not_match_gitlab(repo):
     assert _gh.matches(repo) is False
 
 
-@pytest.mark.parametrize("repo", [
-    "https://gitlab.com/org/repo",
-    "git@gitlab.com:org/repo.git",
-])
+@pytest.mark.parametrize(
+    "repo",
+    [
+        "https://gitlab.com/org/repo",
+        "git@gitlab.com:org/repo.git",
+    ],
+)
 def test_gitlab_matches(repo):
     assert _gl.matches(repo) is True
 
 
-@pytest.mark.parametrize("repo", [
-    "https://github.com/org/repo",
-    "git@github.com:org/repo.git",
-])
+@pytest.mark.parametrize(
+    "repo",
+    [
+        "https://github.com/org/repo",
+        "git@github.com:org/repo.git",
+    ],
+)
 def test_gitlab_does_not_match_github(repo):
     assert _gl.matches(repo) is False
 
@@ -64,20 +76,23 @@ def test_gitlab_does_not_match_github(repo):
 # ------------------------------------------------------------------ authed_remote
 
 
-@pytest.mark.parametrize("repo, expected", [
-    (
-        "https://github.com/org/myapp",
-        "https://x-access-token:tok@github.com/org/myapp",
-    ),
-    (
-        "https://github.com/org/myapp.git",
-        "https://x-access-token:tok@github.com/org/myapp.git",
-    ),
-    (
-        "git@github.com:org/myapp.git",
-        "https://x-access-token:tok@github.com/org/myapp.git",
-    ),
-])
+@pytest.mark.parametrize(
+    "repo, expected",
+    [
+        (
+            "https://github.com/org/myapp",
+            "https://x-access-token:tok@github.com/org/myapp",
+        ),
+        (
+            "https://github.com/org/myapp.git",
+            "https://x-access-token:tok@github.com/org/myapp.git",
+        ),
+        (
+            "git@github.com:org/myapp.git",
+            "https://x-access-token:tok@github.com/org/myapp.git",
+        ),
+    ],
+)
 def test_github_authed_remote(repo, expected):
     assert _gh.authed_remote(repo, "tok") == expected
 
@@ -87,20 +102,23 @@ def test_github_authed_remote_wrong_host_raises():
         _gh.authed_remote("https://gitlab.com/org/repo", "tok")
 
 
-@pytest.mark.parametrize("repo, expected", [
-    (
-        "https://gitlab.com/org/myapp",
-        "https://oauth2:tok@gitlab.com/org/myapp",
-    ),
-    (
-        "https://gitlab.com/org/myapp.git",
-        "https://oauth2:tok@gitlab.com/org/myapp.git",
-    ),
-    (
-        "git@gitlab.com:org/myapp.git",
-        "https://oauth2:tok@gitlab.com/org/myapp.git",
-    ),
-])
+@pytest.mark.parametrize(
+    "repo, expected",
+    [
+        (
+            "https://gitlab.com/org/myapp",
+            "https://oauth2:tok@gitlab.com/org/myapp",
+        ),
+        (
+            "https://gitlab.com/org/myapp.git",
+            "https://oauth2:tok@gitlab.com/org/myapp.git",
+        ),
+        (
+            "git@gitlab.com:org/myapp.git",
+            "https://oauth2:tok@gitlab.com/org/myapp.git",
+        ),
+    ],
+)
 def test_gitlab_authed_remote(repo, expected):
     assert _gl.authed_remote(repo, "tok") == expected
 
@@ -113,13 +131,16 @@ def test_gitlab_authed_remote_wrong_host_raises():
 # ------------------------------------------------------------------ parse_repo
 
 
-@pytest.mark.parametrize("repo, expected", [
-    ("https://github.com/org/myapp",    ("org", "myapp")),
-    ("https://github.com/org/myapp.git", ("org", "myapp")),
-    ("https://github.com/org/myapp/",   ("org", "myapp")),
-    ("git@github.com:org/myapp.git",    ("org", "myapp")),
-    ("git@github.com:org/myapp",        ("org", "myapp")),
-])
+@pytest.mark.parametrize(
+    "repo, expected",
+    [
+        ("https://github.com/org/myapp", ("org", "myapp")),
+        ("https://github.com/org/myapp.git", ("org", "myapp")),
+        ("https://github.com/org/myapp/", ("org", "myapp")),
+        ("git@github.com:org/myapp.git", ("org", "myapp")),
+        ("git@github.com:org/myapp", ("org", "myapp")),
+    ],
+)
 def test_github_parse_repo(repo, expected):
     assert _gh.parse_repo(repo) == expected
 
@@ -129,13 +150,16 @@ def test_github_parse_repo_wrong_host_raises():
         _gh.parse_repo("https://gitlab.com/org/repo")
 
 
-@pytest.mark.parametrize("repo, expected", [
-    ("https://gitlab.com/org/myapp",    ("org", "myapp")),
-    ("https://gitlab.com/org/myapp.git", ("org", "myapp")),
-    ("https://gitlab.com/org/myapp/",   ("org", "myapp")),
-    ("git@gitlab.com:org/myapp.git",    ("org", "myapp")),
-    ("git@gitlab.com:org/myapp",        ("org", "myapp")),
-])
+@pytest.mark.parametrize(
+    "repo, expected",
+    [
+        ("https://gitlab.com/org/myapp", ("org", "myapp")),
+        ("https://gitlab.com/org/myapp.git", ("org", "myapp")),
+        ("https://gitlab.com/org/myapp/", ("org", "myapp")),
+        ("git@gitlab.com:org/myapp.git", ("org", "myapp")),
+        ("git@gitlab.com:org/myapp", ("org", "myapp")),
+    ],
+)
 def test_gitlab_parse_repo(repo, expected):
     assert _gl.parse_repo(repo) == expected
 

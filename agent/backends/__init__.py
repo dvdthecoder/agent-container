@@ -14,7 +14,7 @@ from typing import Protocol, runtime_checkable
 class AgentBackend(Protocol):
     """Structural interface for a coding agent backend."""
 
-    name: str          # "opencode" | "claude" | "gemini" | "stub"
+    name: str  # "opencode" | "claude" | "gemini" | "stub"
     display_name: str  # human-readable name for UI / logging
 
     def command(self, task: str) -> list[str]:
@@ -38,7 +38,5 @@ def get_backend(name: str) -> AgentBackend:
     }
 
     if name not in registry:
-        raise ValueError(
-            f"Unknown backend: {name!r}. Available: {', '.join(registry)}"
-        )
+        raise ValueError(f"Unknown backend: {name!r}. Available: {', '.join(registry)}")
     return registry[name]

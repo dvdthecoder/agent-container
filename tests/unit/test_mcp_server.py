@@ -117,6 +117,7 @@ async def test_sandbox_run_forwards_backend_to_spec(fresh_store):
 @pytest.mark.asyncio
 async def test_sandbox_run_on_event_pushes_to_store(fresh_store):
     """on_event callback emitted by ModalSandbox.run reaches the store."""
+
     def fake_run(spec, on_event=None):
         if on_event:
             on_event("phase", {"phase": "RUNNING"})
