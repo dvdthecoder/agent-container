@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>agent-container dashboard</title>
+  <style>
+    /* --------------------------------------------------------- reset & base */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #0d1117;
+      --surface: #161b22;
+      --border:  #30363d;
+      --text:    #e6edf3;
+      --muted:   #8b949e;
+      --accent:  #58a6ff;
+      --green:   #3fb950;
+      --red:     #f85149;
+      --yellow:  #d29922;
+      --purple:  #bc8cff;
+      --mono:    "JetBrains Mono", "Fira Code", "Cascadia Code", monospace;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 14px;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* --------------------------------------------------------- layout */
+    header {
+      border-bottom: 1px solid var(--border);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    header h1 { font-size: 15px; font-weight: 600; color: var(--text); }
+    header span { font-size: 11px; color: var(--muted); }
+
+    main {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 0;
+      height: calc(100vh - 49px);
+    }
+
+    /* --------------------------------------------------------- sidebar */
+    #sidebar {
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #new-run-form {
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    #new-run-form h2 { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+
+    label { font-size: 12px; color: var(--muted); display: block; margin-bottom: 2px; }
+
+    input, select, textarea {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 13px;
+      padding: 6px 8px;
+      outline: none;
+      font-family: inherit;
+      resize: vertical;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--accent);
+    }
+
+    #start-btn {
+      background: var(--accent);
+      color: #000;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 8px 14px;
+      cursor: pointer;
+      margin-top: 4px;
+    }
+
+    #start-btn:hover { opacity: .88; }
+    #start-btn:disabled { opacity: .4; cursor: not-allowed; }
+
+    /* --------------------------------------------------------- run list */
+    #run-list { flex: 1; overflow-y: auto; }
+
+    .run-card {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background .1s;
+    }
+
+    .run-card:hover  { background: rgba(88,166,255,.06); }
+    .run-card.active { background: rgba(88,166,255,.10); border-left: 2px solid var(--accent); }
+
+    .run-card-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 2px;
+    }
+
+    .phase-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .phase-dot.BOOTING  { background: var(--yellow); animation: pulse 1s infinite; }
+    .phase-dot.CLONING  { background: var(--yellow); animation: pulse 1s infinite; }
+    .phase-dot.RUNNING  { background: var(--accent);  animation: pulse 1s infinite; }
+    .phase-dot.TESTING  { background: var(--purple);  animation: pulse 1s infinite; }
+    .phase-dot.PR       { background: var(--purple);  animation: pulse 1s infinite; }
+    .phase-dot.DONE     { background: var(--green); }
+    .phase-dot.FAILED   { background: var(--red); }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: .35; }
+    }
+
+    .run-id { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+    .run-repo { font-size: 12px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .run-phase { font-size: 11px; color: var(--muted); }
+
+    /* --------------------------------------------------------- detail panel */
+    #detail {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    #detail-header {
+      padding: 16px 20px 12px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    #detail-header .repo-link {
+      color: var(--accent);
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    #detail-header .repo-link:hover { text-decoration: underline; }
+
+    #detail-meta {
+      display: flex;
+      gap: 16px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    #detail-meta .badge {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1px 7px;
+      font-family: var(--mono);
+      font-size: 11px;
+    }
+
+    #pr-link {
+      display: inline-block;
+      background: var(--green);
+      color: #000;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 4px;
+      text-decoration: none;
+    }
+
+    #pr-link:hover { opacity: .85; }
+    #pr-link.hidden { display: none; }
+
+    #log-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 20px;
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 1.55;
+      white-space: pre-wrap;
+      word-break: break-all;
+      color: var(--text);
+      background: var(--bg);
+    }
+
+    .log-line { }
+    .log-phase { color: var(--accent); font-weight: 700; }
+    .log-done-ok   { color: var(--green); font-weight: 700; }
+    .log-done-fail { color: var(--red);   font-weight: 700; }
+    .log-ts { color: var(--muted); user-select: none; margin-right: 8px; }
+
+    /* --------------------------------------------------------- empty state */
+    #empty {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: var(--muted);
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>agent-container</h1>
+  <span>dashboard</span>
+</header>
+
+<main>
+  <!-- ------------------------------------------------ sidebar -->
+  <div id="sidebar">
+    <form id="new-run-form" onsubmit="return false">
+      <h2>New run</h2>
+      <div>
+        <label for="inp-repo">Repo URL</label>
+        <input id="inp-repo" type="url" placeholder="https://github.com/org/repo" required />
+      </div>
+      <div>
+        <label for="inp-task">Task</label>
+        <textarea id="inp-task" rows="3" placeholder="Describe what the agent should do…" required></textarea>
+      </div>
+      <div>
+        <label for="inp-backend">Backend</label>
+        <select id="inp-backend">
+          <option value="opencode">opencode</option>
+          <option value="claude">claude</option>
+          <option value="gemini">gemini</option>
+          <option value="stub">stub</option>
+        </select>
+      </div>
+      <div>
+        <label for="inp-branch">Base branch</label>
+        <input id="inp-branch" type="text" value="main" />
+      </div>
+      <div style="display:flex;gap:12px;align-items:center;">
+        <label style="display:flex;align-items:center;gap:4px;margin:0">
+          <input id="inp-pr" type="checkbox" checked /> Create PR
+        </label>
+        <label style="display:flex;align-items:center;gap:4px;margin:0">
+          <input id="inp-tests" type="checkbox" checked /> Run tests
+        </label>
+      </div>
+      <button id="start-btn" type="button" onclick="startRun()">Start run</button>
+    </form>
+
+    <div id="run-list"></div>
+  </div>
+
+  <!-- ------------------------------------------------ detail -->
+  <div id="detail">
+    <div id="empty">Select a run or start one →</div>
+  </div>
+</main>
+
+<script>
+// ------------------------------------------------------------------ state
+const runs = {};       // run_id → { state, card el, sse }
+let activeRunId = null;
+
+// ------------------------------------------------------------------ API helpers
+async function apiPost(path, body) {
+  const r = await fetch(path, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+
+// ------------------------------------------------------------------ start run
+async function startRun() {
+  const repo  = document.getElementById('inp-repo').value.trim();
+  const task  = document.getElementById('inp-task').value.trim();
+  if (!repo || !task) return;
+
+  const btn = document.getElementById('start-btn');
+  btn.disabled = true;
+
+  try {
+    const { run_id } = await apiPost('/api/runs', {
+      repo,
+      task,
+      backend:         document.getElementById('inp-backend').value,
+      base_branch:     document.getElementById('inp-branch').value || 'main',
+      create_pr:       document.getElementById('inp-pr').checked,
+      run_tests:       document.getElementById('inp-tests').checked,
+      timeout_seconds: 300,
+    });
+    addRun(run_id, repo, task, document.getElementById('inp-backend').value);
+    openRun(run_id);
+  } catch (e) {
+    alert('Failed to start run: ' + e.message);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// ------------------------------------------------------------------ run card
+function addRun(run_id, repo, task, backend) {
+  const card = document.createElement('div');
+  card.className = 'run-card';
+  card.dataset.runId = run_id;
+  card.innerHTML = `
+    <div class="run-card-header">
+      <div class="phase-dot BOOTING" id="dot-${run_id}"></div>
+      <span class="run-id">${run_id}</span>
+    </div>
+    <div class="run-repo">${escHtml(repo)}</div>
+    <div class="run-phase" id="phase-label-${run_id}">BOOTING</div>
+  `;
+  card.onclick = () => openRun(run_id);
+  document.getElementById('run-list').prepend(card);
+
+  runs[run_id] = { repo, task, backend, phase: 'BOOTING', card, logLines: [] };
+}
+
+function updateCard(run_id, phase) {
+  const r = runs[run_id];
+  if (!r) return;
+  r.phase = phase;
+  const dot = document.getElementById('dot-' + run_id);
+  if (dot) {
+    dot.className = `phase-dot ${phase}`;
+  }
+  const label = document.getElementById('phase-label-' + run_id);
+  if (label) label.textContent = phase;
+  if (r.card) {
+    r.card.className = 'run-card' + (activeRunId === run_id ? ' active' : '');
+  }
+}
+
+// ------------------------------------------------------------------ detail panel
+function openRun(run_id) {
+  if (activeRunId === run_id) return;
+
+  // Deactivate old card
+  if (activeRunId && runs[activeRunId]) {
+    runs[activeRunId].card.classList.remove('active');
+  }
+
+  activeRunId = run_id;
+  const r = runs[run_id];
+  r.card.classList.add('active');
+
+  const detail = document.getElementById('detail');
+  detail.innerHTML = `
+    <div id="detail-header">
+      <a class="repo-link" href="${escHtml(r.repo)}" target="_blank">${escHtml(r.repo)}</a>
+      <div id="detail-meta">
+        <span class="badge">${escHtml(r.backend)}</span>
+        <span id="detail-phase">${r.phase}</span>
+        <a id="pr-link" class="hidden" href="#" target="_blank">Open PR</a>
+      </div>
+      <div style="font-size:12px;color:var(--muted);margin-top:4px">${escHtml(r.task)}</div>
+    </div>
+    <div id="log-area"></div>
+  `;
+
+  // Replay buffered log lines
+  const logArea = document.getElementById('log-area');
+  for (const line of r.logLines) {
+    logArea.appendChild(line.cloneNode(true));
+  }
+  logArea.scrollTop = logArea.scrollHeight;
+
+  // Subscribe to SSE if not already
+  if (!r.sse && !isTerminal(r.phase)) {
+    subscribeSSE(run_id);
+  }
+}
+
+function isTerminal(phase) {
+  return phase === 'DONE' || phase === 'FAILED';
+}
+
+// ------------------------------------------------------------------ SSE
+function subscribeSSE(run_id) {
+  const r = runs[run_id];
+  if (!r) return;
+
+  const sse = new EventSource(`/api/runs/${run_id}/stream`);
+  r.sse = sse;
+
+  sse.onmessage = (e) => {
+    let ev;
+    try { ev = JSON.parse(e.data); } catch { return; }
+    handleEvent(run_id, ev);
+  };
+
+  sse.onerror = () => {
+    sse.close();
+    r.sse = null;
+  };
+}
+
+function handleEvent(run_id, ev) {
+  const r = runs[run_id];
+  if (!r) return;
+
+  const ts = new Date(ev.ts * 1000).toLocaleTimeString('en-US', { hour12: false });
+
+  if (ev.type === 'phase') {
+    updateCard(run_id, ev.phase);
+    if (activeRunId === run_id) {
+      const el = document.getElementById('detail-phase');
+      if (el) el.textContent = ev.phase;
+    }
+    appendLog(run_id, ts, `▶ ${ev.phase}`, 'log-phase');
+
+  } else if (ev.type === 'log') {
+    appendLog(run_id, ts, ev.text || '', 'log-line');
+
+  } else if (ev.type === 'done') {
+    const phase = ev.success ? 'DONE' : 'FAILED';
+    updateCard(run_id, phase);
+
+    if (activeRunId === run_id) {
+      const el = document.getElementById('detail-phase');
+      if (el) el.textContent = phase;
+
+      if (ev.pr_url) {
+        const link = document.getElementById('pr-link');
+        if (link) {
+          link.href = ev.pr_url;
+          link.textContent = 'Open PR →';
+          link.classList.remove('hidden');
+        }
+      }
+    }
+
+    const cls = ev.success ? 'log-done-ok' : 'log-done-fail';
+    const msg = ev.success
+      ? `✓ DONE${ev.diff_stat ? '  ' + ev.diff_stat : ''}`
+      : `✗ FAILED${ev.error ? '  ' + ev.error : ''}`;
+    appendLog(run_id, ts, msg, cls);
+
+    if (r.sse) { r.sse.close(); r.sse = null; }
+  }
+}
+
+function appendLog(run_id, ts, text, cls) {
+  const r = runs[run_id];
+  if (!r) return;
+
+  const span = document.createElement('div');
+  span.className = cls;
+  span.innerHTML = `<span class="log-ts">${escHtml(ts)}</span>${escHtml(text)}`;
+  r.logLines.push(span);
+
+  if (activeRunId === run_id) {
+    const logArea = document.getElementById('log-area');
+    if (logArea) {
+      logArea.appendChild(span.cloneNode(true));
+      logArea.scrollTop = logArea.scrollHeight;
+    }
+  }
+}
+
+// ------------------------------------------------------------------ utils
+function escHtml(s) {
+  return String(s ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+// ------------------------------------------------------------------ boot — load existing runs
+(async () => {
+  try {
+    const list = await fetch('/api/runs').then(r => r.json());
+    for (const run of list.reverse()) {
+      addRun(run.run_id, run.repo, run.task || '', run.backend || 'opencode');
+      updateCard(run.run_id, run.phase);
+    }
+  } catch { /* dashboard works offline */ }
+})();
+</script>
+</body>
+</html>
