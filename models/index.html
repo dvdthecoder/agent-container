@@ -998,13 +998,17 @@ standard benchmark for autonomous code editing on real repositories.</p>
 <td>SWE-bench score</td>
 <td><strong>#1 as of 2026-04</strong></td>
 </tr>
+<tr>
+<td>Latest model</td>
+<td>MiniMax-M2.7 (M2.5 is previous, both available)</td>
+</tr>
 </tbody>
 </table>
 <h3 id="route-a-hosted-api-fastest-setup-no-gpu-cost">Route A — Hosted API (fastest setup, no GPU cost)<a class="headerlink" href="#route-a-hosted-api-fastest-setup-no-gpu-cost" title="Permanent link">&para;</a></h3>
-<p>Get an API key at <strong>platform.minimax.chat</strong>, then set three env vars:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nv">OPENAI_BASE_URL</span><span class="o">=</span>https://api.minimax.chat/v1
+<p>Get an API key at <strong>platform.minimax.io</strong> → Account Management → API Keys, then set:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nv">OPENAI_BASE_URL</span><span class="o">=</span>https://api.minimax.io/v1
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nv">OPENAI_API_KEY</span><span class="o">=</span>your-minimax-api-key
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="nv">OPENCODE_MODEL</span><span class="o">=</span>MiniMax-M2.5
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="nv">OPENCODE_MODEL</span><span class="o">=</span>MiniMax-M2.5<span class="w">           </span><span class="c1"># or MiniMax-M2.7 (latest), MiniMax-M2.5-highspeed</span>
 </code></pre></div>
 <p>Done. No deployment step — <code>agent-run</code> calls the MiniMax API directly from inside the
 sandbox container.</p>
