@@ -604,21 +604,49 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#deploy-the-model" class="md-nav__link">
+  <a href="#recommended-minimax-m25" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Deploy the model
+        Recommended: MiniMax M2.5
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Recommended: MiniMax M2.5">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#route-a-hosted-api-fastest-setup-no-gpu-cost" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Route A — Hosted API (fastest setup, no GPU cost)
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#profiles" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#route-b-self-hosted-on-modal-gpu-full-control-1m-context" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Profiles
+        Route B — Self-hosted on Modal GPU (full control, 1M context)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#profiles-self-hosted" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Profiles (self-hosted)
       
     </span>
   </a>
@@ -630,28 +658,6 @@
     <span class="md-ellipsis">
       
         Why SGLang
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#why-qwen3-coder" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Why Qwen3-Coder
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#why-modal-for-the-model" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Why Modal for the model
       
     </span>
   </a>
@@ -866,21 +872,49 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#deploy-the-model" class="md-nav__link">
+  <a href="#recommended-minimax-m25" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Deploy the model
+        Recommended: MiniMax M2.5
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Recommended: MiniMax M2.5">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#route-a-hosted-api-fastest-setup-no-gpu-cost" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Route A — Hosted API (fastest setup, no GPU cost)
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#profiles" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#route-b-self-hosted-on-modal-gpu-full-control-1m-context" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Profiles
+        Route B — Self-hosted on Modal GPU (full control, 1M context)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#profiles-self-hosted" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Profiles (self-hosted)
       
     </span>
   </a>
@@ -892,28 +926,6 @@
     <span class="md-ellipsis">
       
         Why SGLang
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#why-qwen3-coder" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Why Qwen3-Coder
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#why-modal-for-the-model" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Why Modal for the model
       
     </span>
   </a>
@@ -952,19 +964,66 @@
 
 
 <h1 id="model-setup">Model Setup<a class="headerlink" href="#model-setup" title="Permanent link">&para;</a></h1>
-<p>The model runs on Modal GPU infrastructure, deployed once and called by the sandbox over Modal's
-internal network. The inference server is <a href="https://github.com/sgl-project/sglang">SGLang</a> —
-an open-source, high-performance serving framework built for agent and reasoning workloads.</p>
-<h2 id="deploy-the-model">Deploy the model<a class="headerlink" href="#deploy-the-model" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>modal<span class="w"> </span>deploy<span class="w"> </span>modal/serve.py
+<p>The sandbox passes three env vars into every container run:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nv">OPENAI_BASE_URL</span><span class="o">=</span>...<span class="w">   </span><span class="c1"># any OpenAI-compatible endpoint</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nv">OPENAI_API_KEY</span><span class="o">=</span>...<span class="w">    </span><span class="c1"># key for that endpoint</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="nv">OPENCODE_MODEL</span><span class="o">=</span>...<span class="w">    </span><span class="c1"># model name the endpoint accepts</span>
 </code></pre></div>
-<p>This starts Qwen3-Coder on an A100 GPU and exposes an internal Modal endpoint. The sandbox
-container calls it automatically — no URL configuration needed, it's wired up inside Modal's
-network.</p>
-<p>Scale-to-zero when idle. You pay only for GPU seconds while the model is actually processing a
-request.</p>
-<h2 id="profiles">Profiles<a class="headerlink" href="#profiles" title="Permanent link">&para;</a></h2>
-<p><code>modal/serve.py</code> ships with two profiles:</p>
+<p>That's the full coupling. Any OpenAI-compatible inference server works — hosted or self-hosted.</p>
+<hr />
+<h2 id="recommended-minimax-m25">Recommended: MiniMax M2.5<a class="headerlink" href="#recommended-minimax-m25" title="Permanent link">&para;</a></h2>
+<p>MiniMax M2.5 is currently the top-ranked model on <a href="https://swebench.com">SWE-bench</a> — the
+standard benchmark for autonomous code editing on real repositories.</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Architecture</td>
+<td>MoE + Lightning Attention</td>
+</tr>
+<tr>
+<td>Active params</td>
+<td>~45B (out of 456B total)</td>
+</tr>
+<tr>
+<td>Context window</td>
+<td>1 000 000 tokens</td>
+</tr>
+<tr>
+<td>SWE-bench score</td>
+<td><strong>#1 as of 2026-04</strong></td>
+</tr>
+</tbody>
+</table>
+<h3 id="route-a-hosted-api-fastest-setup-no-gpu-cost">Route A — Hosted API (fastest setup, no GPU cost)<a class="headerlink" href="#route-a-hosted-api-fastest-setup-no-gpu-cost" title="Permanent link">&para;</a></h3>
+<p>Get an API key at <strong>platform.minimax.chat</strong>, then set three env vars:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nv">OPENAI_BASE_URL</span><span class="o">=</span>https://api.minimax.chat/v1
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nv">OPENAI_API_KEY</span><span class="o">=</span>your-minimax-api-key
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="nv">OPENCODE_MODEL</span><span class="o">=</span>MiniMax-M2.5
+</code></pre></div>
+<p>Done. No deployment step — <code>agent-run</code> calls the MiniMax API directly from inside the
+sandbox container.</p>
+<h3 id="route-b-self-hosted-on-modal-gpu-full-control-1m-context">Route B — Self-hosted on Modal GPU (full control, 1M context)<a class="headerlink" href="#route-b-self-hosted-on-modal-gpu-full-control-1m-context" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nv">SERVE_PROFILE</span><span class="o">=</span>minimax<span class="w"> </span>modal<span class="w"> </span>deploy<span class="w"> </span>modal/serve.py
+</code></pre></div>
+<p>Modal deploys SGLang on 8× A100 80GB with tensor parallelism. After deployment:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nv">OPENAI_BASE_URL</span><span class="o">=</span>https://your-org--agent-container-serve.modal.run/v1
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nv">OPENAI_API_KEY</span><span class="o">=</span>modal
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="nv">OPENCODE_MODEL</span><span class="o">=</span>minimax-m2.5
+</code></pre></div>
+<div class="admonition note">
+<p class="admonition-title">Cold start</p>
+<p>The MiniMax profile uses 8× A100 80GB — cold start takes ~10 minutes on first deploy.
+Set <code>SCALEDOWN_WINDOW=600</code> (default) to keep it warm between runs.</p>
+</div>
+<hr />
+<h2 id="profiles-self-hosted">Profiles (self-hosted)<a class="headerlink" href="#profiles-self-hosted" title="Permanent link">&para;</a></h2>
+<p><code>modal/serve.py</code> ships with three profiles, selected via <code>SERVE_PROFILE</code>:</p>
 <table>
 <thead>
 <tr>
@@ -972,7 +1031,7 @@ request.</p>
 <th>Model</th>
 <th>GPU</th>
 <th>Context</th>
-<th>Use case</th>
+<th>Best for</th>
 </tr>
 </thead>
 <tbody>
@@ -981,27 +1040,33 @@ request.</p>
 <td>Qwen3-Coder 8B</td>
 <td>A10G</td>
 <td>32 k</td>
-<td>Development, CI, low-cost runs</td>
+<td>Development, CI, cheap iteration</td>
 </tr>
 <tr>
 <td><code>prod</code></td>
 <td>Qwen3-Coder 80B</td>
 <td>2× A100 80GB</td>
 <td>128 k</td>
-<td>Production, large repos</td>
+<td>Production Qwen3 runs</td>
+</tr>
+<tr>
+<td><code>minimax</code></td>
+<td>MiniMax M2.5</td>
+<td>8× A100 80GB</td>
+<td>1 M</td>
+<td>Best quality, large repo context</td>
 </tr>
 </tbody>
 </table>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># test profile (default)</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>modal<span class="w"> </span>deploy<span class="w"> </span>modal/serve.py
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="c1"># production profile</span>
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="nv">SERVE_PROFILE</span><span class="o">=</span>prod<span class="w"> </span>modal<span class="w"> </span>deploy<span class="w"> </span>modal/serve.py
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>modal<span class="w"> </span>deploy<span class="w"> </span>modal/serve.py<span class="w">                        </span><span class="c1"># test</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="nv">SERVE_PROFILE</span><span class="o">=</span>prod<span class="w"> </span>modal<span class="w"> </span>deploy<span class="w"> </span>modal/serve.py<span class="w">     </span><span class="c1"># prod</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="nv">SERVE_PROFILE</span><span class="o">=</span>minimax<span class="w"> </span>modal<span class="w"> </span>deploy<span class="w"> </span>modal/serve.py<span class="w">  </span><span class="c1"># minimax</span>
 </code></pre></div>
+<hr />
 <h2 id="why-sglang">Why SGLang<a class="headerlink" href="#why-sglang" title="Permanent link">&para;</a></h2>
 <p>SGLang's <strong>RadixAttention</strong> automatically caches shared KV prefixes across requests using a radix
 tree. Agent runs against the same repo repeatedly re-use the cached representation of the system
-prompt and repo context — only the task-specific tokens need to be computed from scratch.</p>
+prompt and repo context — only the task-specific tokens are computed from scratch.</p>
 <p>This matters for agent-container because:</p>
 <ul>
 <li>Every run against the same repo shares a large common prefix (system prompt + file tree)</li>
@@ -1010,48 +1075,32 @@ prompt and repo context — only the task-specific tokens need to be computed fr
 </ul>
 <p>Benchmarks show ~29% higher throughput vs vLLM on prefix-heavy workloads (H100, ShareGPT-style).
 For purely unique-prompt workloads the gap closes, but the agent pattern is prefix-heavy by nature.</p>
-<p>SGLang also exposes the same OpenAI-compatible API as vLLM — no changes to the sandbox, CLI, or
-any calling code are required when switching between inference backends.</p>
-<h2 id="why-qwen3-coder">Why Qwen3-Coder<a class="headerlink" href="#why-qwen3-coder" title="Permanent link">&para;</a></h2>
-<p>Qwen3-Coder 80B scores <strong>70.6 on SWE-bench</strong> — the standard benchmark for real code editing on
-real repositories. It is purpose-built for software engineering tasks: reading large codebases,
-understanding context, making targeted edits, writing tests.</p>
-<p>The 80B model fits on 2× A100 80GB with tensor parallelism (<code>--tp 2</code>), which is what the <code>prod</code>
-profile provisions. The 8B test model fits on a single A10G.</p>
-<h2 id="why-modal-for-the-model">Why Modal for the model<a class="headerlink" href="#why-modal-for-the-model" title="Permanent link">&para;</a></h2>
-<ul>
-<li>No GPU hardware to buy or manage</li>
-<li>Same infrastructure as the sandbox — one platform, one bill, one set of credentials</li>
-<li>Internal network between sandbox and model — no public internet hop, lower latency</li>
-<li>Scale-to-zero: costs nothing when no agent runs are happening</li>
-</ul>
+<hr />
 <h2 id="agent-backends-and-model-coupling">Agent backends and model coupling<a class="headerlink" href="#agent-backends-and-model-coupling" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
 <th>Backend</th>
-<th>Model</th>
+<th>Model source</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td><code>opencode</code></td>
-<td>Qwen3-Coder via Modal SGLang endpoint (default)</td>
+<td>Any endpoint via <code>OPENAI_BASE_URL</code> — MiniMax, Qwen3, or self-hosted</td>
 </tr>
 <tr>
 <td><code>claude</code></td>
-<td>Anthropic API (Claude Code CLI reads <code>ANTHROPIC_API_KEY</code>)</td>
+<td>Anthropic API (<code>ANTHROPIC_API_KEY</code>)</td>
 </tr>
 <tr>
 <td><code>gemini</code></td>
-<td>Google AI / Vertex (Gemini CLI reads <code>GEMINI_API_KEY</code>)</td>
+<td>Google AI / Vertex (<code>GEMINI_API_KEY</code>)</td>
 </tr>
 </tbody>
 </table>
-<p>The <code>opencode</code> backend is the default and recommended path — it uses the Modal-hosted model,
-keeping everything within Modal's infrastructure.</p>
-<p>The <code>claude</code> and <code>gemini</code> backends are available for teams already standardised on those CLIs.
-When using them, prompts go to Anthropic or Google respectively.</p>
+<p>The <code>opencode</code> backend is the default. It uses whatever endpoint <code>OPENAI_BASE_URL</code> points to —
+swap the three env vars to change models with zero code changes.</p>
 
 
 
