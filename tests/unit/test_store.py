@@ -4,10 +4,7 @@ from __future__ import annotations
 
 import time
 
-import pytest
-
 from dashboard.store import WorkspaceStore
-
 
 # ------------------------------------------------------------------ helpers
 
@@ -17,7 +14,9 @@ def _store() -> WorkspaceStore:
 
 
 def _create(store: WorkspaceStore, run_id: str = "run-001") -> None:
-    store.create_run(run_id=run_id, repo="https://github.com/org/repo", task="fix it", backend="opencode")
+    store.create_run(
+        run_id=run_id, repo="https://github.com/org/repo", task="fix it", backend="opencode"
+    )
 
 
 # ------------------------------------------------------------------ create / get / list

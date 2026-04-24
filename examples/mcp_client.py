@@ -56,7 +56,7 @@ async def demo_via_direct_import() -> None:
     for ev in status["events"][:3]:
         print(f"  {ev['type']:8}  {ev.get('phase') or ev.get('text', '')[:60]}")
 
-    print(f"\n=== sandbox_list (after run) ===")
+    print("\n=== sandbox_list (after run) ===")
     runs = await sandbox_list()
     print(f"{len(runs)} run(s) recorded")
 

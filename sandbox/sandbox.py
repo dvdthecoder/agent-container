@@ -68,7 +68,7 @@ class ModalSandbox:
             if on_event is not None:
                 try:
                     on_event(event_type, payload)
-                except Exception:
+                except Exception:  # noqa: S110
                     pass  # never let dashboard callbacks crash the run
 
         start = time.monotonic()

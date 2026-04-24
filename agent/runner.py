@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import modal
-
 from agent.backends import AgentBackend
 
 

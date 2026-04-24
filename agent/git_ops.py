@@ -8,10 +8,9 @@ from __future__ import annotations
 
 import json
 import shlex
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import modal
-
 from sandbox.config import ConfigError, SandboxConfig
 from sandbox.providers import RepoProvider, detect_provider
 
@@ -23,7 +22,7 @@ def branch_name(backend: str) -> str:
 
     Format: ``agent/<backend>-YYYYMMDD-HHMMSS``
     """
-    ts = datetime.now(tz=timezone.utc).strftime("%Y%m%d-%H%M%S")
+    ts = datetime.now(tz=UTC).strftime("%Y%m%d-%H%M%S")
     return f"agent/{backend}-{ts}"
 
 

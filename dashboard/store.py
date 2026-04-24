@@ -14,7 +14,6 @@ from typing import Any
 
 from sandbox.result import AgentTaskResult
 
-
 # Phases in lifecycle order.  The store auto-advances phase on well-known events.
 PHASES = ["BOOTING", "CLONING", "RUNNING", "TESTING", "PR", "DONE", "FAILED"]
 

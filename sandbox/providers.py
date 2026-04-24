@@ -63,7 +63,7 @@ class GitHubProvider:
     """github.com — REST API v3, PAT or fine-grained token."""
 
     name = "github"
-    token_env_var = "GITHUB_TOKEN"
+    token_env_var = "GITHUB_TOKEN"  # noqa: S105
 
     def matches(self, repo: str) -> bool:
         return "github.com" in repo
@@ -113,7 +113,7 @@ class GitLabProvider:
     """gitlab.com — REST API v4, personal access token or OAuth2 token."""
 
     name = "gitlab"
-    token_env_var = "GITLAB_TOKEN"
+    token_env_var = "GITLAB_TOKEN"  # noqa: S105
 
     def matches(self, repo: str) -> bool:
         return "gitlab.com" in repo

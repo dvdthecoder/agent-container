@@ -193,7 +193,7 @@ def main() -> None:
     args = parser.parse_args()
 
     if args.transport == "sse":
-        mcp.run(transport="sse", host="0.0.0.0", port=args.port)
+        mcp.run(transport="sse", host="0.0.0.0", port=args.port)  # noqa: S104
     else:
         mcp.run(transport="stdio")
 
