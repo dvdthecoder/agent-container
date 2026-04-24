@@ -23,15 +23,16 @@ standard benchmark for autonomous code editing on real repositories.
 | Active params | ~45B (out of 456B total) |
 | Context window | 1 000 000 tokens |
 | SWE-bench score | **#1 as of 2026-04** |
+| Latest model | MiniMax-M2.7 (M2.5 is previous, both available) |
 
 ### Route A — Hosted API (fastest setup, no GPU cost)
 
-Get an API key at **platform.minimax.chat**, then set three env vars:
+Get an API key at **platform.minimax.io** → Account Management → API Keys, then set:
 
 ```bash
-OPENAI_BASE_URL=https://api.minimax.chat/v1
+OPENAI_BASE_URL=https://api.minimax.io/v1
 OPENAI_API_KEY=your-minimax-api-key
-OPENCODE_MODEL=MiniMax-M2.5
+OPENCODE_MODEL=MiniMax-M2.5           # or MiniMax-M2.7 (latest), MiniMax-M2.5-highspeed
 ```
 
 Done. No deployment step — `agent-run` calls the MiniMax API directly from inside the

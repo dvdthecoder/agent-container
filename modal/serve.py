@@ -25,7 +25,7 @@ Add it to .env:
   OPENCODE_MODEL=<SERVED_MODEL_NAME from profile below>
 
 Alternatively, use MiniMax's hosted API instead (no GPU required):
-  OPENAI_BASE_URL=https://api.minimax.chat/v1
+  OPENAI_BASE_URL=https://api.minimax.io/v1
   OPENAI_API_KEY=<your-minimax-api-key>
   OPENCODE_MODEL=MiniMax-M2.5
 """

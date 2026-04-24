@@ -120,8 +120,8 @@ Two options — both work with zero code changes:
 
 **Option A — MiniMax M2.5 hosted API** (recommended, no GPU setup):
 ```bash
-OPENAI_BASE_URL=https://api.minimax.chat/v1
-OPENAI_API_KEY=your-minimax-api-key   # platform.minimax.chat
+OPENAI_BASE_URL=https://api.minimax.io/v1
+OPENAI_API_KEY=your-minimax-api-key   # platform.minimax.io → Account Management → API Keys
 OPENCODE_MODEL=MiniMax-M2.5
 ```
 
