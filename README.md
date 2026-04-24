@@ -54,7 +54,7 @@ PR is opened, and the sandbox is destroyed. The agent never touches your local m
                        ▼
 ┌──────────────────────────────────────────────────────────┐
 │  Model endpoint — pluggable                              │
-│  MiniMax M2.5 hosted API  (recommended)                  │
+│  DeepSeek V4 Pro API  (recommended, ~$1-3/run)           │
 │  or: modal deploy modal/serve.py  (SGLang, scale-to-0)  │
 └──────────────────────────────────────────────────────────┘
 ```
@@ -116,27 +116,27 @@ make lint               # ruff check
 
 ## Model setup
 
-Two options — both work with zero code changes:
+Three env vars — swap them to change models, no code changes:
 
-**Option A — MiniMax M2.5 hosted API** (recommended, no GPU setup):
+**Recommended — DeepSeek V4 Pro** (~74% aider score, ~$1–3/run, 1M context):
 ```bash
-OPENAI_BASE_URL=https://api.minimax.io/v1
-OPENAI_API_KEY=your-minimax-api-key   # platform.minimax.io → Account Management → API Keys
-OPENCODE_MODEL=MiniMax-M2.5
+OPENAI_BASE_URL=https://api.deepseek.com/v1
+OPENAI_API_KEY=your-deepseek-api-key   # platform.deepseek.com → API Keys
+OPENCODE_MODEL=deepseek-v4-pro
 ```
 
-**Option B — Self-hosted on Modal GPU** (full control, scale-to-zero):
+**Budget — DeepSeek V4 Flash** (~10× cheaper, same 1M context):
 ```bash
-# Qwen3-Coder (default)
-modal deploy modal/serve.py
-
-# MiniMax M2.5 on 8× A100 80GB
-SERVE_PROFILE=minimax modal deploy modal/serve.py
+OPENCODE_MODEL=deepseek-v4-flash   # keep same BASE_URL and API_KEY
 ```
 
-MiniMax M2.5 is currently **#1 on SWE-bench** — the standard benchmark for real-repo code editing.
-It uses a MoE architecture (~45B active params, 1M context). See [Model setup](docs/models.md) for
-full profile table and GPU requirements.
+**Self-hosted on Modal GPU** (full control, scale-to-zero):
+```bash
+SERVE_PROFILE=minimax modal deploy modal/serve.py   # MiniMax M2.5, 8× A100
+SERVE_PROFILE=prod    modal deploy modal/serve.py   # Qwen3-Coder 80B
+```
+
+See [Model setup docs](docs/models.md) for the full comparison table and GPU profiles.
 
 ---
 

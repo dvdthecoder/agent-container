@@ -7,7 +7,7 @@ Get your first agent task running in under 5 minutes.
 - Python 3.11+
 - A [Modal](https://modal.com) account (free tier works)
 - A GitHub personal access token
-- A MiniMax API key — get one at [platform.minimax.io](https://platform.minimax.io) (recommended)
+- A DeepSeek API key — get one at [platform.deepseek.com](https://platform.deepseek.com) (recommended)
   or any other OpenAI-compatible model endpoint
 
 ## 1. Install
@@ -40,18 +40,18 @@ MODAL_TOKEN_SECRET=as-...
 # GitHub
 GITHUB_TOKEN=ghp_...
 
-# Model — MiniMax M2.5 hosted API (recommended, no GPU setup)
-OPENAI_BASE_URL=https://api.minimax.io/v1
-OPENAI_API_KEY=your-minimax-api-key
-OPENCODE_MODEL=MiniMax-M2.5
+# Model — DeepSeek V4 Pro (recommended: ~74% aider score, ~$1-3/run, 1M context)
+OPENAI_BASE_URL=https://api.deepseek.com/v1
+OPENAI_API_KEY=your-deepseek-api-key
+OPENCODE_MODEL=deepseek-v4-pro
 ```
 
 !!! tip "Self-hosted model (optional)"
     To run the model on your own Modal GPU instead:
     ```bash
-    modal deploy modal/serve.py            # Qwen3-Coder 8B (test)
-    SERVE_PROFILE=prod modal deploy ...    # Qwen3-Coder 80B
-    SERVE_PROFILE=minimax modal deploy ... # MiniMax M2.5 on 8× A100
+    SERVE_PROFILE=minimax modal deploy modal/serve.py  # MiniMax M2.5, 8× A100
+    SERVE_PROFILE=prod    modal deploy modal/serve.py  # Qwen3-Coder 80B
+    modal deploy modal/serve.py                        # Qwen3-Coder 8B (test)
     ```
     Then set `OPENAI_BASE_URL` to the printed endpoint URL.
 
