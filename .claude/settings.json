@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "agent-container": {
+      "command": "python3",
+      "args": ["-m", "mcp_server.server"],
+      "env": {
+        "MODAL_TOKEN_ID": "",
+        "MODAL_TOKEN_SECRET": "",
+        "GITHUB_TOKEN": "",
+        "GITLAB_TOKEN": "",
+        "OPENAI_BASE_URL": "",
+        "OPENAI_API_KEY": ""
+      }
+    }
+  }
+}
