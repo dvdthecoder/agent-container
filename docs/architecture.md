@@ -77,7 +77,7 @@ Step 1 — Clone
   git checkout -b agent/<slug>-<timestamp>
 
 Step 2 — Agent runs
-  opencode --print -m "<task prompt>"     # or claude / gemini equivalent
+  python3 /opencode_runner.py "<task prompt>"   # ACP-based; or claude / gemini equivalent
   streams output live to dashboard via SSE
 
 Step 3 — Collect result

@@ -73,8 +73,8 @@ class SandboxConfig:
         self._require_modal_auth()
 
     def _require_modal_cli(self) -> None:
-        result = subprocess.run(
-            ["modal", "--version"],
+        result = subprocess.run(  # noqa: S603
+            ["modal", "--version"],  # noqa: S607 — modal CLI installed in dev environment
             capture_output=True,
             timeout=10,
         )
@@ -82,8 +82,8 @@ class SandboxConfig:
             raise ConfigError("modal CLI not found.\nInstall it with: pip install modal")
 
     def _require_modal_auth(self) -> None:
-        result = subprocess.run(
-            ["modal", "token", "current"],
+        result = subprocess.run(  # noqa: S603
+            ["modal", "token", "current"],  # noqa: S607 — modal CLI installed in dev environment
             capture_output=True,
             timeout=10,
         )

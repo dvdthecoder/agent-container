@@ -41,8 +41,11 @@ for full air-gap deployments. The model is fully under your control.
 
 Invoked inside the container as:
 ```bash
-opencode --print -m "<task prompt>"
+python3 /opencode_runner.py "<task prompt>"
 ```
+
+`opencode_runner.py` drives opencode non-interactively via its ACP (Agent Client Protocol)
+JSON-RPC interface (`opencode acp`), streaming output to stdout as the agent works.
 
 ---
 

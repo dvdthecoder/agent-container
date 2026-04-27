@@ -129,4 +129,4 @@ def serve() -> None:
     ]
     if TP_SIZE > 1:
         cmd += ["--tp", str(TP_SIZE)]
-    subprocess.Popen(cmd)
+    subprocess.Popen(cmd)  # noqa: S603 — cmd is fully hardcoded; TP_SIZE is an int

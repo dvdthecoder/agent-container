@@ -82,8 +82,8 @@ def _write_config() -> None:
 
 class AcpClient:
     def __init__(self) -> None:
-        self._proc = subprocess.Popen(
-            ["opencode", "acp"],
+        self._proc = subprocess.Popen(  # noqa: S603
+            ["opencode", "acp"],  # noqa: S607 — opencode installed via npm in the container
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.DEVNULL,
@@ -96,7 +96,7 @@ class AcpClient:
         t.start()
 
     def _reader(self) -> None:
-        assert self._proc.stdout is not None
+        assert self._proc.stdout is not None  # noqa: S101 — guaranteed by stdout=PIPE
         for raw in self._proc.stdout:
             line = raw.decode("utf-8", errors="replace").strip()
             if not line:
@@ -123,7 +123,7 @@ class AcpClient:
             self._stop_reason = kind
 
     def send(self, req: dict, timeout: float = 15.0) -> dict:
-        assert self._proc.stdin is not None
+        assert self._proc.stdin is not None  # noqa: S101 — guaranteed by stdin=PIPE
         self._proc.stdin.write((json.dumps(req) + "\n").encode())
         self._proc.stdin.flush()
         deadline = time.monotonic() + timeout
