@@ -56,6 +56,35 @@ communicating over Modal's internal network. No external API keys required.
 
 ## Quickstart
 
+```
+ YOU                          MODAL
+  │                             │
+  │  1. pip install             │
+  │     modal token new ───────▶│ authenticate
+  │                             │
+  │  2. modal deploy ──────────▶│ build image
+  │     modal/serve.py          │ download weights (once)
+  │                             │ start SGLang server
+  │                             │◀─── prints endpoint URL
+  │                             │
+  │  3. cp .env.example .env    │
+  │     paste URL + tokens      │
+  │                             │
+  │  4. make dashboard ─────────┼──▶ http://localhost:8000
+  │     (or agent-run CLI)      │         │
+  │                             │         │ submit task
+  │                             │         ▼
+  │                             │    boot sandbox
+  │                             │    git clone repo
+  │                             │    run opencode ──▶ SGLang (your model)
+  │                             │    git diff
+  │                             │    open PR
+  │                             │    destroy sandbox
+  │                             │◀─── PR URL + diff stat
+  │◀────────────────────────────│
+  ✓ Done
+```
+
 ### 1. Install
 
 ```bash
@@ -71,7 +100,10 @@ SERVE_PROFILE=prod    modal deploy modal/serve.py  # Qwen3-Coder 80B — product
 SERVE_PROFILE=minimax modal deploy modal/serve.py  # MiniMax M2.5    — best SWE-bench score
 ```
 
-Modal prints the endpoint URL on deploy. Copy it.
+Modal prints the endpoint URL on deploy — you need it in the next step:
+```
+✓ Created web endpoint: https://your-org--agent-container-serve.modal.run
+```
 
 ### 3. Configure
 
