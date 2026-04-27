@@ -57,16 +57,19 @@ def detect_and_run(
 
 def _detect_runner(sb: modal.Sandbox, workdir: str) -> str | None:
     """Return the name of the first matching test runner, or ``None``."""
-    # Build a single sh -c command that echoes the runner name or "none".
-    branches = " ".join(f"if {cond}; then echo {name}; el" for name, cond in _DETECT_CONDITIONS)
-    # Close the if-elif chain.
-    script = branches + "se echo none; fi"
+    # Build a valid if/elif/else/fi chain as a one-liner.
+    parts = []
+    for i, (name, cond) in enumerate(_DETECT_CONDITIONS):
+        kw = "if" if i == 0 else "elif"
+        parts.append(f"{kw} {cond}; then echo {name}")
+    script = "; ".join(parts) + "; else echo none; fi"
 
     proc = sb.exec("sh", "-c", script, workdir=workdir)
     output = proc.stdout.read().strip()
     proc.wait()
 
-    return None if output == "none" else output
+    known = {name for name, _ in _DETECT_CONDITIONS}
+    return output if output in known else None
 
 
 def _run_tests(

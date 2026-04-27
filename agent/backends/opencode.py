@@ -14,4 +14,4 @@ class OpenCodeBackend:
     display_name = "OpenCode"
 
     def command(self, task: str) -> list[str]:
-        return ["opencode", "--print", "-m", task]
+        return ["python3", "/opencode_runner.py", task]

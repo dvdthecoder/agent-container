@@ -50,7 +50,7 @@ def test_non_zero_exit_code_returned_as_is():
 @pytest.mark.parametrize(
     "backend, expected_argv_start",
     [
-        (OpenCodeBackend(), ["opencode", "--print", "-m"]),
+        (OpenCodeBackend(), ["python3", "/opencode_runner.py"]),
         (ClaudeCodeBackend(), ["claude", "--print"]),
         (GeminiBackend(), ["gemini", "--yolo", "-p"]),
         (StubBackend(), ["sh", "-c"]),

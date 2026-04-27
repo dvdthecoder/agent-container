@@ -30,6 +30,7 @@ _BASE_IMAGE = (
         "apt-get install -y nodejs",
         "npm install -g opencode-ai",
     )
+    .add_local_file("agent/opencode_runner.py", "/opencode_runner.py", copy=True)
 )
 
 

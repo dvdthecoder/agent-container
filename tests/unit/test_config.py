@@ -21,7 +21,8 @@ class TestSandboxConfigFromEnv:
         ]:
             monkeypatch.delenv(var, raising=False)
 
-        config = SandboxConfig.from_env()
+        with patch("sandbox.config.load_dotenv"):
+            config = SandboxConfig.from_env()
 
         assert config.default_image == _DEFAULT_IMAGE
         assert config.workspace_timeout_seconds == 300

@@ -31,7 +31,7 @@ def test_satisfies_protocol(backend_cls):
 
 def test_opencode_command():
     cmd = OpenCodeBackend().command("fix the bug")
-    assert cmd == ["opencode", "--print", "-m", "fix the bug"]
+    assert cmd == ["python3", "/opencode_runner.py", "fix the bug"]
 
 
 def test_claude_command():
@@ -58,7 +58,7 @@ def test_stub_command_safely_quotes_task():
 @pytest.mark.parametrize(
     "backend_name, expected_prefix",
     [
-        ("opencode", ["opencode", "--print", "-m"]),
+        ("opencode", ["python3", "/opencode_runner.py"]),
         ("claude", ["claude", "--print"]),
         ("gemini", ["gemini", "--yolo", "-p"]),
         ("stub", ["sh", "-c"]),
