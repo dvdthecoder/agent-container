@@ -25,19 +25,20 @@ spec = AgentTaskSpec(
 
 ## OpenCode (default)
 
-[OpenCode](https://opencode.ai) is an open-source coding agent designed to work with any
-OpenAI-compatible model endpoint.
+[OpenCode](https://opencode.ai) is an open-source coding agent that runs inside the sandbox and
+talks to your self-hosted model endpoint on Modal.
 
 ```bash
 AGENT_BACKEND=opencode   # or omit — this is the default
-OPENAI_BASE_URL=...
-OPENAI_API_KEY=...
-OPENCODE_MODEL=...
+
+# Set after deploying modal/serve.py:
+OPENAI_BASE_URL=https://your-org--agent-container-serve.modal.run/v1
+OPENAI_API_KEY=modal
+OPENCODE_MODEL=qwen3-coder   # or minimax-m2.5
 ```
 
-**Best for**: teams wanting the best quality-to-cost ratio. Point `OPENAI_BASE_URL` at DeepSeek's
-API (`deepseek-v4-pro`) for ~74% aider score at ~$1–3/run, or at a self-hosted SGLang endpoint
-for full air-gap deployments. The model is fully under your control.
+**Best for**: the default setup. Everything stays on Modal — no external API keys, no code leaves
+your infrastructure.
 
 Invoked inside the container as:
 ```bash
@@ -64,11 +65,8 @@ claude --print "<task prompt>"
 ```
 
 !!! warning "Privacy note"
-    Claude Code sends prompts to Anthropic's API. Code context leaves your network.
-    Use the `opencode` backend with SGLang if full air-gap is required.
-
-**Best for**: teams already using Claude Code who want consistent agent behaviour between their
-local sessions and automated sandbox runs.
+    Claude Code sends prompts to Anthropic's API. Code context leaves your Modal sandbox.
+    Use the `opencode` backend for full air-gap.
 
 ---
 
@@ -88,8 +86,9 @@ Invoked inside the container as:
 gemini --yolo -p "<task prompt>"
 ```
 
-**Best for**: teams already on GCP who need to stay within Google's infrastructure. Vertex AI
-backend keeps prompts within your GCP project.
+!!! note "Air-gap with Vertex AI"
+    Using Vertex AI keeps prompts within your GCP project. For full on-prem air-gap, use the
+    `opencode` backend with your self-hosted Modal endpoint.
 
 ---
 
@@ -97,10 +96,10 @@ backend keeps prompts within your GCP project.
 
 | | OpenCode | Claude Code | Gemini CLI |
 |---|---|---|---|
-| Model | Any via `OPENAI_BASE_URL` | Anthropic API | Google AI / Vertex |
-| Open source | ✅ | ❌ | ✅ |
-| Air-gap capable | ✅ (with SGLang or MiniMax) | ❌ | ✅ (Vertex AI) |
-| Recommended model | deepseek-v4-pro (~74% aider) | Claude Sonnet 4.5 | Gemini 2.5 Pro |
+| Model | Self-hosted on Modal | Anthropic API | Google AI / Vertex |
+| External API key needed | ❌ | ✅ | ✅ |
+| Air-gap capable | ✅ | ❌ | ✅ (Vertex AI) |
+| Default | ✅ | ❌ | ❌ |
 
 ---
 

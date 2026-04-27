@@ -10,7 +10,6 @@ ModalSandbox is the orchestrator.  Domain logic lives in dedicated modules:
 from __future__ import annotations
 
 import time
-import uuid
 from collections.abc import Callable
 
 import modal
@@ -75,12 +74,10 @@ class ModalSandbox:
 
         start = time.monotonic()
         sb: modal.Sandbox | None = None
-        # Unique app per run — avoids collisions when multiple runs execute in parallel.
-        app = modal.App.lookup(f"agent-container-{uuid.uuid4().hex[:8]}", create_if_missing=True)
         try:
             try:
                 _emit("phase", phase="BOOTING")
-                sb = self._create(spec, app)
+                sb = self._create(spec)
 
                 _emit("phase", phase="CLONING")
                 git_ops.clone(sb, spec.repo, spec.base_branch)
@@ -148,7 +145,7 @@ class ModalSandbox:
 
     # ----------------------------------------------------------------- private
 
-    def _create(self, spec: AgentTaskSpec, app: modal.App) -> modal.Sandbox:
+    def _create(self, spec: AgentTaskSpec) -> modal.Sandbox:
         image = _BASE_IMAGE
         if spec.image:
             image = modal.Image.from_registry(spec.image)
@@ -159,7 +156,6 @@ class ModalSandbox:
             image=image,
             timeout=spec.timeout_seconds,
             secrets=[modal.Secret.from_dict(env)] if env else [],
-            app=app,
         )
 
 

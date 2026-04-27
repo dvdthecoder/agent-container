@@ -37,30 +37,20 @@ PR is opened, and the sandbox is destroyed. The agent never touches your local m
                        │
                        ▼
 ┌──────────────────────────────────────────────────────────┐
-│  ModalSandbox — ephemeral container per agent run        │
+│  Modal — agent sandbox (ephemeral container per run)     │
 │  boot → clone → run agent → diff → PR → destroy         │
-│  Destroy runs in finally — container never left dangling │
-└──────────────────────┬───────────────────────────────────┘
-                       │  modal.Sandbox (Python SDK)
-                       ▼
-┌──────────────────────────────────────────────────────────┐
-│  Modal — container compute                               │
-│  Each run gets a fresh ephemeral container               │
-│  Coding agent: opencode / claude CLI / gemini CLI        │
-│                                                          │
-│  Calls → Modal model endpoint (internal network)         │
 └──────────────────────┬───────────────────────────────────┘
                        │  Modal internal network
                        ▼
 ┌──────────────────────────────────────────────────────────┐
-│  Model endpoint — pluggable                              │
-│  DeepSeek V4 Pro API  (recommended, ~$1-3/run)           │
-│  or: modal deploy modal/serve.py  (SGLang, scale-to-0)  │
+│  Modal — model serving (modal/serve.py)                  │
+│  SGLang + Qwen3-Coder / MiniMax M2.5                    │
+│  Scale-to-zero. Weights cached in Modal Volume.          │
 └──────────────────────────────────────────────────────────┘
 ```
 
-Everything runs on Modal. Sandbox compute and model serving are both Modal resources communicating
-over Modal's internal network.
+**Everything runs on Modal.** The agent sandbox and the model endpoint are both Modal resources
+communicating over Modal's internal network. No external API keys required.
 
 ---
 
@@ -70,30 +60,39 @@ over Modal's internal network.
 
 ```bash
 pip install agent-container
+modal token new   # browser prompt — saves to ~/.modal.toml
 ```
 
-### 2. Configure
+### 2. Deploy your model
+
+```bash
+modal deploy modal/serve.py                        # Qwen3-Coder 8B  — cheap, good for testing
+SERVE_PROFILE=prod    modal deploy modal/serve.py  # Qwen3-Coder 80B — production quality
+SERVE_PROFILE=minimax modal deploy modal/serve.py  # MiniMax M2.5    — best SWE-bench score
+```
+
+Modal prints the endpoint URL on deploy. Copy it.
+
+### 3. Configure
 
 ```bash
 cp .env.example .env
 ```
 
-Required:
+Fill in three things:
+
 ```bash
-# Modal — sandbox compute
-MODAL_TOKEN_ID=...
-MODAL_TOKEN_SECRET=...
+MODAL_TOKEN_ID=ak-...
+MODAL_TOKEN_SECRET=as-...
 
-# Git provider
-GITHUB_TOKEN=ghp_...
+OPENAI_BASE_URL=https://your-org--agent-container-serve.modal.run/v1   # from step 2
+OPENAI_API_KEY=modal
+OPENCODE_MODEL=qwen3-coder   # or minimax-m2.5
 
-# Model endpoint — MiniMax M2.5 hosted API (recommended)
-OPENAI_BASE_URL=https://api.minimax.io/v1
-OPENAI_API_KEY=your-minimax-api-key
-OPENCODE_MODEL=MiniMax-M2.5
+GITHUB_TOKEN=ghp_...   # Contents (read) + Pull Requests (read/write)
 ```
 
-### 3. Run
+### 4. Run
 
 ```bash
 agent-run \
@@ -101,61 +100,46 @@ agent-run \
   --task "Fix the off-by-one error in pagination"
 ```
 
-That's it. No Docker, no servers, no infrastructure setup.
+That's it. No Docker, no servers beyond Modal.
 
 ### Common commands
 
 ```bash
-make test               # run unit tests
-make dashboard          # start live dashboard at http://localhost:8000
-make mcp                # start MCP server (stdio) for Claude Code / Gemini CLI
-make lint               # ruff check
+make test               # unit tests — no external services
+make dashboard          # live dashboard at http://localhost:8000
+make mcp                # MCP server (stdio) for Claude Code / Gemini CLI
+make lint               # ruff check + format check
 ```
 
 ---
 
-## Model setup
+## Model profiles
 
-Three env vars — swap them to change models, no code changes:
+Three GPU profiles in `modal/serve.py`:
 
-**Recommended — DeepSeek V4 Pro** (~74% aider score, ~$1–3/run, 1M context):
-```bash
-OPENAI_BASE_URL=https://api.deepseek.com/v1
-OPENAI_API_KEY=your-deepseek-api-key   # platform.deepseek.com → API Keys
-OPENCODE_MODEL=deepseek-v4-pro
-```
+| Profile | Model | GPU | Context | Best for |
+|---|---|---|---|---|
+| `test` (default) | Qwen3-Coder 8B | A10G | 32k | Development, CI |
+| `prod` | Qwen3-Coder 80B | 2× A100 80GB | 128k | Production PRs |
+| `minimax` | MiniMax M2.5 | 8× A100 80GB | 1M | Best quality |
 
-**Budget — DeepSeek V4 Flash** (~10× cheaper, same 1M context):
-```bash
-OPENCODE_MODEL=deepseek-v4-flash   # keep same BASE_URL and API_KEY
-```
+Scale-to-zero is on by default — you only pay while runs are active. Model weights are cached in a
+Modal Volume so cold starts after the first don't re-download.
 
-**Self-hosted on Modal GPU** (full control, scale-to-zero):
-```bash
-SERVE_PROFILE=minimax modal deploy modal/serve.py   # MiniMax M2.5, 8× A100
-SERVE_PROFILE=prod    modal deploy modal/serve.py   # Qwen3-Coder 80B
-```
-
-See [Model setup docs](docs/models.md) for the full comparison table and GPU profiles.
+See [Model setup docs](docs/models.md) for details on SGLang, RadixAttention caching, and GPU sizing.
 
 ---
 
 ## Agent backends
 
-Three coding agents are supported. All produce the same `AgentTaskResult` — the pipeline
-(PR creation, dashboard, MCP) is identical regardless of backend.
-
 ```bash
-agent-run --backend opencode ...   # default — OpenCode via OPENAI_BASE_URL
+agent-run --backend opencode ...   # default — opencode via OPENAI_BASE_URL
 agent-run --backend claude  ...    # Claude Code CLI — Anthropic API
 agent-run --backend gemini  ...    # Gemini CLI — Google AI / Vertex AI
 ```
 
-| Backend | What runs inside the sandbox | Model source |
-|---|---|---|
-| `opencode` | OpenCode CLI | Any via `OPENAI_BASE_URL` |
-| `claude` | Claude Code CLI | Anthropic API |
-| `gemini` | Gemini CLI | Google AI / Vertex AI |
+All backends produce the same `AgentTaskResult`. PR creation, dashboard, MCP are identical
+regardless of backend. The `opencode` backend uses the self-hosted Modal endpoint by default.
 
 ---
 
@@ -166,8 +150,8 @@ make dashboard
 # → http://localhost:8000
 ```
 
-Live view of all running, completed, and failed agent runs. Each run streams phase changes and log
-output in real time via Server-Sent Events. No page refresh needed.
+Live view of all running, completed, and failed agent runs. Streams phase changes and agent output
+in real time via Server-Sent Events.
 
 ```
 ● BOOTING     starting Modal sandbox...
@@ -202,10 +186,9 @@ print(result.diff_stat)   # +67 −3
 
 ## MCP integration (Claude Code / Gemini CLI)
 
-The sandbox exposes an MCP server so you can trigger runs directly from your editor session.
+`.claude/settings.json` is already checked in — fill in your tokens:
 
 ```json
-// .claude/settings.json  (already checked in — fill in your tokens)
 {
   "mcpServers": {
     "agent-container": {
@@ -216,7 +199,7 @@ The sandbox exposes an MCP server so you can trigger runs directly from your edi
         "MODAL_TOKEN_SECRET": "",
         "GITHUB_TOKEN": "",
         "OPENAI_BASE_URL": "",
-        "OPENAI_API_KEY": ""
+        "OPENAI_API_KEY": "modal"
       }
     }
   }
@@ -245,8 +228,7 @@ GITLAB_URL=https://gitlab.yourcompany.com   # omit for gitlab.com
 ```
 
 **Full air-gap setup**: GitLab on-prem + Modal in a private VPC + SGLang on-prem = no code, no
-prompt, no diff ever touches the public internet. Complete audit trail via MR descriptions (diff,
-test results, original task prompt). Human approval required before merge.
+prompt, no diff ever touches the public internet.
 
 ---
 
@@ -254,15 +236,9 @@ test results, original task prompt). Human approval required before merge.
 
 ```bash
 make test               # unit tests — no external services, always free
-make test-integration   # Modal sandbox lifecycle with stub agent (no LLM)
-make test-e2e           # nightly — real model against fixture repo
+make test-integration   # real Modal sandbox, stub agent (no LLM needed)
+make test-e2e           # real Modal sandbox + real model
 ```
-
-| Layer | What runs | Cost | Trigger |
-|---|---|---|---|
-| Unit | All modules fully mocked | $0 | Every commit |
-| Integration | Real Modal sandbox, stub agent | Modal compute only | Every PR |
-| E2E | Real Modal sandbox + real model | ~$0.05/run | Nightly |
 
 ---
 
