@@ -968,16 +968,17 @@ creation, the dashboard, and MCP integration work identically regardless of whic
 </code></pre></div>
 <hr />
 <h2 id="opencode-default">OpenCode (default)<a class="headerlink" href="#opencode-default" title="Permanent link">&para;</a></h2>
-<p><a href="https://opencode.ai">OpenCode</a> is an open-source coding agent designed to work with any
-OpenAI-compatible model endpoint.</p>
+<p><a href="https://opencode.ai">OpenCode</a> is an open-source coding agent that runs inside the sandbox and
+talks to your self-hosted model endpoint on Modal.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nv">AGENT_BACKEND</span><span class="o">=</span>opencode<span class="w">   </span><span class="c1"># or omit — this is the default</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nv">OPENAI_BASE_URL</span><span class="o">=</span>...
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="nv">OPENAI_API_KEY</span><span class="o">=</span>...
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="nv">OPENCODE_MODEL</span><span class="o">=</span>...
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="c1"># Set after deploying modal/serve.py:</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="nv">OPENAI_BASE_URL</span><span class="o">=</span>https://your-org--agent-container-serve.modal.run/v1
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="nv">OPENAI_API_KEY</span><span class="o">=</span>modal
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="nv">OPENCODE_MODEL</span><span class="o">=</span>qwen3-coder<span class="w">   </span><span class="c1"># or minimax-m2.5</span>
 </code></pre></div>
-<p><strong>Best for</strong>: teams wanting the best quality-to-cost ratio. Point <code>OPENAI_BASE_URL</code> at DeepSeek's
-API (<code>deepseek-v4-pro</code>) for ~74% aider score at ~$1–3/run, or at a self-hosted SGLang endpoint
-for full air-gap deployments. The model is fully under your control.</p>
+<p><strong>Best for</strong>: the default setup. Everything stays on Modal — no external API keys, no code leaves
+your infrastructure.</p>
 <p>Invoked inside the container as:
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>python3<span class="w"> </span>/opencode_runner.py<span class="w"> </span><span class="s2">&quot;&lt;task prompt&gt;&quot;</span>
 </code></pre></div></p>
@@ -994,11 +995,9 @@ JSON-RPC interface (<code>opencode acp</code>), streaming output to stdout as th
 </code></pre></div></p>
 <div class="admonition warning">
 <p class="admonition-title">Privacy note</p>
-<p>Claude Code sends prompts to Anthropic's API. Code context leaves your network.
-Use the <code>opencode</code> backend with SGLang if full air-gap is required.</p>
+<p>Claude Code sends prompts to Anthropic's API. Code context leaves your Modal sandbox.
+Use the <code>opencode</code> backend for full air-gap.</p>
 </div>
-<p><strong>Best for</strong>: teams already using Claude Code who want consistent agent behaviour between their
-local sessions and automated sandbox runs.</p>
 <hr />
 <h2 id="gemini-cli">Gemini CLI<a class="headerlink" href="#gemini-cli" title="Permanent link">&para;</a></h2>
 <p>Google's <a href="https://github.com/google-gemini/gemini-cli">Gemini CLI</a> runs inside the container.</p>
@@ -1010,8 +1009,11 @@ local sessions and automated sandbox runs.</p>
 <p>Invoked inside the container as:
 <div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>gemini<span class="w"> </span>--yolo<span class="w"> </span>-p<span class="w"> </span><span class="s2">&quot;&lt;task prompt&gt;&quot;</span>
 </code></pre></div></p>
-<p><strong>Best for</strong>: teams already on GCP who need to stay within Google's infrastructure. Vertex AI
-backend keeps prompts within your GCP project.</p>
+<div class="admonition note">
+<p class="admonition-title">Air-gap with Vertex AI</p>
+<p>Using Vertex AI keeps prompts within your GCP project. For full on-prem air-gap, use the
+<code>opencode</code> backend with your self-hosted Modal endpoint.</p>
+</div>
 <hr />
 <h2 id="comparison">Comparison<a class="headerlink" href="#comparison" title="Permanent link">&para;</a></h2>
 <table>
@@ -1026,27 +1028,27 @@ backend keeps prompts within your GCP project.</p>
 <tbody>
 <tr>
 <td>Model</td>
-<td>Any via <code>OPENAI_BASE_URL</code></td>
+<td>Self-hosted on Modal</td>
 <td>Anthropic API</td>
 <td>Google AI / Vertex</td>
 </tr>
 <tr>
-<td>Open source</td>
-<td>✅</td>
+<td>External API key needed</td>
 <td>❌</td>
+<td>✅</td>
 <td>✅</td>
 </tr>
 <tr>
 <td>Air-gap capable</td>
-<td>✅ (with SGLang or MiniMax)</td>
+<td>✅</td>
 <td>❌</td>
 <td>✅ (Vertex AI)</td>
 </tr>
 <tr>
-<td>Recommended model</td>
-<td>deepseek-v4-pro (~74% aider)</td>
-<td>Claude Sonnet 4.5</td>
-<td>Gemini 2.5 Pro</td>
+<td>Default</td>
+<td>✅</td>
+<td>❌</td>
+<td>❌</td>
 </tr>
 </tbody>
 </table>

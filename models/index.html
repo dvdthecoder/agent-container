@@ -604,22 +604,22 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#recommended-deepseek-v4-pro" class="md-nav__link">
+  <a href="#gpu-profiles" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Recommended: DeepSeek V4 Pro
+        GPU profiles
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Recommended: DeepSeek V4 Pro">
+    <nav class="md-nav" aria-label="GPU profiles">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#setup" class="md-nav__link">
+  <a href="#model-names" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Setup
+        Model names
       
     </span>
   </a>
@@ -632,10 +632,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#alternative-minimax-m25-m27" class="md-nav__link">
+  <a href="#how-it-works" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Alternative: MiniMax M2.5 / M2.7
+        How it works
       
     </span>
   </a>
@@ -643,10 +643,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#self-hosted-on-modal-gpu" class="md-nav__link">
+  <a href="#why-sglang" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Self-hosted on Modal GPU
+        Why SGLang
       
     </span>
   </a>
@@ -654,32 +654,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#model-comparison" class="md-nav__link">
+  <a href="#scale-to-zero-and-cold-starts" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Model comparison
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#why-sglang-for-self-hosted" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Why SGLang (for self-hosted)
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#agent-backends-and-model-coupling" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Agent backends and model coupling
+        Scale-to-zero and cold starts
       
     </span>
   </a>
@@ -883,22 +861,22 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#recommended-deepseek-v4-pro" class="md-nav__link">
+  <a href="#gpu-profiles" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Recommended: DeepSeek V4 Pro
+        GPU profiles
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Recommended: DeepSeek V4 Pro">
+    <nav class="md-nav" aria-label="GPU profiles">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#setup" class="md-nav__link">
+  <a href="#model-names" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Setup
+        Model names
       
     </span>
   </a>
@@ -911,10 +889,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#alternative-minimax-m25-m27" class="md-nav__link">
+  <a href="#how-it-works" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Alternative: MiniMax M2.5 / M2.7
+        How it works
       
     </span>
   </a>
@@ -922,10 +900,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#self-hosted-on-modal-gpu" class="md-nav__link">
+  <a href="#why-sglang" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Self-hosted on Modal GPU
+        Why SGLang
       
     </span>
   </a>
@@ -933,32 +911,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#model-comparison" class="md-nav__link">
+  <a href="#scale-to-zero-and-cold-starts" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Model comparison
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#why-sglang-for-self-hosted" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Why SGLang (for self-hosted)
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#agent-backends-and-model-coupling" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Agent backends and model coupling
+        Scale-to-zero and cold starts
       
     </span>
   </a>
@@ -986,101 +942,16 @@
 
 
 <h1 id="model-setup">Model Setup<a class="headerlink" href="#model-setup" title="Permanent link">&para;</a></h1>
-<p>The sandbox passes three env vars into every container run:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nv">OPENAI_BASE_URL</span><span class="o">=</span>...<span class="w">   </span><span class="c1"># any OpenAI-compatible endpoint</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nv">OPENAI_API_KEY</span><span class="o">=</span>...<span class="w">    </span><span class="c1"># key for that endpoint</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="nv">OPENCODE_MODEL</span><span class="o">=</span>...<span class="w">    </span><span class="c1"># model name the endpoint accepts</span>
-</code></pre></div>
-<p>Any OpenAI-compatible inference server works — hosted or self-hosted.</p>
-<hr />
-<h2 id="recommended-deepseek-v4-pro">Recommended: DeepSeek V4 Pro<a class="headerlink" href="#recommended-deepseek-v4-pro" title="Permanent link">&para;</a></h2>
-<p>DeepSeek V4 Pro is the best model for agent-container workloads today — top-tier coding benchmark
-scores, 1M context window (handles large repos without truncation), and low cost per run.</p>
-<table>
-<thead>
-<tr>
-<th>Property</th>
-<th>deepseek-v4-pro</th>
-<th>deepseek-v4-flash</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Context window</td>
-<td>1 000 000 tokens</td>
-<td>1 000 000 tokens</td>
-</tr>
-<tr>
-<td>Output tokens max</td>
-<td>384 000</td>
-<td>—</td>
-</tr>
-<tr>
-<td>Input (cache miss)</td>
-<td>$1.74 / M tokens</td>
-<td>$0.14 / M tokens</td>
-</tr>
-<tr>
-<td>Output</td>
-<td>$3.48 / M tokens</td>
-<td>$0.28 / M tokens</td>
-</tr>
-<tr>
-<td>Aider polyglot score</td>
-<td>~74% (V3.2 series)</td>
-<td>—</td>
-</tr>
-<tr>
-<td>Best for</td>
-<td>Full agent runs, large repos</td>
-<td>High-volume, cost-sensitive</td>
-</tr>
-</tbody>
-</table>
-<h3 id="setup">Setup<a class="headerlink" href="#setup" title="Permanent link">&para;</a></h3>
-<p>Get an API key at <strong>platform.deepseek.com</strong> → API Keys:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nv">OPENAI_BASE_URL</span><span class="o">=</span>https://api.deepseek.com/v1
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nv">OPENAI_API_KEY</span><span class="o">=</span>your-deepseek-api-key
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="nv">OPENCODE_MODEL</span><span class="o">=</span>deepseek-v4-pro<span class="w">        </span><span class="c1"># or deepseek-v4-flash for ~10× cheaper</span>
-</code></pre></div>
-<p>That's it. No deployment step required.</p>
-<hr />
-<h2 id="alternative-minimax-m25-m27">Alternative: MiniMax M2.5 / M2.7<a class="headerlink" href="#alternative-minimax-m25-m27" title="Permanent link">&para;</a></h2>
-<p>MiniMax scored well on SWE-bench and offers extremely low per-instance cost. Use it if you want
-to run high volumes of shorter tasks.</p>
-<table>
-<thead>
-<tr>
-<th>Property</th>
-<th>Value</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Context window</td>
-<td>1 000 000 tokens</td>
-</tr>
-<tr>
-<td>Cost (SWE-bench instance)</td>
-<td>$0.073</td>
-</tr>
-<tr>
-<td>Architecture</td>
-<td>MoE + Lightning Attention</td>
-</tr>
-<tr>
-<td>Latest model</td>
-<td>MiniMax-M2.7</td>
-</tr>
-</tbody>
-</table>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nv">OPENAI_BASE_URL</span><span class="o">=</span>https://api.minimax.io/v1
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nv">OPENAI_API_KEY</span><span class="o">=</span>your-minimax-api-key<span class="w">   </span><span class="c1"># platform.minimax.io → API Keys</span>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="nv">OPENCODE_MODEL</span><span class="o">=</span>MiniMax-M2.5<span class="w">           </span><span class="c1"># or MiniMax-M2.7 (latest), MiniMax-M2.5-highspeed</span>
+<p>The model runs on Modal GPU via <code>modal/serve.py</code> — the same platform that runs the agent sandbox.
+Deploy once, it scales to zero when idle, weights are cached so cold starts after the first are fast.</p>
+<p>Three env vars tell the agent sandbox where the model is:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nv">OPENAI_BASE_URL</span><span class="o">=</span>https://your-org--agent-container-serve.modal.run/v1
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nv">OPENAI_API_KEY</span><span class="o">=</span>modal<span class="w">        </span><span class="c1"># any non-empty string — it&#39;s your own endpoint</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="nv">OPENCODE_MODEL</span><span class="o">=</span>qwen3-coder<span class="w">  </span><span class="c1"># must match SERVED_MODEL_NAME in modal/serve.py</span>
 </code></pre></div>
 <hr />
-<h2 id="self-hosted-on-modal-gpu">Self-hosted on Modal GPU<a class="headerlink" href="#self-hosted-on-modal-gpu" title="Permanent link">&para;</a></h2>
-<p>For full air-gap or maximum control, deploy the model on Modal. Three profiles:</p>
+<h2 id="gpu-profiles">GPU profiles<a class="headerlink" href="#gpu-profiles" title="Permanent link">&para;</a></h2>
+<p>Three profiles are built into <code>modal/serve.py</code>. Pick one based on your quality and cost needs:</p>
 <table>
 <thead>
 <tr>
@@ -1088,132 +959,110 @@ to run high volumes of shorter tasks.</p>
 <th>Model</th>
 <th>GPU</th>
 <th>Context</th>
-<th>Command</th>
+<th>Deploy command</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>test</code></td>
+<td><code>test</code> (default)</td>
 <td>Qwen3-Coder 8B</td>
 <td>A10G</td>
-<td>32 k</td>
+<td>32k</td>
 <td><code>modal deploy modal/serve.py</code></td>
 </tr>
 <tr>
 <td><code>prod</code></td>
 <td>Qwen3-Coder 80B</td>
 <td>2× A100 80GB</td>
-<td>128 k</td>
+<td>128k</td>
 <td><code>SERVE_PROFILE=prod modal deploy modal/serve.py</code></td>
 </tr>
 <tr>
 <td><code>minimax</code></td>
 <td>MiniMax M2.5</td>
 <td>8× A100 80GB</td>
-<td>1 M</td>
+<td>1M</td>
 <td><code>SERVE_PROFILE=minimax modal deploy modal/serve.py</code></td>
 </tr>
 </tbody>
 </table>
-<p>After deployment Modal prints the endpoint URL:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nv">OPENAI_BASE_URL</span><span class="o">=</span>https://your-org--agent-container-serve.modal.run/v1
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nv">OPENAI_API_KEY</span><span class="o">=</span>modal
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="nv">OPENCODE_MODEL</span><span class="o">=</span>deepseek-v4-pro<span class="w">    </span><span class="c1"># or minimax-m2.5 / qwen3-coder</span>
-</code></pre></div>
-<hr />
-<h2 id="model-comparison">Model comparison<a class="headerlink" href="#model-comparison" title="Permanent link">&para;</a></h2>
+<p><strong>Start with <code>test</code></strong> — it deploys in ~30 seconds, cold starts in ~30s, and is cheap enough for
+iterating. Promote to <code>prod</code> or <code>minimax</code> when you want production-grade output.</p>
+<h3 id="model-names">Model names<a class="headerlink" href="#model-names" title="Permanent link">&para;</a></h3>
+<p>After deploy, set <code>OPENCODE_MODEL</code> to match the <code>SERVED_MODEL_NAME</code> in <code>modal/serve.py</code>:</p>
 <table>
 <thead>
 <tr>
-<th>Model</th>
-<th>Aider score</th>
-<th>Cost/run (est.)</th>
-<th>Context</th>
-<th>Hosted API</th>
+<th>Profile</th>
+<th><code>OPENCODE_MODEL</code></th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>GPT-5</td>
-<td>88%</td>
-<td>$17–29</td>
-<td>—</td>
-<td>OpenAI</td>
+<td><code>test</code> / <code>prod</code></td>
+<td><code>qwen3-coder</code></td>
 </tr>
 <tr>
-<td>Gemini 2.5 Pro</td>
-<td>83%</td>
-<td>$45–50</td>
-<td>1M</td>
-<td>Google</td>
-</tr>
-<tr>
-<td>o3</td>
-<td>77%</td>
-<td>$13.75</td>
-<td>—</td>
-<td>OpenAI</td>
-</tr>
-<tr>
-<td><strong>DeepSeek V4 Pro</strong></td>
-<td><strong>~74%</strong></td>
-<td><strong>~$1–3</strong></td>
-<td><strong>1M</strong></td>
-<td><strong>DeepSeek</strong></td>
-</tr>
-<tr>
-<td>DeepSeek V4 Flash</td>
-<td>—</td>
-<td>~$0.10–0.30</td>
-<td>1M</td>
-<td>DeepSeek</td>
-</tr>
-<tr>
-<td>MiniMax M2.5</td>
-<td>(SWE-bench #1)</td>
-<td>~$0.07/instance</td>
-<td>1M</td>
-<td>MiniMax</td>
+<td><code>minimax</code></td>
+<td><code>minimax-m2.5</code></td>
 </tr>
 </tbody>
 </table>
-<p>DeepSeek V4 Pro hits the quality/cost sweet spot for automated agent runs in CI — good enough
-to ship production PRs, cheap enough to run on every PR or nightly.</p>
 <hr />
-<h2 id="why-sglang-for-self-hosted">Why SGLang (for self-hosted)<a class="headerlink" href="#why-sglang-for-self-hosted" title="Permanent link">&para;</a></h2>
+<h2 id="how-it-works">How it works<a class="headerlink" href="#how-it-works" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>┌─────────────────────────────────────────────────┐
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>│  Modal                                          │
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>│                                                 │
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>│  Agent sandbox          Model server            │
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>│  ┌──────────────┐       ┌─────────────────┐     │
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>│  │ opencode     │──────▶│ SGLang          │     │
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>│  │ (your task)  │ HTTP  │ Qwen3-Coder     │     │
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>│  └──────────────┘       │ or MiniMax M2.5 │     │
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>│                         └─────────────────┘     │
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>└─────────────────────────────────────────────────┘
+</code></pre></div>
+<p>The sandbox and the model server communicate over Modal's internal network. No traffic leaves Modal.</p>
+<hr />
+<h2 id="why-sglang">Why SGLang<a class="headerlink" href="#why-sglang" title="Permanent link">&para;</a></h2>
 <p>SGLang's <strong>RadixAttention</strong> automatically caches shared KV prefixes across requests. Agent runs
-against the same repo repeatedly re-use the cached representation of the system prompt and repo
-context — only the task-specific tokens are computed from scratch.</p>
+against the same repo re-use the cached system prompt and repo context — only task-specific tokens
+are computed fresh.</p>
 <p>This matters for agent-container because:</p>
 <ul>
 <li>Every run against the same repo shares a large common prefix (system prompt + file tree)</li>
-<li>Multiple CI runs against the same repo in parallel hit the cache simultaneously</li>
+<li>Multiple CI runs against the same repo in parallel all hit the prefix cache</li>
 </ul>
+<p>Benchmark: <code>make test-e2e</code> covers end-to-end wall time. Issue #48 tracks a formal throughput
+comparison at 1/4/8 concurrent runs.</p>
 <hr />
-<h2 id="agent-backends-and-model-coupling">Agent backends and model coupling<a class="headerlink" href="#agent-backends-and-model-coupling" title="Permanent link">&para;</a></h2>
+<h2 id="scale-to-zero-and-cold-starts">Scale-to-zero and cold starts<a class="headerlink" href="#scale-to-zero-and-cold-starts" title="Permanent link">&para;</a></h2>
+<p>Modal scales the model server to zero after <code>scaledown_window</code> seconds of inactivity (5–10 min
+depending on profile). You pay only for active inference time.</p>
+<p>Cold start times (first request after scale-down):</p>
 <table>
 <thead>
 <tr>
-<th>Backend</th>
-<th>Model source</th>
+<th>Profile</th>
+<th>Cold start</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>opencode</code></td>
-<td>Any endpoint via <code>OPENAI_BASE_URL</code> — DeepSeek, MiniMax, or self-hosted</td>
+<td><code>test</code></td>
+<td>~30s</td>
 </tr>
 <tr>
-<td><code>claude</code></td>
-<td>Anthropic API (<code>ANTHROPIC_API_KEY</code>)</td>
+<td><code>prod</code></td>
+<td>~2–3 min</td>
 </tr>
 <tr>
-<td><code>gemini</code></td>
-<td>Google AI / Vertex (<code>GEMINI_API_KEY</code>)</td>
+<td><code>minimax</code></td>
+<td>~5–8 min</td>
 </tr>
 </tbody>
 </table>
-<p>The <code>opencode</code> backend is the default. Swap the three env vars to change models — no code changes.</p>
+<p>Model weights are stored in a Modal Volume (<code>agent-container-models</code>) and are not re-downloaded
+on cold start after the first deploy.</p>
 
 
 
