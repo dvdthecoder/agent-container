@@ -53,19 +53,25 @@ TIMEOUT_SECONDS = int(os.environ.get("OPENCODE_TIMEOUT", "300"))
 def _preflight() -> bool:
     """Hit BASE_URL/v1/models and print what comes back. Returns True if OK."""
     if not BASE_URL:
-        print("[preflight] OPENAI_BASE_URL is not set — opencode will use its built-in model", file=sys.stderr)
+        print(  # noqa: T201
+            "[preflight] OPENAI_BASE_URL is not set — using built-in model",
+            file=sys.stderr,
+        )
         return True
 
     url = f"{BASE_URL}/v1/models"
     print(f"[preflight] checking model endpoint: {url}", file=sys.stderr)
     try:
-        req = urllib.request.Request(url, headers={"Authorization": f"Bearer {API_KEY}"})
-        with urllib.request.urlopen(req, timeout=30) as resp:
+        http_req = urllib.request.Request(  # noqa: S310 — URL comes from operator-controlled env var
+            url, headers={"Authorization": f"Bearer {API_KEY}"}
+        )
+        with urllib.request.urlopen(http_req, timeout=30) as resp:  # noqa: S310
             body = resp.read().decode("utf-8", errors="replace")
             print(f"[preflight] endpoint OK ({resp.status}): {body[:200]}", file=sys.stderr)
             return True
     except urllib.error.HTTPError as e:
-        print(f"[preflight] HTTP {e.code} from {url}: {e.read().decode('utf-8', errors='replace')[:200]}", file=sys.stderr)
+        body = e.read().decode("utf-8", errors="replace")[:200]
+        print(f"[preflight] HTTP {e.code} from {url}: {body}", file=sys.stderr)
         return False
     except Exception as e:
         print(f"[preflight] FAILED to reach {url}: {e}", file=sys.stderr)
@@ -251,7 +257,10 @@ def main() -> int:
     #    session_completed / session_error notification.
     #    Some opencode builds block on session/prompt (ack = completion);
     #    others ack immediately and complete via notification.
-    print(f"[runner] sending prompt, polling for completion (max {TIMEOUT_SECONDS}s) ...", file=sys.stderr)
+    print(
+        f"[runner] sending prompt, polling for completion (max {TIMEOUT_SECONDS}s) ...",
+        file=sys.stderr,
+    )
     result = req(
         "session/prompt",
         {"sessionId": sid, "prompt": [{"type": "text", "text": TASK}]},
@@ -278,13 +287,19 @@ def main() -> int:
         if time.monotonic() - last_log >= 30:
             elapsed = TIMEOUT_SECONDS - (deadline - time.monotonic())
             chunks = len(client._output_lines)
-            print(f"[runner] waiting ... {elapsed:.0f}s elapsed, {chunks} chunks received", file=sys.stderr)
+            print(
+                f"[runner] waiting ... {elapsed:.0f}s elapsed, {chunks} chunks received",
+                file=sys.stderr,
+            )
             last_log = time.monotonic()
         time.sleep(0.5)
 
     stop_reason = client._stop_reason
     chunks_received = len(client._output_lines)
-    print(f"[runner] finished: stop_reason={stop_reason!r}  chunks={chunks_received}", file=sys.stderr)
+    print(
+        f"[runner] finished: stop_reason={stop_reason!r}  chunks={chunks_received}",
+        file=sys.stderr,
+    )
 
     if stop_reason != "session_completed":
         print(
