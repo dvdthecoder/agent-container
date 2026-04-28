@@ -91,7 +91,7 @@ model_volume = modal.Volume.from_name("agent-container-models", create_if_missin
 # SGLang Docker image ships with all CUDA libraries and FlashInfer kernels.
 # huggingface_hub[hf_transfer] accelerates weight downloads.
 image = (
-    modal.Image.from_registry("lmsysorg/sglang:v0.5.8-cu124")
+    modal.Image.from_registry("lmsysorg/sglang:v0.4.7.post1-cu124")
     .pip_install("huggingface_hub[hf_transfer]")
     .env({"HF_HUB_ENABLE_HF_TRANSFER": "1"})
 )
