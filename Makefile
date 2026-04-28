@@ -1,4 +1,4 @@
-.PHONY: test test-integration test-e2e lint mcp dashboard
+.PHONY: test test-integration test-e2e lint mcp dashboard example
 
 # ── unit tests (no external services, always free) ──────────────────────────
 test:
@@ -15,6 +15,15 @@ test-e2e:
 # ── linting ──────────────────────────────────────────────────────────────────
 lint:
 	python3 -m ruff check .
+
+# ── quick manual smoke test against fixture repo ────────────────────────────
+example:
+	python3 -m agent.cli run \
+		--repo https://github.com/dvdthecoder/agent-container-fixture \
+		--task "add a hello world function to the codebase" \
+		--backend opencode \
+		--run-tests \
+		--create-pr
 
 # ── servers ──────────────────────────────────────────────────────────────────
 mcp:
