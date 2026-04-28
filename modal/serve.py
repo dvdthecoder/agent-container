@@ -98,7 +98,9 @@ image = (
 @app.function(
     image=image,
     gpu=GPU,
-    secrets=[modal.Secret.from_name("HF_TOKEN")],
+    # Secret must contain key HF_TOKEN=hf_...
+    # Create it once with: modal secret create huggingface HF_TOKEN=hf_your_token
+    secrets=[modal.Secret.from_name("huggingface")],
     timeout=60 * 60,
     scaledown_window=SCALEDOWN_WINDOW,
     volumes={"/model-cache": model_volume},
