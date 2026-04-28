@@ -97,13 +97,22 @@ def _write_config() -> None:
         "model": MODEL_ID,
         "provider": {
             "openai": {
-                "options": {"apiKey": API_KEY, "baseURL": BASE_URL},
+                "options": {
+                    "apiKey": API_KEY,
+                    # Include /v1 in the baseURL — the AI SDK appends paths like
+                    # /chat/completions relative to this, giving .../v1/chat/completions.
+                    "baseURL": f"{BASE_URL}/v1",
+                    # Force OpenAI-compatible mode: use POST /v1/chat/completions
+                    # instead of the new POST /responses (Responses API).
+                    # SGLang and most self-hosted servers only implement chat completions.
+                    "compatibility": "compatible",
+                },
                 "models": {
                     RAW_MODEL: {
                         "name": RAW_MODEL,
                         "tool_call": True,
                         "temperature": True,
-                        # Disable extended thinking — Qwen3/reasoning models can spin
+                        # Disable extended thinking — reasoning models can spin
                         # indefinitely on simple tasks when thinking is enabled.
                         "reasoning": False,
                     }

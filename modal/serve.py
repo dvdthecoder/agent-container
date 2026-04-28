@@ -126,7 +126,8 @@ def serve() -> None:
     # The image's own Python (typically 3.10) is still accessible at its
     # version-specific path.  Try candidates in order; fall back to python3.
     sglang_python = "python3"
-    for candidate in ["python3.12", "python3.11", "python3.10", "python3.9", "/usr/bin/python3", "python3"]:
+    for candidate in ["python3.12", "python3.11", "python3.10", "python3.9",
+                      "/usr/bin/python3", "python3"]:
         try:
             r = subprocess.run(  # noqa: S603
                 [candidate, "-c", "import sglang"],
