@@ -92,7 +92,7 @@ model_volume = modal.Volume.from_name("agent-container-models", create_if_missin
 # huggingface_hub[hf_transfer] accelerates weight downloads.
 image = (
     modal.Image.from_registry("lmsysorg/sglang:v0.4.7.post1-cu124")
-    .run_commands("python3 -m pip install 'huggingface_hub[hf_transfer]'")
+    .run_commands("python3 -m pip install --break-system-packages 'huggingface_hub[hf_transfer]'")
     .env({"HF_HUB_ENABLE_HF_TRANSFER": "1"})
 )
 
