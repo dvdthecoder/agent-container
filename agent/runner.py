@@ -20,6 +20,12 @@ def run_agent(
     """
     cmd = backend.command(task)
     proc = sb.exec(*cmd, workdir=workdir)
-    output = proc.stdout.read()
+    stdout = proc.stdout.read()
+    stderr = proc.stderr.read()
     proc.wait()
+    # Combine stdout + stderr so callers (and AgentTaskResult.error) surface
+    # any failure messages written to stderr (e.g. opencode_runner.py errors).
+    output = stdout
+    if stderr:
+        output = f"{stdout}\n[stderr]\n{stderr}".strip() if stdout else f"[stderr]\n{stderr}"
     return output, proc.returncode

@@ -13,17 +13,18 @@ from agent.backends.stub import StubBackend
 from agent.runner import run_agent
 
 
-def _make_proc(stdout: str = "", returncode: int = 0) -> MagicMock:
+def _make_proc(stdout: str = "", stderr: str = "", returncode: int = 0) -> MagicMock:
     proc = MagicMock()
     proc.stdout.read.return_value = stdout
+    proc.stderr.read.return_value = stderr
     proc.returncode = returncode
     proc.wait.return_value = returncode
     return proc
 
 
-def _make_sb(stdout: str = "", returncode: int = 0) -> MagicMock:
+def _make_sb(stdout: str = "", stderr: str = "", returncode: int = 0) -> MagicMock:
     sb = MagicMock()
-    sb.exec.return_value = _make_proc(stdout=stdout, returncode=returncode)
+    sb.exec.return_value = _make_proc(stdout=stdout, stderr=stderr, returncode=returncode)
     return sb
 
 
@@ -42,6 +43,34 @@ def test_non_zero_exit_code_returned_as_is():
     output, code = run_agent(sb, OpenCodeBackend(), "fix it")
     assert code == 1
     assert output == "error detail"
+
+
+def test_stderr_appended_when_stdout_present():
+    proc = _make_proc(stdout="progress", stderr="[opencode] unexpected stop: timeout")
+    sb = MagicMock()
+    sb.exec.return_value = proc
+    output, _ = run_agent(sb, OpenCodeBackend(), "fix it")
+    assert "progress" in output
+    assert "[stderr]" in output
+    assert "unexpected stop" in output
+
+
+def test_stderr_only_no_stdout():
+    proc = _make_proc(stdout="", stderr="fatal error")
+    sb = MagicMock()
+    sb.exec.return_value = proc
+    output, _ = run_agent(sb, OpenCodeBackend(), "fix it")
+    assert "[stderr]" in output
+    assert "fatal error" in output
+
+
+def test_no_stderr_output_unchanged():
+    proc = _make_proc(stdout="done", stderr="")
+    sb = MagicMock()
+    sb.exec.return_value = proc
+    output, _ = run_agent(sb, OpenCodeBackend(), "fix it")
+    assert output == "done"
+    assert "[stderr]" not in output
 
 
 # ------------------------------------------------------------------ command dispatch
