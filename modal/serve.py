@@ -102,8 +102,8 @@ image = (
     timeout=60 * 60,
     scaledown_window=SCALEDOWN_WINDOW,
     volumes={"/model-cache": model_volume},
-    allow_concurrent_inputs=32,
 )
+@modal.concurrent(max_inputs=32)
 @modal.web_server(port=8000, startup_timeout=STARTUP_TIMEOUT)
 def serve() -> None:
     """Start SGLang OpenAI-compatible server inside the Modal container."""
