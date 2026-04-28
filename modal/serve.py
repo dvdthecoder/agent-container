@@ -17,10 +17,10 @@ SERVE_PROFILE=prod modal deploy modal/serve.py     # prod (Qwen3-Coder 80B)
 SERVE_PROFILE=minimax modal deploy modal/serve.py  # MiniMax M2.5
 
 After deployment Modal prints the endpoint URL:
-  ✓ Created web endpoint: https://your-org--agent-container-serve.modal.run
+  ✓ Created web function serve => https://your-org--agent-container-serve-serve.modal.run
 
-Add it to .env:
-  OPENAI_BASE_URL=https://your-org--agent-container-serve.modal.run/v1
+Add it to .env (no /v1 suffix — the OpenAI SDK adds that itself):
+  OPENAI_BASE_URL=https://your-org--agent-container-serve-serve.modal.run
   OPENAI_API_KEY=modal
   OPENCODE_MODEL=<SERVED_MODEL_NAME from profile below>
 
