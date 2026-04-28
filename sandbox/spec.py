@@ -15,7 +15,7 @@ class AgentTaskSpec:
     image: str | None = None
     env: dict[str, str] = field(default_factory=dict)
     timeout_seconds: int = 600
-    cpu: float = 2.0    # vCPUs allocated to the sandbox (Modal default 0.1 is too low)
+    cpu: float = 2.0  # vCPUs allocated to the sandbox (Modal default 0.1 is too low)
     memory: int = 1024  # MB of RAM for the sandbox (Modal default 128 MB causes OOM)
     create_pr: bool = True
     run_tests: bool = True  # auto-detect and run the project test suite
