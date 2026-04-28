@@ -18,12 +18,10 @@ lint:
 
 # ── quick manual smoke test against fixture repo ────────────────────────────
 example:
-	python3 -m agent.cli run \
+	agent-run run \
 		--repo https://github.com/dvdthecoder/agent-container-fixture \
 		--task "add a hello world function to the codebase" \
-		--backend opencode \
-		--run-tests \
-		--create-pr
+		--backend opencode
 
 # ── servers ──────────────────────────────────────────────────────────────────
 mcp:
