@@ -163,6 +163,8 @@ class ModalSandbox:
             timeout=spec.timeout_seconds,
             secrets=[modal.Secret.from_dict(env)] if env else [],
             app=app,
+            cpu=spec.cpu,
+            memory=spec.memory,
         )
 
 
