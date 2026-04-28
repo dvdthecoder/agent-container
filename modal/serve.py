@@ -98,7 +98,7 @@ image = (
 @app.function(
     image=image,
     gpu=GPU,
-    secrets=[modal.Secret.from_name("huggingface")],
+    secrets=[modal.Secret.from_name("HF_TOKEN")],
     timeout=60 * 60,
     scaledown_window=SCALEDOWN_WINDOW,
     volumes={"/model-cache": model_volume},
