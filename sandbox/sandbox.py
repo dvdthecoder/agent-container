@@ -152,10 +152,14 @@ class ModalSandbox:
         # Merge config-level env vars (model endpoint, git tokens) with
         # any task-specific overrides from spec.env.
         env = {**self.config.container_env(), **spec.env}
+        # Single shared app — all sandbox runs attach to the same app so
+        # Modal doesn't accumulate one app per run (the original leak).
+        app = modal.App.lookup("agent-container-sandbox", create_if_missing=True)
         return modal.Sandbox.create(
             image=image,
             timeout=spec.timeout_seconds,
             secrets=[modal.Secret.from_dict(env)] if env else [],
+            app=app,
         )
 
 
