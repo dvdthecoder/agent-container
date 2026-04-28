@@ -60,7 +60,7 @@ class TestAgentTaskSpecDefaults:
         assert spec.base_branch == "main"
         assert spec.image is None
         assert spec.env == {}
-        assert spec.timeout_seconds == 300
+        assert spec.timeout_seconds == 600
         assert spec.create_pr is True
         assert spec.backend == "opencode"
 
