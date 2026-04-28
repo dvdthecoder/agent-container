@@ -64,6 +64,9 @@ def _write_config() -> None:
                         "name": RAW_MODEL,
                         "tool_call": True,
                         "temperature": True,
+                        # Disable extended thinking — Qwen3/reasoning models can spin
+                        # indefinitely on simple tasks when thinking is enabled.
+                        "reasoning": False,
                     }
                 },
             }
@@ -195,17 +198,41 @@ def main() -> int:
     # 3. Resume (loads current model list; sets cwd context)
     req("session/resume", {"sessionId": sid, "cwd": CWD})
 
-    # 4. Send prompt and wait for completion
+    # 4. Send prompt — fire-and-forget (quick RPC ack), then poll for the
+    #    session_completed / session_error notification which is the real signal.
+    #    Some opencode versions block on session/prompt; others return an ack
+    #    immediately.  Handling both: if the RPC response contains a stopReason
+    #    we trust it; otherwise we fall through to the notification poll.
     result = req(
         "session/prompt",
         {"sessionId": sid, "prompt": [{"type": "text", "text": TASK}]},
-        timeout=float(TIMEOUT_SECONDS),
+        timeout=30.0,  # short — just waiting for the ack, not completion
     )
 
+    # If the RPC response itself carries stopReason (blocking mode), use it.
     stop_reason = result.get("result", {}).get("stopReason", "")
-    if stop_reason != "end_turn":
-        error = result.get("error", "")
-        print(f"\n[opencode] unexpected stop: {stop_reason or error}", file=sys.stderr)
+    if stop_reason:
+        if stop_reason != "end_turn":
+            error = result.get("error", "")
+            print(f"\n[opencode] unexpected stop: {stop_reason or error}", file=sys.stderr)
+            client.terminate()
+            return 1
+        client.terminate()
+        return 0
+
+    # Notification-driven mode: poll client._stop_reason until set or timeout.
+    deadline = time.monotonic() + float(TIMEOUT_SECONDS)
+    while time.monotonic() < deadline:
+        if client._stop_reason:
+            break
+        time.sleep(0.5)
+
+    stop_reason = client._stop_reason
+    if stop_reason != "session_completed":
+        print(
+            f"\n[opencode] unexpected stop: {stop_reason or 'timeout'}",
+            file=sys.stderr,
+        )
         client.terminate()
         return 1
 
