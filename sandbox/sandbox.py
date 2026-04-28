@@ -152,6 +152,9 @@ class ModalSandbox:
         # Merge config-level env vars (model endpoint, git tokens) with
         # any task-specific overrides from spec.env.
         env = {**self.config.container_env(), **spec.env}
+        # Give the opencode runner 60s less than the sandbox timeout so it
+        # can exit cleanly before Modal forcefully kills the container.
+        env.setdefault("OPENCODE_TIMEOUT", str(spec.timeout_seconds - 60))
         # Single shared app — all sandbox runs attach to the same app so
         # Modal doesn't accumulate one app per run (the original leak).
         app = modal.App.lookup("agent-container-sandbox", create_if_missing=True)

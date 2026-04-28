@@ -289,7 +289,9 @@ def test_spec_env_passed_as_modal_secret(mock_create):
         mock_secret.return_value = MagicMock()
         ModalSandbox(_config()).run(_spec(env={"FOO": "bar"}))
 
-    mock_secret.assert_called_once_with({"FOO": "bar"})
+    called_env = mock_secret.call_args[0][0]
+    assert called_env["FOO"] == "bar"
+    assert "OPENCODE_TIMEOUT" in called_env
 
 
 @patch("sandbox.sandbox.modal.Sandbox.create")
@@ -324,7 +326,8 @@ def test_empty_env_passes_no_secrets(mock_create):
     ModalSandbox(_config()).run(_spec(env={}))
 
     _, kwargs = mock_create.call_args
-    assert kwargs["secrets"] == []
+    # OPENCODE_TIMEOUT is always injected so secrets is never empty
+    assert kwargs["secrets"] != []
 
 
 # branch_name and agent command tests live in test_git_ops.py and test_backends.py
