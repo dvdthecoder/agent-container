@@ -3,7 +3,7 @@
 Usage: python3 opencode_runner.py <task>
 
 Environment variables read:
-  OPENAI_BASE_URL  — custom OpenAI-compatible base URL (e.g. DeepSeek)
+  OPENAI_BASE_URL  — custom OpenAI-compatible base URL (e.g. SGLang on Modal)
   OPENAI_API_KEY   — API key for the above endpoint
   OPENCODE_MODEL   — model name; if it contains '/' it's used as-is (e.g.
                      'github-models/deepseek/deepseek-v3-0324'); otherwise
@@ -14,6 +14,7 @@ Environment variables read:
 
 from __future__ import annotations
 
+import http.server
 import json
 import os
 import queue
@@ -30,23 +31,224 @@ import urllib.request
 
 TASK = " ".join(sys.argv[1:]) if len(sys.argv) > 1 else ""
 CWD = os.environ.get("OPENCODE_WORKDIR", "/workspace")
-# Strip trailing /v1 (or /v1/) — the OpenAI SDK appends /v1 itself, so
-# if OPENAI_BASE_URL is "https://host/v1" all calls become .../v1/v1/... (404).
 BASE_URL = os.environ.get("OPENAI_BASE_URL", "").rstrip("/")
-if BASE_URL.endswith("/v1"):
-    BASE_URL = BASE_URL[:-3]
 API_KEY = os.environ.get("OPENAI_API_KEY", "")
 RAW_MODEL = os.environ.get("OPENCODE_MODEL", "")
 
+# Strip trailing /v1 — we add it explicitly where needed.
+if BASE_URL.endswith("/v1"):
+    BASE_URL = BASE_URL[:-3]
+
 # Resolve the model to provider/model format.
 if "/" in RAW_MODEL:
-    # Already fully qualified (e.g. "github-models/deepseek/deepseek-v3-0324").
     MODEL_ID = RAW_MODEL
 else:
-    # Bare model name → assume the openai-compatible custom endpoint.
     MODEL_ID = f"openai/{RAW_MODEL}" if RAW_MODEL else "opencode/big-pickle"
 
 TIMEOUT_SECONDS = int(os.environ.get("OPENCODE_TIMEOUT", "300"))
+
+# Port the local Responses→ChatCompletions proxy listens on.
+_PROXY_PORT = 8080
+
+
+# ---------------------------------------------------------------------------
+# Responses API → Chat Completions proxy
+#
+# opencode v1.14+ calls POST /v1/responses (OpenAI Responses API).
+# SGLang only serves POST /v1/chat/completions.
+# This proxy intercepts /v1/responses, translates the request/response, and
+# forwards everything else unchanged.
+# ---------------------------------------------------------------------------
+
+
+class _ProxyHandler(http.server.BaseHTTPRequestHandler):
+    """Translate Responses API calls to Chat Completions for SGLang."""
+
+    target: str = ""  # set to BASE_URL before starting
+
+    def log_message(self, fmt: str, *args: object) -> None:  # noqa: D102
+        pass  # suppress default access log
+
+    # ── routing ──────────────────────────────────────────────────────────────
+
+    def do_GET(self) -> None:  # noqa: N802
+        self._forward(method="GET", body=None)
+
+    def do_POST(self) -> None:  # noqa: N802
+        length = int(self.headers.get("Content-Length", 0))
+        body = self.rfile.read(length) if length else b""
+
+        if self.path in ("/v1/responses", "/responses"):
+            self._handle_responses(body)
+        else:
+            self._forward(method="POST", body=body)
+
+    # ── responses → chat completions ─────────────────────────────────────────
+
+    def _handle_responses(self, body: bytes) -> None:
+        try:
+            req = json.loads(body) if body else {}
+        except json.JSONDecodeError:
+            self._send(400, b'{"error":"bad request"}')
+            return
+
+        # Convert Responses API input to messages list.
+        raw_input = req.get("input", "")
+        if isinstance(raw_input, str):
+            messages = [{"role": "user", "content": raw_input}]
+        elif isinstance(raw_input, list):
+            messages = raw_input  # already in messages format
+        else:
+            messages = [{"role": "user", "content": str(raw_input)}]
+
+        chat_req: dict = {
+            "model": req.get("model", RAW_MODEL),
+            "messages": messages,
+        }
+        # Forward optional fields that both APIs share.
+        for key in ("stream", "temperature", "max_tokens", "tools", "tool_choice"):
+            if key in req:
+                chat_req[key] = req[key]
+
+        stream = bool(req.get("stream", False))
+        chat_body = json.dumps(chat_req).encode()
+
+        url = f"{self.target}/v1/chat/completions"
+        print(f"[proxy] responses→chat  stream={stream}  url={url}", file=sys.stderr)
+
+        http_req = urllib.request.Request(  # noqa: S310
+            url,
+            data=chat_body,
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {API_KEY}",
+            },
+            method="POST",
+        )
+        try:
+            with urllib.request.urlopen(http_req, timeout=TIMEOUT_SECONDS) as resp:  # noqa: S310
+                if stream:
+                    self._stream_chat_to_responses(resp)
+                else:
+                    raw = resp.read()
+                    translated = self._translate_chat_response(raw)
+                    self._send(200, translated, content_type="application/json")
+        except urllib.error.HTTPError as e:
+            body_err = e.read()
+            print(f"[proxy] upstream error {e.code}: {body_err[:200]}", file=sys.stderr)
+            self._send(e.code, body_err)
+        except Exception as exc:
+            print(f"[proxy] upstream exception: {exc}", file=sys.stderr)
+            self._send(502, json.dumps({"error": str(exc)}).encode())
+
+    def _translate_chat_response(self, raw: bytes) -> bytes:
+        """Convert a chat completions response to Responses API format."""
+        try:
+            chat = json.loads(raw)
+        except json.JSONDecodeError:
+            return raw
+        text = chat.get("choices", [{}])[0].get("message", {}).get("content", "") or ""
+        resp = {
+            "id": chat.get("id", "resp_proxy"),
+            "object": "response",
+            "model": chat.get("model", RAW_MODEL),
+            "output": [
+                {
+                    "type": "message",
+                    "role": "assistant",
+                    "content": [{"type": "output_text", "text": text}],
+                }
+            ],
+            "usage": chat.get("usage", {}),
+        }
+        return json.dumps(resp).encode()
+
+    def _stream_chat_to_responses(self, resp: object) -> None:
+        """Stream chat completions SSE and re-emit as Responses API events."""
+        self.send_response(200)
+        self.send_header("Content-Type", "text/event-stream")
+        self.send_header("Cache-Control", "no-cache")
+        self.end_headers()
+        full_text: list[str] = []
+        for raw_line in resp:
+            line = raw_line.decode("utf-8", errors="replace").rstrip()
+            if not line.startswith("data:"):
+                continue
+            data = line[5:].strip()
+            if data == "[DONE]":
+                break
+            try:
+                chunk = json.loads(data)
+            except json.JSONDecodeError:
+                continue
+            delta = chunk.get("choices", [{}])[0].get("delta", {}).get("content") or ""
+            if delta:
+                full_text.append(delta)
+                event = json.dumps({"type": "response.output_text.delta", "delta": delta})
+                self._write_sse(event)
+
+        # Emit completed event.
+        text = "".join(full_text)
+        completed = json.dumps(
+            {
+                "type": "response.completed",
+                "response": {
+                    "id": "resp_proxy",
+                    "object": "response",
+                    "model": RAW_MODEL,
+                    "output": [
+                        {
+                            "type": "message",
+                            "role": "assistant",
+                            "content": [{"type": "output_text", "text": text}],
+                        }
+                    ],
+                },
+            }
+        )
+        self._write_sse(completed)
+        self.wfile.flush()
+
+    def _write_sse(self, data: str) -> None:
+        line = f"data: {data}\n\n".encode()
+        self.wfile.write(line)
+
+    # ── plain forward ─────────────────────────────────────────────────────────
+
+    def _forward(self, method: str, body: bytes | None) -> None:
+        url = f"{self.target}{self.path}"
+        headers = {
+            k: v for k, v in self.headers.items() if k.lower() not in ("host", "content-length")
+        }
+        headers.setdefault("Authorization", f"Bearer {API_KEY}")
+        http_req = urllib.request.Request(  # noqa: S310
+            url, data=body, headers=headers, method=method
+        )
+        try:
+            with urllib.request.urlopen(http_req, timeout=30) as resp:  # noqa: S310
+                raw = resp.read()
+                ct = resp.headers.get("Content-Type", "application/json")
+                self._send(resp.status, raw, content_type=ct)
+        except urllib.error.HTTPError as e:
+            self._send(e.code, e.read())
+        except Exception as exc:
+            self._send(502, json.dumps({"error": str(exc)}).encode())
+
+    def _send(self, code: int, body: bytes, content_type: str = "application/json") -> None:
+        self.send_response(code)
+        self.send_header("Content-Type", content_type)
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+
+def _start_proxy(target_base_url: str) -> None:
+    """Start the Responses→ChatCompletions proxy in a background thread."""
+    _ProxyHandler.target = target_base_url
+    server = http.server.ThreadingHTTPServer(("127.0.0.1", _PROXY_PORT), _ProxyHandler)
+    t = threading.Thread(target=server.serve_forever, daemon=True)
+    t.start()
+    print(f"[proxy] started on 127.0.0.1:{_PROXY_PORT} → {target_base_url}", file=sys.stderr)
 
 
 # ---------------------------------------------------------------------------
@@ -57,7 +259,7 @@ TIMEOUT_SECONDS = int(os.environ.get("OPENCODE_TIMEOUT", "300"))
 def _preflight() -> bool:
     """Hit BASE_URL/v1/models and print what comes back. Returns True if OK."""
     if not BASE_URL:
-        print(  # noqa: T201
+        print(
             "[preflight] OPENAI_BASE_URL is not set — using built-in model",
             file=sys.stderr,
         )
@@ -83,15 +285,18 @@ def _preflight() -> bool:
 
 
 # ---------------------------------------------------------------------------
-# Write opencode config for custom OpenAI-compatible providers
+# Write opencode config
 # ---------------------------------------------------------------------------
 
 
 def _write_config() -> None:
-    """Write ~/.config/opencode/config.json for custom provider + model."""
+    """Write ~/.config/opencode/config.json pointing at the local proxy."""
     if not BASE_URL or not API_KEY or not RAW_MODEL or "/" in RAW_MODEL:
-        # No custom base URL, or model is already fully qualified — skip.
         return
+
+    # Point opencode at the local proxy (port 8080) instead of SGLang directly.
+    # The proxy translates POST /v1/responses → POST /v1/chat/completions.
+    proxy_url = f"http://127.0.0.1:{_PROXY_PORT}"
 
     cfg = {
         "model": MODEL_ID,
@@ -99,21 +304,13 @@ def _write_config() -> None:
             "openai": {
                 "options": {
                     "apiKey": API_KEY,
-                    # Include /v1 in the baseURL — the AI SDK appends paths like
-                    # /chat/completions relative to this, giving .../v1/chat/completions.
-                    "baseURL": f"{BASE_URL}/v1",
-                    # Force OpenAI-compatible mode: use POST /v1/chat/completions
-                    # instead of the new POST /responses (Responses API).
-                    # SGLang and most self-hosted servers only implement chat completions.
-                    "compatibility": "compatible",
+                    "baseURL": proxy_url,
                 },
                 "models": {
                     RAW_MODEL: {
                         "name": RAW_MODEL,
                         "tool_call": True,
                         "temperature": True,
-                        # Disable extended thinking — reasoning models can spin
-                        # indefinitely on simple tasks when thinking is enabled.
                         "reasoning": False,
                     }
                 },
@@ -125,8 +322,7 @@ def _write_config() -> None:
     cfg_path = os.path.join(cfg_dir, "config.json")
     with open(cfg_path, "w") as f:
         json.dump(cfg, f, indent=2)
-    print(f"[config] wrote opencode config to {cfg_path}:", file=sys.stderr)
-    print(f"  model={MODEL_ID}  base_url={BASE_URL}", file=sys.stderr)
+    print(f"[config] wrote opencode config: model={MODEL_ID}  proxy={proxy_url}", file=sys.stderr)
 
 
 # ---------------------------------------------------------------------------
@@ -141,7 +337,7 @@ class AcpClient:
             ["opencode", "acp"],  # noqa: S607 — opencode installed via npm in the container
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
-            stderr=sys.stderr,  # forward opencode's own logs to our stderr
+            stderr=sys.stderr,
             bufsize=0,
         )
         self._responses: queue.Queue[dict] = queue.Queue()
@@ -151,7 +347,7 @@ class AcpClient:
         t.start()
 
     def _reader(self) -> None:
-        assert self._proc.stdout is not None  # noqa: S101 — guaranteed by stdout=PIPE
+        assert self._proc.stdout is not None  # noqa: S101
         for raw in self._proc.stdout:
             line = raw.decode("utf-8", errors="replace").strip()
             if not line:
@@ -159,7 +355,6 @@ class AcpClient:
             try:
                 msg = json.loads(line)
             except json.JSONDecodeError:
-                # Non-JSON line from opencode stdout — log it for visibility.
                 print(f"[acp] non-json: {line[:200]}", file=sys.stderr)
                 continue
             if "id" in msg:
@@ -180,12 +375,11 @@ class AcpClient:
             print(f"[acp] session ended: {kind}", file=sys.stderr)
             self._stop_reason = kind
         else:
-            # Log unknown notification kinds so we can spot unexpected events.
             if kind:
                 print(f"[acp] notification: {kind}", file=sys.stderr)
 
     def send(self, req: dict, timeout: float = 15.0) -> dict:
-        assert self._proc.stdin is not None  # noqa: S101 — guaranteed by stdin=PIPE
+        assert self._proc.stdin is not None  # noqa: S101
         self._proc.stdin.write((json.dumps(req) + "\n").encode())
         self._proc.stdin.flush()
         deadline = time.monotonic() + timeout
@@ -197,7 +391,6 @@ class AcpClient:
             except queue.Empty:
                 continue
             if resp.get("id") == req_id:
-                # Re-queue any buffered responses for other calls.
                 for p in pending:
                     self._responses.put(p)
                 return resp
@@ -213,7 +406,7 @@ class AcpClient:
         try:
             self._proc.terminate()
         except Exception:  # noqa: S110
-            pass  # best-effort — don't let teardown errors propagate
+            pass
 
 
 # ---------------------------------------------------------------------------
@@ -229,6 +422,10 @@ def main() -> int:
     print(f"[runner] task={TASK!r}  model={MODEL_ID}  timeout={TIMEOUT_SECONDS}s", file=sys.stderr)
 
     _preflight()
+
+    if BASE_URL:
+        _start_proxy(BASE_URL)
+
     _write_config()
 
     print("[runner] starting opencode acp ...", file=sys.stderr)
@@ -263,13 +460,10 @@ def main() -> int:
         client.terminate()
         return 1
 
-    # 3. Resume (loads current model list; sets cwd context)
+    # 3. Resume
     req("session/resume", {"sessionId": sid, "cwd": CWD})
 
-    # 4. Send prompt — give it a short window for the ack, then poll for the
-    #    session_completed / session_error notification.
-    #    Some opencode builds block on session/prompt (ack = completion);
-    #    others ack immediately and complete via notification.
+    # 4. Send prompt and wait for completion.
     print(
         f"[runner] sending prompt, polling for completion (max {TIMEOUT_SECONDS}s) ...",
         file=sys.stderr,
@@ -277,7 +471,7 @@ def main() -> int:
     result = req(
         "session/prompt",
         {"sessionId": sid, "prompt": [{"type": "text", "text": TASK}]},
-        timeout=30.0,  # short — just waiting for ack, not completion
+        timeout=30.0,
     )
 
     # Blocking mode: RPC response carries stopReason.
@@ -291,7 +485,7 @@ def main() -> int:
         client.terminate()
         return 0
 
-    # Notification-driven mode: poll client._stop_reason until set or timeout.
+    # Notification-driven mode: poll until session_completed or timeout.
     deadline = time.monotonic() + float(TIMEOUT_SECONDS)
     last_log = time.monotonic()
     while time.monotonic() < deadline:
