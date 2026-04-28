@@ -111,11 +111,13 @@ Modal prints the endpoint URL on deploy — you need it in the next step:
 cp .env.example .env
 ```
 
-Fill in three things:
+Fill in four things:
 
 ```bash
 MODAL_TOKEN_ID=ak-...
 MODAL_TOKEN_SECRET=as-...
+
+HF_TOKEN=hf_...          # huggingface.co/settings/tokens — read access
 
 OPENAI_BASE_URL=https://your-org--agent-container-serve.modal.run/v1   # from step 2
 OPENAI_API_KEY=modal
@@ -127,7 +129,7 @@ GITHUB_TOKEN=ghp_...   # Contents (read) + Pull Requests (read/write)
 ### 4. Run
 
 ```bash
-agent-run \
+agent-run run \
   --repo https://github.com/org/myapp \
   --task "Fix the off-by-one error in pagination"
 ```
@@ -137,6 +139,7 @@ That's it. No Docker, no servers beyond Modal.
 ### Common commands
 
 ```bash
+make example            # smoke test against fixture repo (full pipeline)
 make test               # unit tests — no external services
 make dashboard          # live dashboard at http://localhost:8000
 make mcp                # MCP server (stdio) for Claude Code / Gemini CLI

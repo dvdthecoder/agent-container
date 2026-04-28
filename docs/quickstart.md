@@ -6,7 +6,8 @@ Get your first agent task running in under 10 minutes.
 
 - Python 3.11+
 - A [Modal](https://modal.com) account (free tier works)
-- A GitHub personal access token
+- A GitHub personal access token — Contents (read) + Pull Requests (read/write)
+- A HuggingFace token — read access, from [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens)
 
 ## 1. Install
 
@@ -37,12 +38,15 @@ Modal prints the endpoint URL after deploy — you need it in the next step:
 cp .env.example .env
 ```
 
-Fill in three things:
+Fill in four things:
 
 ```bash
 # Modal credentials
 MODAL_TOKEN_ID=ak-...
 MODAL_TOKEN_SECRET=as-...
+
+# HuggingFace — needed to download model weights during deploy
+HF_TOKEN=hf_...
 
 # Your model endpoint (URL from step 2)
 OPENAI_BASE_URL=https://your-org--agent-container-serve.modal.run/v1
@@ -56,7 +60,7 @@ GITHUB_TOKEN=ghp_...
 ## 4. Run your first task
 
 ```bash
-agent-run \
+agent-run run \
   --repo https://github.com/org/myapp \
   --task "Fix the off-by-one error in the pagination helper"
 ```
@@ -90,6 +94,17 @@ in Claude Code and Gemini CLI.
 ```bash
 make mcp          # start MCP server standalone (stdio)
 claude mcp list   # verify agent-container appears
+```
+
+---
+
+## Smoke test
+
+Once configured, verify the full pipeline end-to-end against the fixture repo:
+
+```bash
+make example
+# boots sandbox → clones fixture repo → runs opencode → opens PR
 ```
 
 ---
