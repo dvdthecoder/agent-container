@@ -35,7 +35,11 @@ from __future__ import annotations
 import os
 import subprocess
 
+from dotenv import load_dotenv
+
 import modal
+
+load_dotenv()  # reads HF_TOKEN from .env if not already in environment
 
 # ── Profile configuration ────────────────────────────────────────────────────
 
@@ -98,9 +102,7 @@ image = (
 @app.function(
     image=image,
     gpu=GPU,
-    # Name of the Modal secret containing HF_TOKEN=hf_...
-    # Set MODAL_HF_SECRET env var to override, default is "custom-secret"
-    secrets=[modal.Secret.from_name(os.environ.get("MODAL_HF_SECRET", "custom-secret"))],
+    secrets=[modal.Secret.from_dict({"HF_TOKEN": os.environ["HF_TOKEN"]})],
     timeout=60 * 60,
     scaledown_window=SCALEDOWN_WINDOW,
     volumes={"/model-cache": model_volume},
