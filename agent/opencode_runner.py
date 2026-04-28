@@ -30,7 +30,11 @@ import urllib.request
 
 TASK = " ".join(sys.argv[1:]) if len(sys.argv) > 1 else ""
 CWD = os.environ.get("OPENCODE_WORKDIR", "/workspace")
+# Strip trailing /v1 (or /v1/) — the OpenAI SDK appends /v1 itself, so
+# if OPENAI_BASE_URL is "https://host/v1" all calls become .../v1/v1/... (404).
 BASE_URL = os.environ.get("OPENAI_BASE_URL", "").rstrip("/")
+if BASE_URL.endswith("/v1"):
+    BASE_URL = BASE_URL[:-3]
 API_KEY = os.environ.get("OPENAI_API_KEY", "")
 RAW_MODEL = os.environ.get("OPENCODE_MODEL", "")
 
