@@ -78,9 +78,10 @@ elif SERVE_PROFILE == "prod":
     MEM_FRACTION = 0.88
 
 else:
-    # test — Qwen3-Coder 8B on a single A10G (~$1/hr, ~3 min cold start)
-    MODEL_ID = "Qwen/Qwen3-Coder-8B-Instruct"
-    SERVED_MODEL_NAME = "qwen3-coder"
+    # test — Qwen2.5-Coder 7B on a single A10G (~$1/hr, ~3 min cold start)
+    # Qwen3-Coder is not yet released as a standalone HF model.
+    MODEL_ID = "Qwen/Qwen2.5-Coder-7B-Instruct"
+    SERVED_MODEL_NAME = "qwen2.5-coder"
     GPU = "A10G"
     CONTEXT_LENGTH = 32_768
     TP_SIZE = 1
@@ -125,7 +126,7 @@ def serve() -> None:
     # The image's own Python (typically 3.10) is still accessible at its
     # version-specific path.  Try candidates in order; fall back to python3.
     sglang_python = "python3"
-    for candidate in ["python3.10", "python3.9", "/usr/bin/python3", "python3"]:
+    for candidate in ["python3.12", "python3.11", "python3.10", "python3.9", "/usr/bin/python3", "python3"]:
         try:
             r = subprocess.run(  # noqa: S603
                 [candidate, "-c", "import sglang"],
