@@ -78,14 +78,14 @@ elif SERVE_PROFILE == "prod":
     MEM_FRACTION = 0.88
 
 else:
-    # test — Qwen3-Coder 8B on a single A10G (~$1/hr, ~30s cold start)
+    # test — Qwen3-Coder 8B on a single A10G (~$1/hr, ~3 min cold start)
     MODEL_ID = "Qwen/Qwen3-Coder-8B-Instruct"
     SERVED_MODEL_NAME = "qwen3-coder"
     GPU = "A10G"
     CONTEXT_LENGTH = 32_768
     TP_SIZE = 1
     SCALEDOWN_WINDOW = 300
-    STARTUP_TIMEOUT = 180
+    STARTUP_TIMEOUT = 300  # 5 min — model load from volume takes ~3 min on A10G
     MEM_FRACTION = 0.88
 
 # ── Modal app ────────────────────────────────────────────────────────────────
@@ -98,6 +98,9 @@ model_volume = modal.Volume.from_name("agent-container-models", create_if_missin
 # SGLang Docker image ships with all CUDA libraries and FlashInfer kernels.
 # huggingface_hub[hf_transfer] accelerates weight downloads.
 image = (
+    # add_python="3.11" lets Modal detect the Python version for the function
+    # runtime.  It installs a bare Python 3.11 but does NOT delete the image's
+    # own Python (3.10) — we detect sglang's Python by version path at runtime.
     modal.Image.from_registry("lmsysorg/sglang:v0.4.7.post1-cu124", add_python="3.11")
     .run_commands("python3 -m pip install --break-system-packages 'huggingface_hub[hf_transfer]'")
     .env({"HF_HUB_ENABLE_HF_TRANSFER": "1"})
@@ -118,8 +121,26 @@ image = (
 @modal.web_server(port=8000, startup_timeout=STARTUP_TIMEOUT)
 def serve() -> None:
     """Start SGLang OpenAI-compatible server inside the Modal container."""
+    # add_python="3.11" puts a bare Python 3.11 first in PATH that has no sglang.
+    # The image's own Python (typically 3.10) is still accessible at its
+    # version-specific path.  Try candidates in order; fall back to python3.
+    sglang_python = "python3"
+    for candidate in ["python3.10", "python3.9", "/usr/bin/python3", "python3"]:
+        try:
+            r = subprocess.run(  # noqa: S603
+                [candidate, "-c", "import sglang"],
+                capture_output=True,
+                check=False,
+            )
+            if r.returncode == 0:
+                sglang_python = candidate
+                break
+        except FileNotFoundError:
+            continue
+    print(f"[serve] using {sglang_python} for sglang.launch_server")  # noqa: T201
+
     cmd = [
-        "python",
+        sglang_python,
         "-m",
         "sglang.launch_server",
         "--model",
