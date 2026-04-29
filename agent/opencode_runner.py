@@ -181,13 +181,14 @@ class _ProxyHandler(http.server.BaseHTTPRequestHandler):
             if key in req:
                 chat_req[key] = req[key]
 
-        # Forward tools in Chat Completions format.
-        # SGLang must be launched with --tool-call-parser and
-        # --enable-auto-tool-choice for these to work (see modal/serve.py).
+        # Strip tools until SGLang image is upgraded to support --tool-call-parser
+        # qwen25 (see #81). Qwen2.5-Coder generates tool-call JSON from training
+        # without needing the schema at inference time.
         if req.get("tools"):
-            chat_req["tools"] = _convert_tools(req["tools"])
-            if req.get("tool_choice"):
-                chat_req["tool_choice"] = req["tool_choice"]
+            print(
+                f"[proxy] stripping {len(req['tools'])} tools (pending #81)",
+                file=sys.stderr,
+            )
 
         stream = chat_req["stream"]
         chat_body = json.dumps(chat_req).encode()

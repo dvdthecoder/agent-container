@@ -171,6 +171,8 @@ def serve() -> None:
     ]
     if TP_SIZE > 1:
         cmd += ["--tp", str(TP_SIZE)]
-    if TOOL_CALL_PARSER:
-        cmd += ["--tool-call-parser", TOOL_CALL_PARSER, "--enable-auto-tool-choice"]
+    # Tool calling flags — only enable once SGLang image is upgraded to a
+    # version where the parser name is valid (see #81).
+    # if TOOL_CALL_PARSER:
+    #     cmd += ["--tool-call-parser", TOOL_CALL_PARSER, "--enable-auto-tool-choice"]
     subprocess.Popen(cmd)  # noqa: S603 — cmd is fully hardcoded; TP_SIZE is an int
