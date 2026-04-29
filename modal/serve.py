@@ -87,6 +87,10 @@ model_volume = modal.Volume.from_name("agent-container-models", create_if_missin
 # huggingface_hub[hf_transfer] accelerates weight downloads.
 image = (
     modal.Image.from_registry("vllm/vllm-openai:latest", add_python="3.11")
+    # vllm/vllm-openai sets ENTRYPOINT ["python3", "-m", "vllm.entrypoints.openai.api_server"]
+    # which intercepts Modal's own bootstrap command.  Clear it so Modal can start normally;
+    # our serve() function calls python3 -m vllm.entrypoints.openai.api_server explicitly.
+    .dockerfile_commands(["ENTRYPOINT []"])
     .pip_install("huggingface_hub[hf_transfer]")
     .env({"HF_HUB_ENABLE_HF_TRANSFER": "1"})
 )
