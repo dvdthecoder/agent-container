@@ -16,6 +16,7 @@ from collections.abc import Callable
 import modal
 from agent import git_ops, runner, tester
 from agent.backends import get_backend
+from agent.log_store import RunLogger
 from sandbox.config import SandboxConfig
 from sandbox.result import AgentTaskResult, SuiteResult
 from sandbox.spec import AgentTaskSpec
@@ -66,13 +67,20 @@ class ModalSandbox:
                       progress without coupling sandbox logic to FastAPI.
         """
 
+        logger = RunLogger.create(
+            repo=spec.repo,
+            task=spec.resolved_task(),
+            backend=spec.backend,
+        )
+
         def _emit(event_type: str, **payload) -> None:
             if event_type == "phase":
                 elapsed = time.monotonic() - start
-                phase = payload.get("phase")
+                phase = payload.get("phase", "")
                 print(
                     f"[sandbox] phase={phase}  elapsed={elapsed:.1f}s", file=sys.stderr, flush=True
                 )  # noqa: E501
+                logger.phase(phase)
             if on_event is not None:
                 try:
                     on_event(event_type, payload)
@@ -85,13 +93,16 @@ class ModalSandbox:
             try:
                 _emit("phase", phase="BOOTING")
                 sb = self._create(spec)
+                logger.set_sandbox_id(_run_id(sb))
 
                 _emit("phase", phase="CLONING")
                 git_ops.clone(sb, spec.repo, spec.base_branch)
 
                 _emit("phase", phase="RUNNING")
                 backend = get_backend(spec.backend)
-                agent_output, exit_code = runner.run_agent(sb, backend, spec.resolved_task())
+                agent_output, exit_code = runner.run_agent(
+                    sb, backend, spec.resolved_task(), logger=logger
+                )
                 _emit("log", text=agent_output)
 
                 suite: SuiteResult | None = None
@@ -115,9 +126,11 @@ class ModalSandbox:
                     )
 
             except Exception as exc:
+                logger.log("runner", str(exc), level="error")
+                logger.finish("error", duration_s=time.monotonic() - start)
                 result = AgentTaskResult(
                     success=False,
-                    run_id=_run_id(sb),
+                    run_id=logger.run_id,
                     duration_seconds=time.monotonic() - start,
                     error=str(exc),
                     backend=spec.backend,
@@ -125,15 +138,18 @@ class ModalSandbox:
                 _emit("done", success=False, error=str(exc), result=result)
                 return result
 
+            outcome = "success" if exit_code == 0 else "failed"
+            duration = time.monotonic() - start
+            logger.finish(outcome, branch=branch, pr_url=pr_url, duration_s=duration)
             result = AgentTaskResult(
                 success=exit_code == 0,
-                run_id=_run_id(sb),
+                run_id=logger.run_id,
                 branch=branch,
                 pr_url=pr_url,
                 diff=diff,
                 diff_stat=diff_stat,
                 tests=suite,
-                duration_seconds=time.monotonic() - start,
+                duration_seconds=duration,
                 error=None if exit_code == 0 else agent_output,
                 backend=spec.backend,
             )
@@ -149,6 +165,7 @@ class ModalSandbox:
         finally:
             # Always terminate — even on KeyboardInterrupt or other BaseException.
             _terminate(sb)
+            logger.close()
 
     # ----------------------------------------------------------------- private
 
@@ -192,6 +209,7 @@ def _run_id(sb: modal.Sandbox | None) -> str:
     if sb is None:
         return "unknown"
     try:
-        return sb.object_id
+        oid = sb.object_id
+        return oid if isinstance(oid, str) else "unknown"
     except Exception:  # noqa: S110
         return "unknown"

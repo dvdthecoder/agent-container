@@ -4,9 +4,13 @@ from __future__ import annotations
 
 import sys
 import threading
+from typing import TYPE_CHECKING
 
 import modal
 from agent.backends import AgentBackend
+
+if TYPE_CHECKING:
+    from agent.log_store import RunLogger
 
 
 def run_agent(
@@ -14,12 +18,13 @@ def run_agent(
     backend: AgentBackend,
     task: str,
     workdir: str = "/workspace",
+    logger: RunLogger | None = None,
 ) -> tuple[str, int]:
     """Run *backend* with *task* inside *sb*. Returns ``(combined_output, exit_code)``.
 
     stdout and stderr are streamed to the local terminal in real time so
     failures during long runs are visible before the sandbox times out.
-    The combined output is also returned for AgentTaskResult.
+    Each line is also persisted to *logger* when provided.
     """
     cmd = backend.command(task)
     proc = sb.exec(*cmd, workdir=workdir)
@@ -33,6 +38,9 @@ def run_agent(
             sink.append(line)
             sys.stderr.write(f"[sandbox:{label}] {line}")
             sys.stderr.flush()
+            if logger is not None:
+                level = "error" if label == "stderr" else "info"
+                logger.log(f"sandbox:{label}", line.rstrip(), level=level)
 
     t_out = threading.Thread(
         target=_stream, args=(proc.stdout, stdout_lines, "stdout"), daemon=True

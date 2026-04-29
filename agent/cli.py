@@ -7,6 +7,7 @@ from pathlib import Path
 
 import click
 
+from agent.log_store import RunStore
 from sandbox.config import ConfigError, SandboxConfig
 from sandbox.result import AgentTaskResult
 from sandbox.sandbox import ModalSandbox
@@ -88,6 +89,93 @@ def run(
     _print_result(result)
 
     sys.exit(0 if result.success else 1)
+
+
+@cli.command()
+@click.argument("run_id", required=False)
+@click.option("--level", default=None, help="Filter events by level (info|warn|error)")
+@click.option("--phase", default=None, help="Filter events by phase (BOOTING|CLONING|RUNNING…)")
+@click.option("--source", default=None, help="Filter events by source (sandbox:stderr, acp…)")
+@click.option("--db", default=None, type=click.Path(path_type=Path), help="Path to runs.db")
+@click.option("-n", "--limit", default=20, show_default=True, help="Rows to show in list view")
+def logs(
+    run_id: str | None,
+    level: str | None,
+    phase: str | None,
+    source: str | None,
+    db: Path | None,
+    limit: int,
+) -> None:
+    """Inspect run logs stored in the local SQLite database.
+
+    \b
+    List recent runs:
+        agent-run logs
+
+    Show all events for a run:
+        agent-run logs run-20260429-143022-abc123
+
+    Filter to errors only:
+        agent-run logs <run-id> --level error
+
+    Filter to a specific phase:
+        agent-run logs <run-id> --phase RUNNING
+    """
+    store = RunStore(db_path=db)
+
+    try:
+        if run_id is None:
+            # List view
+            runs = store.list_runs(limit=limit)
+            if not runs:
+                click.echo("No runs recorded yet.")
+                return
+            header = f"{'RUN ID':<32}  {'STARTED':<24}  {'OUTCOME':<9}  {'DUR':>6}  REPO"
+            click.echo(header)
+            click.echo("-" * len(header))
+            for r in runs:
+                dur = f"{r.duration_s:.1f}s" if r.duration_s is not None else "…"
+                outcome = r.outcome or "running"
+                started = r.started_at[:19].replace("T", " ")
+                repo_short = r.repo.split("/")[-2] + "/" + r.repo.split("/")[-1]
+                click.echo(f"{r.run_id:<32}  {started:<24}  {outcome:<9}  {dur:>6}  {repo_short}")
+        else:
+            # Event view
+            run = store.get_run(run_id)
+            if run is None:
+                click.echo(f"Run not found: {run_id}", err=True)
+                sys.exit(1)
+
+            outcome = run.outcome or "in progress"
+            dur = f"{run.duration_s:.1f}s" if run.duration_s is not None else "…"
+            click.echo(f"run_id   : {run.run_id}")
+            click.echo(f"repo     : {run.repo}")
+            click.echo(f"task     : {run.task[:80]}")
+            click.echo(f"backend  : {run.backend}")
+            click.echo(f"started  : {run.started_at}")
+            click.echo(f"outcome  : {outcome}  ({dur})")
+            if run.pr_url:
+                click.echo(f"pr       : {run.pr_url}")
+            if run.sandbox_id:
+                click.echo(f"sandbox  : {run.sandbox_id}")
+            click.echo("")
+
+            events = store.events(run_id, level=level, phase=phase, source=source)
+            if not events:
+                click.echo("No events match the filter.")
+                return
+
+            for ev in events:
+                ts = ev.ts[11:23]  # HH:MM:SS.mmm
+                lvl = ev.level.upper()[:4]
+                color = "red" if ev.level == "error" else ("yellow" if ev.level == "warn" else None)
+                line = f"[{ts}] {ev.elapsed_s:>7.2f}s  {ev.phase:<8}  {ev.source:<20}  {lvl}  {ev.message}"  # noqa: E501
+                click.echo(click.style(line, fg=color) if color else line)
+
+    except FileNotFoundError as exc:
+        click.echo(str(exc), err=True)
+        click.echo("No runs have been recorded yet — run `agent-run run` first.", err=True)
+        sys.exit(1)
 
 
 @cli.command()

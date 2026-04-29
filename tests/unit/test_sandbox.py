@@ -26,6 +26,16 @@ def mock_app_lookup():
         yield
 
 
+@pytest.fixture(autouse=True)
+def mock_run_logger():
+    """Prevent RunLogger from writing to the real filesystem in unit tests."""
+    with patch("sandbox.sandbox.RunLogger.create") as mock_cls:
+        inst = MagicMock()
+        inst.run_id = "run-test-abc123"
+        mock_cls.return_value = inst
+        yield inst
+
+
 def _make_proc(stdout: str = "", stderr: str = "", returncode: int = 0) -> MagicMock:
     proc = MagicMock()
     # runner.py streams by iterating over proc.stdout/proc.stderr (bytes lines).
@@ -61,7 +71,7 @@ def test_run_success_returns_result(mock_create):
     result = ModalSandbox(_config()).run(_spec(create_pr=False))
 
     assert result.success is True
-    assert result.run_id == "sb-abc123"
+    assert result.run_id == "run-test-abc123"
     assert result.diff == "diff --git a/f b/f\n+fix"
     assert result.diff_stat == "1 file changed"
     assert result.branch is None
