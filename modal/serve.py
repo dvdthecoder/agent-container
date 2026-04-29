@@ -83,23 +83,15 @@ app = modal.App("agent-container-serve")
 # Persistent volume — model weights cached here, not re-downloaded on cold start
 model_volume = modal.Volume.from_name("agent-container-models", create_if_missing=True)
 
-# vLLM image — ships with CUDA libraries and the OpenAI-compatible API server.
-# huggingface_hub[hf_transfer] accelerates weight downloads.
+# Build Modal-natively so Modal can fully manage the Python environment.
+# vllm/vllm-openai Docker image is not compatible with Modal's bootstrap
+# (ENTRYPOINT conflict, no python symlink, Python version undetectable).
+# Modal injects CUDA drivers at runtime when a GPU is attached — no CUDA
+# base image is required.  First build downloads vLLM wheels (~10 min);
+# subsequent deploys reuse the cached layer.
 image = (
-    modal.Image.from_registry("vllm/vllm-openai:latest")
-    # vllm/vllm-openai sets ENTRYPOINT ["python3", "-m", "vllm.entrypoints.openai.api_server"]
-    # which intercepts Modal's own bootstrap command.  Clear it so Modal can start normally;
-    # our serve() function calls python3 -m vllm.entrypoints.openai.api_server explicitly.
-    #
-    # NOTE: do NOT pass add_python — that installs a fresh Python with no vllm package.
-    # NOTE: use dockerfile_commands for pip install — the image has no `python` symlink
-    #       (only python3), so Modal's .pip_install() which calls `python -m pip` fails.
-    .dockerfile_commands(
-        [
-            "ENTRYPOINT []",
-            "RUN pip install 'huggingface_hub[hf_transfer]'",
-        ]
-    )
+    modal.Image.debian_slim(python_version="3.11")
+    .pip_install("vllm", "huggingface_hub[hf_transfer]")
     .env({"HF_HUB_ENABLE_HF_TRANSFER": "1"})
 )
 
