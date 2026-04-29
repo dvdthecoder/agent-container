@@ -77,7 +77,7 @@ def test_run_defaults(runner, mock_sandbox, mock_config):
 
     spec = mock_sandbox.run.call_args[0][0]
     assert spec.base_branch == "main"
-    assert spec.backend == "opencode"
+    assert spec.backend == "aider"
     assert spec.timeout_seconds == 300
     assert spec.create_pr is True
 

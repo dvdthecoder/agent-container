@@ -13,7 +13,7 @@ from sandbox.result import AgentTaskResult
 from sandbox.sandbox import ModalSandbox
 from sandbox.spec import AgentTaskSpec
 
-_BACKENDS = ["opencode", "claude", "gemini", "stub"]
+_BACKENDS = ["aider", "opencode", "claude", "gemini", "stub"]
 
 
 @click.group(invoke_without_command=True)
@@ -35,7 +35,7 @@ def cli(ctx: click.Context) -> None:
 )
 @click.option(
     "--backend",
-    default="opencode",
+    default="aider",
     type=click.Choice(_BACKENDS),
     show_default=True,
     help="Coding agent backend",
