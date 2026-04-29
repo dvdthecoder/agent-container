@@ -181,21 +181,24 @@ class _ProxyHandler(http.server.BaseHTTPRequestHandler):
             if key in req:
                 chat_req[key] = req[key]
 
-        # Convert Responses API tool format → Chat Completions tool format.
-        # Responses API: {"type":"function","name":"...","parameters":{...}}
-        # Chat Completions: {"type":"function","function":{"name":"...","parameters":{...}}}
+        # SGLang v0.4.7 crashes (500) when tool definitions are included in
+        # the request — its prompt template for Qwen2.5-Coder doesn't handle
+        # tool schemas correctly.  Strip tools entirely; Qwen2.5-Coder is
+        # trained on function-calling data and outputs tool-call JSON from
+        # its weights without needing the schema at inference time.
+        # TODO(#79): re-enable once SGLang is upgraded or model is switched.
         if req.get("tools"):
-            chat_req["tools"] = _convert_tools(req["tools"])
-            if req.get("tool_choice"):
-                chat_req["tool_choice"] = req["tool_choice"]
+            print(
+                f"[proxy] stripping {len(req['tools'])} tools (SGLang #79)",
+                file=sys.stderr,
+            )
 
         stream = chat_req["stream"]
         chat_body = json.dumps(chat_req).encode()
 
         url = f"{self.target}/v1/chat/completions"
         print(
-            f"[proxy] → chat/completions  stream={stream}"
-            f"  tools={len(chat_req.get('tools', []))}  messages={len(messages)}",
+            f"[proxy] → chat/completions  stream={stream}  messages={len(messages)}",
             file=sys.stderr,
         )
 
