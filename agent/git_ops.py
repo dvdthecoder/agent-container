@@ -38,9 +38,12 @@ def clone(sb: modal.Sandbox, repo: str, base_branch: str) -> None:
         repo,
         "/workspace",
     )
+    # Read stderr before wait() — Modal drains streams on wait(), so reading
+    # after would return empty even when there is an error message.
+    stderr = proc.stderr.read()
     proc.wait()
     if proc.returncode != 0:
-        raise ConfigError(f"git clone failed:\n{proc.stderr.read()}")
+        raise ConfigError(f"git clone failed:\n{stderr}")
 
 
 def collect_diff(sb: modal.Sandbox, workdir: str = "/workspace") -> tuple[str, str]:

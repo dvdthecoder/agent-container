@@ -9,6 +9,7 @@ ModalSandbox is the orchestrator.  Domain logic lives in dedicated modules:
 
 from __future__ import annotations
 
+import sys
 import time
 from collections.abc import Callable
 
@@ -66,6 +67,12 @@ class ModalSandbox:
         """
 
         def _emit(event_type: str, **payload) -> None:
+            if event_type == "phase":
+                elapsed = time.monotonic() - start
+                phase = payload.get("phase")
+                print(
+                    f"[sandbox] phase={phase}  elapsed={elapsed:.1f}s", file=sys.stderr, flush=True
+                )  # noqa: E501
             if on_event is not None:
                 try:
                     on_event(event_type, payload)

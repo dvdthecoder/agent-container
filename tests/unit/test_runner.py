@@ -15,6 +15,12 @@ from agent.runner import run_agent
 
 def _make_proc(stdout: str = "", stderr: str = "", returncode: int = 0) -> MagicMock:
     proc = MagicMock()
+    # runner.py streams by iterating over proc.stdout/proc.stderr (bytes lines).
+    stdout_bytes = [ln.encode() + b"\n" for ln in stdout.splitlines()] if stdout else []
+    stderr_bytes = [ln.encode() + b"\n" for ln in stderr.splitlines()] if stderr else []
+    proc.stdout.__iter__ = lambda self: iter(stdout_bytes)
+    proc.stderr.__iter__ = lambda self: iter(stderr_bytes)
+    # Keep .read() for compatibility with git_ops / tester which still use it.
     proc.stdout.read.return_value = stdout
     proc.stderr.read.return_value = stderr
     proc.returncode = returncode
