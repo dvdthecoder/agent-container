@@ -171,9 +171,9 @@ def serve() -> None:
     ]
     if TP_SIZE > 1:
         cmd += ["--tp", str(TP_SIZE)]
-    # Enable native tool-call parsing so the model can use tools.
-    # v0.4.7 supports --tool-call-parser but NOT --enable-auto-tool-choice
-    # (that flag was added in v0.5.x).  Use parser only.
-    if TOOL_CALL_PARSER:
-        cmd += ["--tool-call-parser", TOOL_CALL_PARSER]
+    # Note: --tool-call-parser qwen25 crashes the SGLang v0.4.7 server on the
+    # first request that carries tool schemas (ServerDisconnectedError).  Tool
+    # calling is handled entirely in the proxy via text injection + <tool_call>
+    # parsing — no SGLang-side parser needed.  TOOL_CALL_PARSER is kept in the
+    # profile config for when the image is upgraded to a version that supports it.
     subprocess.Popen(cmd)  # noqa: S603 — cmd is fully hardcoded; TP_SIZE is an int

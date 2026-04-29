@@ -18,6 +18,7 @@ import http.server
 import json
 import os
 import queue
+import re
 import subprocess
 import sys
 import threading
@@ -85,6 +86,73 @@ def _convert_tools(tools: list) -> list:
     return out
 
 
+# Pattern for Qwen2.5's native tool-call output format.
+_TOOL_CALL_RE = re.compile(r"<tool_call>\s*(.*?)\s*</tool_call>", re.DOTALL)
+
+
+def _inject_tools_into_messages(messages: list, tools: list) -> list:
+    """Inject tool schemas as text into the system message (Qwen2.5 native format).
+
+    Avoids passing tools in the Chat Completions 'tools' field, which crashes
+    SGLang v0.4.7's qwen25 parser.  Instead we inject the schemas directly into
+    the system prompt — the format Qwen2.5 was trained with.
+
+    The model will output tool calls as:
+        <tool_call>{"name": "...", "arguments": {...}}</tool_call>
+    which _extract_tool_calls() parses back out.
+    """
+    if not tools:
+        return messages
+
+    tools_section = (
+        "\n\n# Tools\n\n"
+        "You may call one or more functions to assist with the user query.\n\n"
+        "You are provided with function signatures within <tools></tools> XML tags:\n"
+        "<tools>\n"
+        + json.dumps(tools)
+        + "\n</tools>\n\n"
+        "For each function call, return a json object with the function name and "
+        "arguments within <tool_call></tool_call> XML tags:\n"
+        "<tool_call>\n"
+        '{"name": <function-name>, "arguments": <args-dict>}\n'
+        "</tool_call>"
+    )
+    result = list(messages)
+    if result and result[0].get("role") in ("system", "developer"):
+        # Append to existing system message.
+        result[0] = {**result[0], "content": (result[0].get("content") or "") + tools_section}
+    else:
+        result.insert(0, {"role": "system", "content": tools_section.lstrip()})
+    return result
+
+
+def _extract_tool_calls(text: str) -> tuple[str, list]:
+    """Parse <tool_call>...</tool_call> blocks from model output.
+
+    Returns (clean_text, tool_calls) where tool_calls is a list of
+    {"id", "call_id", "name", "arguments"} dicts ready for the Responses API.
+    """
+    tool_calls = []
+    for i, m in enumerate(_TOOL_CALL_RE.finditer(text)):
+        raw = m.group(1).strip()
+        try:
+            call = json.loads(raw)
+        except json.JSONDecodeError:
+            print(f"[proxy] could not parse tool_call JSON: {raw[:200]}", file=sys.stderr)
+            continue
+        call_id = f"call_{i:04d}"
+        tool_calls.append(
+            {
+                "id": call_id,
+                "call_id": call_id,
+                "name": call.get("name", ""),
+                "arguments": json.dumps(call.get("arguments", {})),
+            }
+        )
+    clean = _TOOL_CALL_RE.sub("", text).strip()
+    return clean, tool_calls
+
+
 def _convert_input_items(items: list) -> list:
     """Convert Responses API input items to Chat Completions messages.
 
@@ -103,31 +171,30 @@ def _convert_input_items(items: list) -> list:
         if role == "developer":
             role = "system"
         if item_type == "tool_result":
-            # Responses API tool result → Chat Completions tool message.
+            # Responses API tool result → user message in Qwen tool_response format.
+            # Using role="user" keeps the conversation in plain-text mode consistent
+            # with how we inject tool definitions and parse <tool_call> output.
+            result_content = str(item.get("output", ""))
             messages.append(
                 {
-                    "role": "tool",
-                    "tool_call_id": item.get("tool_use_id", ""),
-                    "content": str(item.get("output", "")),
+                    "role": "user",
+                    "content": f"<tool_response>\n{result_content}\n</tool_response>",
                 }
             )
         elif item_type == "function_call":
-            # Responses API function_call output item → assistant message with tool_calls.
-            call_id = item.get("call_id") or item.get("id", "")
+            # Responses API function_call item → assistant message in Qwen format.
+            # Render as <tool_call> text so conversation history is consistent with
+            # how the model generated the call originally.
+            call_json = json.dumps(
+                {
+                    "name": item.get("name", ""),
+                    "arguments": json.loads(item.get("arguments", "{}")),
+                }
+            )
             messages.append(
                 {
                     "role": "assistant",
-                    "content": None,
-                    "tool_calls": [
-                        {
-                            "id": call_id,
-                            "type": "function",
-                            "function": {
-                                "name": item.get("name", ""),
-                                "arguments": item.get("arguments", "{}"),
-                            },
-                        }
-                    ],
+                    "content": f"<tool_call>\n{call_json}\n</tool_call>",
                 }
             )
         elif item_type in ("message", ""):
@@ -205,13 +272,16 @@ class _ProxyHandler(http.server.BaseHTTPRequestHandler):
             if key in req:
                 chat_req[key] = req[key]
 
-        # Pass tools through to SGLang (requires --tool-call-parser qwen25 in serve.py).
-        # Force non-streaming when tools are present: SGLang v0.4.7's qwen25 parser
-        # hangs indefinitely in streaming mode waiting for </tool_call> completion.
-        # Non-streaming returns the full response atomically, which the parser handles.
+        # Inject tools as text in the system message rather than passing the 'tools'
+        # field to SGLang.  SGLang v0.4.7's built-in qwen25 tool-call parser crashes
+        # the server process on the first request that carries tool schemas.
+        # Text injection uses Qwen2.5's native training format (<tools>...</tools>)
+        # so the model still sees and uses all tool definitions correctly.
+        # _extract_tool_calls() in the response path parses the <tool_call> output.
         if req.get("tools"):
-            chat_req["tools"] = _convert_tools(req["tools"])
-            chat_req["stream"] = False  # override — required for tool-call parser in v0.4.7
+            chat_req["messages"] = _inject_tools_into_messages(
+                chat_req["messages"], _convert_tools(req["tools"])
+            )
 
         stream = chat_req["stream"]
         chat_body = json.dumps(chat_req).encode()
@@ -269,7 +339,8 @@ class _ProxyHandler(http.server.BaseHTTPRequestHandler):
     def _translate_chat_response(self, raw: bytes) -> bytes:
         """Convert a chat completions response to Responses API format.
 
-        Handles both plain text responses and tool_calls from the model.
+        Handles plain text, SGLang-parsed tool_calls, and Qwen's native
+        <tool_call>...</tool_call> text format (proxy-level parsing fallback).
         """
         try:
             chat = json.loads(raw)
@@ -277,31 +348,60 @@ class _ProxyHandler(http.server.BaseHTTPRequestHandler):
             return raw
         message = chat.get("choices", [{}])[0].get("message", {})
         text = message.get("content") or ""
-        tool_calls = message.get("tool_calls") or []
+        native_tool_calls = message.get("tool_calls") or []
+
+        # Log what the model returned so we can see whether it's using tools.
+        preview = text[:300] if text else "<empty>"
+        print(
+            f"[proxy] ← model response: tool_calls={len(native_tool_calls)}"
+            f"  text={len(text)}chars  preview={preview!r}",
+            file=sys.stderr,
+        )
 
         output = []
-        if text:
-            output.append(
-                {
-                    "type": "message",
-                    "role": "assistant",
-                    "content": [{"type": "output_text", "text": text}],
-                }
-            )
-        for tc in tool_calls:
-            fn = tc.get("function", {})
-            call_id = tc.get("id", "")
-            output.append(
-                {
-                    "type": "function_call",
-                    "id": call_id,
-                    "call_id": call_id,
-                    "name": fn.get("name", ""),
-                    "arguments": fn.get("arguments", "{}"),
-                }
-            )
+
+        # Prefer SGLang-parsed tool_calls if present (--tool-call-parser enabled).
+        if native_tool_calls:
+            if text:
+                output.append(
+                    {
+                        "type": "message",
+                        "role": "assistant",
+                        "content": [{"type": "output_text", "text": text}],
+                    }
+                )
+            for tc in native_tool_calls:
+                fn = tc.get("function", {})
+                call_id = tc.get("id", "")
+                output.append(
+                    {
+                        "type": "function_call",
+                        "id": call_id,
+                        "call_id": call_id,
+                        "name": fn.get("name", ""),
+                        "arguments": fn.get("arguments", "{}"),
+                    }
+                )
+        else:
+            # Fall back to proxy-level <tool_call> parsing (Qwen2.5 text format).
+            clean_text, parsed_calls = _extract_tool_calls(text)
+            if parsed_calls:
+                print(
+                    f"[proxy] parsed {len(parsed_calls)} tool call(s) from text",
+                    file=sys.stderr,
+                )
+            if clean_text:
+                output.append(
+                    {
+                        "type": "message",
+                        "role": "assistant",
+                        "content": [{"type": "output_text", "text": clean_text}],
+                    }
+                )
+            for tc in parsed_calls:
+                output.append({"type": "function_call", **tc})
+
         if not output:
-            # Fallback — empty text message so the Responses API is always valid.
             output.append(
                 {
                     "type": "message",
@@ -368,26 +468,48 @@ class _ProxyHandler(http.server.BaseHTTPRequestHandler):
         # Build output items for response.completed.
         output = []
         text = "".join(full_text)
-        if text:
-            output.append(
-                {
-                    "type": "message",
-                    "role": "assistant",
-                    "content": [{"type": "output_text", "text": text}],
-                }
-            )
-        for idx in sorted(tool_calls_buf):
-            buf = tool_calls_buf[idx]
-            call_id = buf["id"]
-            output.append(
-                {
-                    "type": "function_call",
-                    "id": call_id,
-                    "call_id": call_id,
-                    "name": buf["name"],
-                    "arguments": buf["arguments"],
-                }
-            )
+
+        # Prefer SGLang-parsed tool_calls_buf if any were streamed.
+        if tool_calls_buf:
+            if text:
+                output.append(
+                    {
+                        "type": "message",
+                        "role": "assistant",
+                        "content": [{"type": "output_text", "text": text}],
+                    }
+                )
+            for idx in sorted(tool_calls_buf):
+                buf = tool_calls_buf[idx]
+                call_id = buf["id"]
+                output.append(
+                    {
+                        "type": "function_call",
+                        "id": call_id,
+                        "call_id": call_id,
+                        "name": buf["name"],
+                        "arguments": buf["arguments"],
+                    }
+                )
+        else:
+            # Proxy-level <tool_call> parsing fallback (Qwen2.5 text format).
+            clean_text, parsed_calls = _extract_tool_calls(text)
+            if parsed_calls:
+                print(
+                    f"[proxy] (stream) parsed {len(parsed_calls)} tool call(s) from text",
+                    file=sys.stderr,
+                )
+            if clean_text:
+                output.append(
+                    {
+                        "type": "message",
+                        "role": "assistant",
+                        "content": [{"type": "output_text", "text": clean_text}],
+                    }
+                )
+            for tc in parsed_calls:
+                output.append({"type": "function_call", **tc})
+
         if not output:
             output.append(
                 {
