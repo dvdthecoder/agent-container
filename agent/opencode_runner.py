@@ -61,6 +61,65 @@ _PROXY_PORT = 8080
 # ---------------------------------------------------------------------------
 
 
+def _convert_tools(tools: list) -> list:
+    """Convert Responses API tool definitions to Chat Completions format.
+
+    Responses API:   {"type":"function","name":"x","parameters":{}}
+    Chat Completions: {"type":"function","function":{"name":"x","parameters":{}}}
+    """
+    out = []
+    for t in tools:
+        if not isinstance(t, dict):
+            continue
+        if t.get("type") == "function" and "function" not in t:
+            # Responses API format — wrap in function key.
+            out.append(
+                {
+                    "type": "function",
+                    "function": {k: v for k, v in t.items() if k != "type"},
+                }
+            )
+        else:
+            # Already in Chat Completions format or unknown — pass through.
+            out.append(t)
+    return out
+
+
+def _convert_input_items(items: list) -> list:
+    """Convert Responses API input items to Chat Completions messages.
+
+    Handles plain message dicts, tool_result items, and string items.
+    """
+    messages = []
+    for item in items:
+        if not isinstance(item, dict):
+            messages.append({"role": "user", "content": str(item)})
+            continue
+        item_type = item.get("type", "")
+        role = item.get("role", "user")
+        if item_type == "tool_result":
+            # Responses API tool result → Chat Completions tool message.
+            messages.append(
+                {
+                    "role": "tool",
+                    "tool_call_id": item.get("tool_use_id", ""),
+                    "content": str(item.get("output", "")),
+                }
+            )
+        elif item_type in ("message", ""):
+            content = item.get("content", "")
+            if isinstance(content, list):
+                # content blocks — flatten to text for simplicity.
+                text = " ".join(c.get("text", "") for c in content if isinstance(c, dict))
+                messages.append({"role": role, "content": text})
+            else:
+                messages.append({"role": role, "content": content})
+        else:
+            # Unknown type — best effort.
+            messages.append({"role": role, "content": json.dumps(item)})
+    return messages
+
+
 class _ProxyHandler(http.server.BaseHTTPRequestHandler):
     """Translate Responses API calls to Chat Completions for SGLang."""
 
@@ -92,12 +151,21 @@ class _ProxyHandler(http.server.BaseHTTPRequestHandler):
             self._send(400, b'{"error":"bad request"}')
             return
 
-        # Convert Responses API input to messages list.
+        # Log request shape for debugging (truncated, no content).
+        tools_count = len(req.get("tools", []))
+        input_type = type(req.get("input", "")).__name__
+        print(
+            f"[proxy] request: input_type={input_type} tools={tools_count}"
+            f" stream={req.get('stream')}",
+            file=sys.stderr,
+        )
+
+        # Convert Responses API input to Chat Completions messages list.
         raw_input = req.get("input", "")
         if isinstance(raw_input, str):
             messages = [{"role": "user", "content": raw_input}]
         elif isinstance(raw_input, list):
-            messages = raw_input  # already in messages format
+            messages = _convert_input_items(raw_input)
         else:
             messages = [{"role": "user", "content": str(raw_input)}]
 
@@ -107,17 +175,29 @@ class _ProxyHandler(http.server.BaseHTTPRequestHandler):
             # to SGLang, which only recognises its --served-model-name value.
             "model": RAW_MODEL,
             "messages": messages,
+            "stream": bool(req.get("stream", False)),
         }
-        # Forward optional fields that both APIs share.
-        for key in ("stream", "temperature", "max_tokens", "tools", "tool_choice"):
+        for key in ("temperature", "max_tokens"):
             if key in req:
                 chat_req[key] = req[key]
 
-        stream = bool(req.get("stream", False))
+        # Convert Responses API tool format → Chat Completions tool format.
+        # Responses API: {"type":"function","name":"...","parameters":{...}}
+        # Chat Completions: {"type":"function","function":{"name":"...","parameters":{...}}}
+        if req.get("tools"):
+            chat_req["tools"] = _convert_tools(req["tools"])
+            if req.get("tool_choice"):
+                chat_req["tool_choice"] = req["tool_choice"]
+
+        stream = chat_req["stream"]
         chat_body = json.dumps(chat_req).encode()
 
         url = f"{self.target}/v1/chat/completions"
-        print(f"[proxy] responses→chat  stream={stream}  url={url}", file=sys.stderr)
+        print(
+            f"[proxy] → chat/completions  stream={stream}"
+            f"  tools={len(chat_req.get('tools', []))}  messages={len(messages)}",
+            file=sys.stderr,
+        )
 
         http_req = urllib.request.Request(  # noqa: S310
             url,
@@ -138,7 +218,9 @@ class _ProxyHandler(http.server.BaseHTTPRequestHandler):
                     self._send(200, translated, content_type="application/json")
         except urllib.error.HTTPError as e:
             body_err = e.read()
-            print(f"[proxy] upstream error {e.code}: {body_err[:200]}", file=sys.stderr)
+            # Decode for readability — SGLang may return JSON error detail.
+            body_str = body_err.decode("utf-8", errors="replace")[:400]
+            print(f"[proxy] upstream {e.code}: {body_str}", file=sys.stderr)
             self._send(e.code, body_err)
         except Exception as exc:
             print(f"[proxy] upstream exception: {exc}", file=sys.stderr)
