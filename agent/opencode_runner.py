@@ -238,9 +238,14 @@ class _ProxyHandler(http.server.BaseHTTPRequestHandler):
                     self._send(200, translated, content_type="application/json")
         except urllib.error.HTTPError as e:
             body_err = e.read()
-            # Decode for readability — SGLang may return JSON error detail.
-            body_str = body_err.decode("utf-8", errors="replace")[:400]
-            print(f"[proxy] upstream {e.code}: {body_str}", file=sys.stderr)
+            # Log the FULL error body — SGLang's Pydantic errors contain the
+            # field-level detail needed to diagnose mismatches (e.g. unknown
+            # role names, bad tool schema fields).  Never truncate on error.
+            body_str = body_err.decode("utf-8", errors="replace")
+            print(
+                f"[proxy] upstream {e.code} ({url}):\n{body_str}",
+                file=sys.stderr,
+            )
             self._send(e.code, body_err)
         except Exception as exc:
             print(f"[proxy] upstream exception: {exc}", file=sys.stderr)

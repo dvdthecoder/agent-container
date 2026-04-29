@@ -199,13 +199,15 @@ class ModalSandbox:
 
 
 def _terminate(sb: modal.Sandbox | None) -> None:
-    """Terminate sandbox, ignoring errors (best-effort cleanup)."""
+    """Terminate sandbox, logging outcome but never propagating errors."""
     if sb is None:
         return
     try:
         sb.terminate()
-    except Exception:  # noqa: S110
-        pass  # best-effort — don't let teardown errors propagate
+        print("[sandbox] container terminated", file=sys.stderr, flush=True)
+    except Exception as exc:  # noqa: BLE001
+        # Log so we know terminate failed — still best-effort, never raise.
+        print(f"[sandbox] terminate failed: {exc}", file=sys.stderr, flush=True)
 
 
 def _run_id(sb: modal.Sandbox | None) -> str:
