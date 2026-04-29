@@ -98,6 +98,10 @@ def _convert_input_items(items: list) -> list:
             continue
         item_type = item.get("type", "")
         role = item.get("role", "user")
+        # SGLang v0.4.7 only accepts 'system', 'user', 'assistant', 'tool'.
+        # opencode uses the newer OpenAI 'developer' role — map it to 'system'.
+        if role == "developer":
+            role = "system"
         if item_type == "tool_result":
             # Responses API tool result → Chat Completions tool message.
             messages.append(
