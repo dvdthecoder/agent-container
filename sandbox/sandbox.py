@@ -140,7 +140,7 @@ class ModalSandbox:
                     _emit("phase", phase="TESTING")
                     suite = tester.detect_and_run(sb)
 
-                diff, diff_stat = git_ops.collect_diff(sb)
+                diff, diff_stat = git_ops.collect_diff(sb, base_branch=spec.base_branch)
 
                 branch: str | None = None
                 pr_url: str | None = None

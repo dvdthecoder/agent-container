@@ -40,7 +40,6 @@ print(
 cmd = [
     "aider",
     "--yes",  # accept all changes without prompting
-    "--no-git",  # sandbox handles git; aider only edits files
     "--model",
     model_arg,
     "--openai-api-base",
@@ -49,7 +48,8 @@ cmd = [
     API_KEY,
     "--message",
     TASK,
-    WORKDIR,
 ]
 
-sys.exit(subprocess.run(cmd).returncode)  # noqa: S603
+# Run from WORKDIR so aider picks up the git repo there.
+# Do NOT use --no-git + directory: aider rejects directories without git.
+sys.exit(subprocess.run(cmd, cwd=WORKDIR).returncode)  # noqa: S603

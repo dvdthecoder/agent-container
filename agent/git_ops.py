@@ -46,13 +46,22 @@ def clone(sb: modal.Sandbox, repo: str, base_branch: str) -> None:
         raise ConfigError(f"git clone failed:\n{stderr}")
 
 
-def collect_diff(sb: modal.Sandbox, workdir: str = "/workspace") -> tuple[str, str]:
-    """Return ``(full_diff, diff_stat)`` for uncommitted changes in *workdir*."""
-    diff_proc = sb.exec("git", "diff", "HEAD", workdir=workdir)
+def collect_diff(
+    sb: modal.Sandbox,
+    base_branch: str = "main",
+    workdir: str = "/workspace",
+) -> tuple[str, str]:
+    """Return ``(full_diff, diff_stat)`` for all changes since clone.
+
+    Compares against ``origin/<base_branch>`` so aider commits are included —
+    ``git diff HEAD`` would return empty if aider already committed its edits.
+    """
+    ref = f"origin/{base_branch}"
+    diff_proc = sb.exec("git", "diff", ref, workdir=workdir)
     diff = diff_proc.stdout.read()
     diff_proc.wait()
 
-    stat_proc = sb.exec("git", "diff", "--stat", "HEAD", workdir=workdir)
+    stat_proc = sb.exec("git", "diff", "--stat", ref, workdir=workdir)
     stat = stat_proc.stdout.read()
     stat_proc.wait()
 
@@ -89,7 +98,11 @@ def push_and_pr(
     _git(sb, ["config", "user.name", "Agent Container"], workdir)
     _git(sb, ["checkout", "-b", br], workdir)
     _git(sb, ["add", "-A"], workdir)
-    _git(sb, ["commit", "-m", f"agent: {task[:72]}"], workdir)
+    # Only commit if there is something staged — aider may have already committed.
+    status_proc = sb.exec("git", "diff", "--cached", "--quiet", workdir=workdir)
+    status_proc.wait()
+    if status_proc.returncode != 0:  # non-zero → staged changes exist
+        _git(sb, ["commit", "-m", f"agent: {task[:72]}"], workdir)
 
     # Rewrite the remote URL to embed the token so `git push` can authenticate.
     authed_url = provider.authed_remote(repo, token)
