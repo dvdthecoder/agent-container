@@ -1,14 +1,16 @@
 # Agent Backends
 
-Three coding agents can run inside the sandbox. All produce the same `AgentTaskResult` — PR
-creation, the dashboard, and MCP integration work identically regardless of which backend you use.
+Four coding agent backends can run inside the sandbox. All produce the same `AgentTaskResult`
+— PR creation, the dashboard, and MCP integration work identically regardless of which backend
+you use.
 
 ## Selecting a backend
 
 ```bash
-agent-run --backend opencode ...   # default
-agent-run --backend claude  ...
-agent-run --backend gemini  ...
+agent-run run --backend aider    ...   # default
+agent-run run --backend opencode ...
+agent-run run --backend claude   ...
+agent-run run --backend gemini   ...
 ```
 
 Or in Python:
@@ -17,36 +19,62 @@ Or in Python:
 spec = AgentTaskSpec(
     repo="https://github.com/org/myapp",
     task="Fix the login bug",
-    backend="claude",
+    backend="aider",
 )
 ```
 
 ---
 
-## OpenCode (default)
+## aider (default)
 
-[OpenCode](https://opencode.ai) is an open-source coding agent that runs inside the sandbox and
-talks to your self-hosted model endpoint on Modal.
+[aider](https://aider.chat) is a coding agent that calls `/v1/chat/completions` directly —
+no proxy, no translation layer. It uses text-based diff editing: the model returns a structured
+diff and aider applies it to the workspace.
 
 ```bash
-AGENT_BACKEND=opencode   # or omit — this is the default
-
-# Set after deploying modal/serve.py:
-OPENAI_BASE_URL=https://your-org--agent-container-serve.modal.run/v1
+OPENAI_BASE_URL=https://your-org--agent-container-serve-serve.modal.run
 OPENAI_API_KEY=modal
-OPENCODE_MODEL=qwen3-coder   # or minimax-m2.5
+OPENCODE_MODEL=qwen2.5-coder
 ```
 
-**Best for**: the default setup. Everything stays on Modal — no external API keys, no code leaves
-your infrastructure.
+**How it works:** aider sends the relevant file contents and task to the model and receives
+back a structured edit in diff format. It applies the diff, commits the result, and exits.
+No function calling required at the inference level — works reliably with any model.
+
+**Best for:** the default setup. Fastest path to a working diff and PR. Works with any
+OpenAI-compatible endpoint out of the box.
+
+Invoked inside the container as:
+```bash
+aider --yes --no-git --model <model> \
+      --openai-api-base <url> --openai-api-key <key> \
+      --message "<task>" /workspace
+```
+
+---
+
+## OpenCode
+
+[opencode](https://opencode.ai) is a multi-turn coding agent with a full tool-calling loop.
+It can run commands, read files, write code, check errors, and iterate — more capable than
+aider for complex tasks.
+
+opencode v1.14+ calls the OpenAI Responses API (`POST /v1/responses`). A thin adapter
+translates this to Chat Completions and back — see [Architecture](architecture.md#opencode-adapter-thin-proxy).
+
+```bash
+OPENAI_BASE_URL=https://your-org--agent-container-serve-serve.modal.run
+OPENAI_API_KEY=modal
+OPENCODE_MODEL=qwen2.5-coder
+```
+
+**Best for:** complex multi-step tasks where the agent needs to reason, run tests, and iterate.
+Requires a model with reliable tool calling (use `prod` or `minimax` profile).
 
 Invoked inside the container as:
 ```bash
 python3 /opencode_runner.py "<task prompt>"
 ```
-
-`opencode_runner.py` drives opencode non-interactively via its ACP (Agent Client Protocol)
-JSON-RPC interface (`opencode acp`), streaming output to stdout as the agent works.
 
 ---
 
@@ -66,7 +94,7 @@ claude --print "<task prompt>"
 
 !!! warning "Privacy note"
     Claude Code sends prompts to Anthropic's API. Code context leaves your Modal sandbox.
-    Use the `opencode` backend for full air-gap.
+    Use `aider` or `opencode` for full air-gap with your self-hosted model.
 
 ---
 
@@ -86,20 +114,19 @@ Invoked inside the container as:
 gemini --yolo -p "<task prompt>"
 ```
 
-!!! note "Air-gap with Vertex AI"
-    Using Vertex AI keeps prompts within your GCP project. For full on-prem air-gap, use the
-    `opencode` backend with your self-hosted Modal endpoint.
-
 ---
 
 ## Comparison
 
-| | OpenCode | Claude Code | Gemini CLI |
-|---|---|---|---|
-| Model | Self-hosted on Modal | Anthropic API | Google AI / Vertex |
-| External API key needed | ❌ | ✅ | ✅ |
-| Air-gap capable | ✅ | ❌ | ✅ (Vertex AI) |
-| Default | ✅ | ❌ | ❌ |
+| | aider | opencode | Claude Code | Gemini CLI |
+|--|-------|---------|------------|-----------|
+| Model | Self-hosted on Modal | Self-hosted on Modal | Anthropic API | Google AI / Vertex |
+| External API key | ❌ | ❌ | ✅ | ✅ |
+| Air-gap capable | ✅ | ✅ | ❌ | ✅ (Vertex) |
+| Proxy needed | ❌ | ✅ (thin adapter) | ❌ | ❌ |
+| Tool calling required | ❌ (diff format) | ✅ | ✅ | ✅ |
+| Multi-turn reasoning | ❌ | ✅ | ✅ | ✅ |
+| Default | ✅ | ❌ | ❌ | ❌ |
 
 ---
 
@@ -109,5 +136,5 @@ gemini --yolo -p "<task prompt>"
 AGENT_BACKEND=stub
 ```
 
-Used in integration tests. Echoes the task prompt to stdout and exits 0 without calling any model
-or making any code changes. Exercises the full sandbox lifecycle at near-zero cost.
+Used in integration tests. Echoes the task prompt to stdout and exits 0 without calling any
+model or making code changes. Exercises the full sandbox lifecycle at near-zero cost.

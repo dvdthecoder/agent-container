@@ -1,15 +1,18 @@
 # Model Setup
 
-The model runs on Modal GPU via `modal/serve.py` — the same platform that runs the agent sandbox.
-Deploy once, it scales to zero when idle, weights are cached so cold starts after the first are fast.
+The model runs on Modal GPU via `modal/serve.py`. Deploy once, it scales to zero when idle,
+weights are cached so cold starts after the first are fast.
 
 Three env vars tell the agent sandbox where the model is:
 
 ```bash
-OPENAI_BASE_URL=https://your-org--agent-container-serve.modal.run/v1
+OPENAI_BASE_URL=https://your-org--agent-container-serve-serve.modal.run
 OPENAI_API_KEY=modal        # any non-empty string — it's your own endpoint
-OPENCODE_MODEL=qwen3-coder  # must match SERVED_MODEL_NAME in modal/serve.py
+OPENCODE_MODEL=qwen2.5-coder  # must match SERVED_MODEL_NAME in modal/serve.py
 ```
+
+!!! note "No /v1 suffix"
+    Set `OPENAI_BASE_URL` without a trailing `/v1`. The inference server and adapter add it.
 
 ---
 
@@ -18,21 +21,22 @@ OPENCODE_MODEL=qwen3-coder  # must match SERVED_MODEL_NAME in modal/serve.py
 Three profiles are built into `modal/serve.py`. Pick one based on your quality and cost needs:
 
 | Profile | Model | GPU | Context | Deploy command |
-|---|---|---|---|---|
-| `test` (default) | Qwen3-Coder 8B | A10G | 32k | `modal deploy modal/serve.py` |
-| `prod` | Qwen3-Coder 80B | 2× A100 80GB | 128k | `SERVE_PROFILE=prod modal deploy modal/serve.py` |
-| `minimax` | MiniMax M2.5 | 8× A100 80GB | 1M | `SERVE_PROFILE=minimax modal deploy modal/serve.py` |
+|---------|-------|-----|---------|----------------|
+| `test` (default) | Qwen2.5-Coder-7B | A10G | 32k | `modal deploy modal/serve.py` |
+| `prod` | Qwen3-Coder-80B | 2× A100 80GB | 128k | `SERVE_PROFILE=prod modal deploy modal/serve.py` |
+| `minimax` | MiniMax-M2.5 | 8× A100 80GB | 1M | `SERVE_PROFILE=minimax modal deploy modal/serve.py` |
 
-**Start with `test`** — it deploys in ~30 seconds, cold starts in ~30s, and is cheap enough for
-iterating. Promote to `prod` or `minimax` when you want production-grade output.
+**Start with `test`** — cheap, ~30s cold start, good for iterating. Promote to `prod` or `minimax`
+when you want production-grade output quality.
 
 ### Model names
 
-After deploy, set `OPENCODE_MODEL` to match the `SERVED_MODEL_NAME` in `modal/serve.py`:
+Set `OPENCODE_MODEL` to match `SERVED_MODEL_NAME` in `modal/serve.py`:
 
 | Profile | `OPENCODE_MODEL` |
-|---|---|
-| `test` / `prod` | `qwen3-coder` |
+|---------|-----------------|
+| `test` | `qwen2.5-coder` |
+| `prod` | `qwen3-coder` |
 | `minimax` | `minimax-m2.5` |
 
 ---
@@ -45,10 +49,9 @@ After deploy, set `OPENCODE_MODEL` to match the `SERVED_MODEL_NAME` in `modal/se
 │                                                 │
 │  Agent sandbox          Model server            │
 │  ┌──────────────┐       ┌─────────────────┐     │
-│  │ opencode     │──────▶│ SGLang          │     │
-│  │ (your task)  │ HTTP  │ Qwen3-Coder     │     │
-│  └──────────────┘       │ or MiniMax M2.5 │     │
-│                         └─────────────────┘     │
+│  │ aider        │──────▶│ vLLM            │     │
+│  │ (your task)  │ HTTP  │ Qwen / MiniMax  │     │
+│  └──────────────┘       └─────────────────┘     │
 └─────────────────────────────────────────────────┘
 ```
 
@@ -56,34 +59,38 @@ The sandbox and the model server communicate over Modal's internal network. No t
 
 ---
 
-## Why SGLang
+## Inference server — vLLM
 
-SGLang's **RadixAttention** automatically caches shared KV prefixes across requests. Agent runs
-against the same repo re-use the cached system prompt and repo context — only task-specific tokens
-are computed fresh.
+[vLLM](https://github.com/vllm-project/vllm) provides a stable OpenAI-compatible
+`/v1/chat/completions` API with first-class tool calling support. It serves all three model
+profiles and handles:
 
-This matters for agent-container because:
+- Tool calling natively (`--enable-auto-tool-choice --tool-call-parser`)
+- Tensor parallelism for multi-GPU profiles (`--tensor-parallel-size`)
+- KV prefix caching — agent runs against the same repo share cached context
 
-- Every run against the same repo shares a large common prefix (system prompt + file tree)
-- Multiple CI runs against the same repo in parallel all hit the prefix cache
+### Why not SGLang?
 
-Benchmark: `make test-e2e` covers end-to-end wall time. Issue #48 tracks a formal throughput
-comparison at 1/4/8 concurrent runs.
+SGLang v0.4.7 (the latest cu124 image) has blocking bugs in its tool-call parser that crash
+the server on requests carrying tool schemas. vLLM is the stable primary choice; SGLang is
+tracked in [issue #86](https://github.com/dvdthecoder/agent-container/issues/86) as a
+secondary option pending a compatible image release.
 
 ---
 
 ## Scale-to-zero and cold starts
 
-Modal scales the model server to zero after `scaledown_window` seconds of inactivity (5–10 min
-depending on profile). You pay only for active inference time.
-
-Cold start times (first request after scale-down):
+Modal scales the model server to zero after `scaledown_window` seconds of inactivity.
+You pay only for active inference time.
 
 | Profile | Cold start |
-|---|---|
-| `test` | ~30s |
-| `prod` | ~2–3 min |
-| `minimax` | ~5–8 min |
+|---------|-----------|
+| `test` | ~1–2 min |
+| `prod` | ~3–5 min |
+| `minimax` | ~8–12 min |
 
-Model weights are stored in a Modal Volume (`agent-container-models`) and are not re-downloaded
-on cold start after the first deploy.
+Model weights are stored in a Modal Volume (`agent-container-models`) and are not
+re-downloaded on cold start after the first deploy.
+
+The agent sandbox waits for the model to be ready before starting (preflight probe with
+configurable timeout via `SERVE_COLDSTART_BUDGET`).

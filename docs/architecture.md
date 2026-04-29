@@ -20,17 +20,17 @@
 ┌──────────────────────────────────────────────────────────────────┐
 │  Modal — container compute                                       │
 │  Each run gets a fresh ephemeral container                       │
-│  Coding agent installed: opencode / claude CLI / gemini CLI      │
-│  Git + gh / glab CLI for branch and PR operations               │
+│  Agent backends: aider · opencode · claude CLI · gemini CLI      │
+│  Git + gh CLI for branch and PR operations                       │
 │                                                                  │
 │  Agent calls → Modal model endpoint (internal network)           │
 └──────────────────────────┬───────────────────────────────────────┘
-                           │  Modal internal network
+                           │  POST /v1/chat/completions
                            ▼
 ┌──────────────────────────────────────────────────────────────────┐
-│  Modal GPU — SGLang inference server                             │
+│  Modal GPU — vLLM inference server                               │
 │  modal deploy modal/serve.py  →  stable endpoint                 │
-│  Qwen3-Coder on A100 · RadixAttention prefix caching             │
+│  Qwen3-Coder · MiniMax M2.5 — first-class tool calling           │
 │  Scale-to-zero when idle, billed per GPU second                  │
 └──────────────────────────────────────────────────────────────────┘
 ```
@@ -53,21 +53,27 @@ This means:
 ### Modal for model serving
 
 The model runs on Modal GPU infrastructure alongside the sandbox. `modal deploy modal/serve.py`
-deploys Qwen3-Coder once and gives you a stable internal endpoint. The sandbox container calls
+deploys the model once and gives you a stable internal endpoint. The sandbox container calls
 it over Modal's internal network — no public internet hop, no external API key needed.
 
-The inference server is [SGLang](https://github.com/sgl-project/sglang). Its **RadixAttention**
-automatically caches shared KV prefixes across requests. Agent runs that share a system prompt and
-repo context (the common case) hit the prefix cache on every run after the first, improving
-throughput and reducing per-token latency under concurrent load.
+The inference server is **vLLM**. It provides a stable, first-class OpenAI-compatible
+`/v1/chat/completions` API with reliable tool calling across all model profiles. Scale-to-zero
+when idle, billed per GPU second, no hardware to manage.
 
-Scale-to-zero when idle. Billed per GPU second. No hardware to manage.
+### Agent backends
 
-### Coding agent as a plugin
+Two backends are supported. Both produce identical `AgentTaskResult` output — PR creation,
+the dashboard, and MCP integration work identically regardless of which backend you use.
 
-OpenCode is the default backend, but Claude Code CLI and Gemini CLI can run inside the container
-instead. All backends produce the same `AgentTaskResult` — the rest of the pipeline is identical.
-See [Agent Backends](agents.md).
+**aider** (default) calls `/v1/chat/completions` directly. No proxy, no translation layer.
+Uses text-based diff editing — the model returns structured diffs, aider applies them. Works
+reliably with any OpenAI-compatible endpoint.
+
+**opencode** uses a thin Responses API adapter. opencode v1.14+ calls `/v1/responses`
+(OpenAI Responses API); the adapter translates to Chat Completions and back. The adapter
+is ~100 lines of pure JSON reshaping with no model-specific code.
+
+See [Agent Backends](agents.md) for full documentation.
 
 ## What runs inside the container
 
@@ -77,7 +83,7 @@ Step 1 — Clone
   git checkout -b agent/<slug>-<timestamp>
 
 Step 2 — Agent runs
-  python3 /opencode_runner.py "<task prompt>"   # ACP-based; or claude / gemini equivalent
+  aider --yes --message "<task>" /workspace     # or opencode equivalent
   streams output live to dashboard via SSE
 
 Step 3 — Collect result
@@ -103,6 +109,21 @@ AgentTaskResult
   success, run_id, branch, pr_url, diff, diff_stat, duration_seconds, error, backend
 ```
 
+## opencode adapter (thin proxy)
+
+opencode v1.14+ uses the OpenAI Responses API (`POST /v1/responses`). No self-hosted inference
+server implements this API — they all speak Chat Completions. The adapter bridges the gap:
+
+```
+opencode → POST /v1/responses
+                ↓  reshape: input[] → messages[], tools format, role names
+           POST /v1/chat/completions  →  vLLM
+                ↑  reshape: tool_calls → function_call items
+opencode ← Responses API response
+```
+
+The adapter contains no model-specific code. It is a format translation layer only.
+
 ## File structure
 
 ```
@@ -113,21 +134,23 @@ agent_container/
 │   ├── result.py        AgentTaskResult + SuiteResult
 │   └── sandbox.py       ModalSandbox — boot/run/teardown
 ├── modal/
-│   ├── sandbox.py       Modal Sandbox implementation
-│   └── serve.py         Deploy open model on Modal GPU
+│   └── serve.py         Deploy open model on Modal GPU (vLLM)
 ├── agent/
 │   ├── cli.py           agent-run CLI entrypoint
-│   ├── installer.py     Install agent CLI inside container
-│   ├── runner.py        Invoke agent non-interactively
+│   ├── runner.py        Invoke agent, stream output, enforce timeout
 │   ├── tester.py        Auto-detect and run test suite
 │   ├── git_ops.py       clone, branch, diff, push, PR
+│   ├── log_store.py     SQLite run logger (RunLogger + RunStore)
+│   ├── opencode_runner.py  Responses API adapter (opencode backend only)
 │   └── backends/        AgentBackend protocol + adapters
+│       ├── aider.py     aider — direct Chat Completions
+│       ├── opencode.py  opencode — via Responses API adapter
+│       ├── claude_code.py
+│       └── gemini.py
 ├── dashboard/
 │   ├── app.py           FastAPI app
 │   ├── store.py         WorkspaceStore + RunState
-│   ├── router.py        REST + SSE route handlers
-│   └── static/
-│       └── index.html   Dashboard UI (vanilla JS, no build step)
-└── mcp/
+│   └── router.py        REST + SSE route handlers
+└── mcp_server/
     └── server.py        MCP server exposing sandbox tools
 ```
