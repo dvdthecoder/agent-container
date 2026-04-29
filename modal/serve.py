@@ -107,13 +107,21 @@ image = (
 def serve() -> None:
     """Start vLLM OpenAI-compatible server inside the Modal container."""
     cmd = [
-        "python3", "-m", "vllm.entrypoints.openai.api_server",
-        "--model", MODEL_ID,
-        "--download-dir", "/model-cache",
-        "--served-model-name", SERVED_MODEL_NAME,
-        "--host", "0.0.0.0",  # noqa: S104 — container-internal binding
-        "--port", "8000",
-        "--max-model-len", str(CONTEXT_LENGTH),
+        "python3",
+        "-m",
+        "vllm.entrypoints.openai.api_server",
+        "--model",
+        MODEL_ID,
+        "--download-dir",
+        "/model-cache",
+        "--served-model-name",
+        SERVED_MODEL_NAME,
+        "--host",
+        "0.0.0.0",  # noqa: S104 — container-internal binding
+        "--port",
+        "8000",
+        "--max-model-len",
+        str(CONTEXT_LENGTH),
         "--trust-remote-code",
     ]
     if TP_SIZE > 1:

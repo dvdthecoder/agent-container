@@ -39,12 +39,16 @@ print(
 
 cmd = [
     "aider",
-    "--yes",           # accept all changes without prompting
-    "--no-git",        # sandbox handles git; aider only edits files
-    "--model", model_arg,
-    "--openai-api-base", BASE_URL,
-    "--openai-api-key", API_KEY,
-    "--message", TASK,
+    "--yes",  # accept all changes without prompting
+    "--no-git",  # sandbox handles git; aider only edits files
+    "--model",
+    model_arg,
+    "--openai-api-base",
+    BASE_URL,
+    "--openai-api-key",
+    API_KEY,
+    "--message",
+    TASK,
     WORKDIR,
 ]
 

@@ -108,9 +108,7 @@ def _inject_tools_into_messages(messages: list, tools: list) -> list:
         "\n\n# Tools\n\n"
         "You may call one or more functions to assist with the user query.\n\n"
         "You are provided with function signatures within <tools></tools> XML tags:\n"
-        "<tools>\n"
-        + json.dumps(tools)
-        + "\n</tools>\n\n"
+        "<tools>\n" + json.dumps(tools) + "\n</tools>\n\n"
         "For each function call, return a json object with the function name and "
         "arguments within <tool_call></tool_call> XML tags:\n"
         "<tool_call>\n"

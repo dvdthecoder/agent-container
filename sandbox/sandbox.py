@@ -21,6 +21,22 @@ from sandbox.config import SandboxConfig
 from sandbox.result import AgentTaskResult, SuiteResult
 from sandbox.spec import AgentTaskSpec
 
+
+class PhaseError(Exception):
+    """Raised when a sandbox phase fails.  Carries phase name and elapsed time
+    so the error message is self-contained without inspecting run state.
+    """
+
+    def __init__(self, phase: str, reason: str, elapsed: float) -> None:
+        self.phase = phase
+        self.reason = reason
+        self.elapsed = elapsed
+        super().__init__(str(self))
+
+    def __str__(self) -> str:
+        return f"[{self.phase}] {self.reason} (after {self.elapsed:.1f}s)"
+
+
 # Base image — git + aider + opencode (Node) pre-installed.
 # Built once by Modal and cached; subsequent runs reuse the cached layer.
 #
@@ -81,10 +97,13 @@ class ModalSandbox:
             backend=spec.backend,
         )
 
+        current_phase: list[str] = ["INIT"]  # mutable cell so _emit can update it
+
         def _emit(event_type: str, **payload) -> None:
             if event_type == "phase":
                 elapsed = time.monotonic() - start
                 phase = payload.get("phase", "")
+                current_phase[0] = phase
                 print(
                     f"[sandbox] phase={phase}  elapsed={elapsed:.1f}s", file=sys.stderr, flush=True
                 )  # noqa: E501
@@ -137,16 +156,27 @@ class ModalSandbox:
                     )
 
             except Exception as exc:
-                logger.log("runner", str(exc), level="error")
-                logger.finish("error", duration_s=time.monotonic() - start)
+                elapsed = time.monotonic() - start
+                # Wrap bare exceptions with phase + elapsed context so callers
+                # know where the run failed without parsing logs.
+                if not isinstance(exc, PhaseError):
+                    exc = PhaseError(current_phase[0], str(exc), elapsed)
+                error_msg = str(exc)
+                # Terminate immediately — don't wait for Modal's timeout to
+                # bill us for idle CPU.  The finally block will no-op if sb
+                # is already None or already terminated.
+                _terminate(sb)
+                sb = None  # prevent double-terminate in finally
+                logger.log("runner", error_msg, level="error")
+                logger.finish("error", duration_s=elapsed)
                 result = AgentTaskResult(
                     success=False,
                     run_id=logger.run_id,
-                    duration_seconds=time.monotonic() - start,
-                    error=str(exc),
+                    duration_seconds=elapsed,
+                    error=error_msg,
                     backend=spec.backend,
                 )
-                _emit("done", success=False, error=str(exc), result=result)
+                _emit("done", success=False, error=error_msg, result=result)
                 return result
 
             outcome = "success" if exit_code == 0 else "failed"
