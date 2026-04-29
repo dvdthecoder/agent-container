@@ -66,6 +66,7 @@ if SERVE_PROFILE == "minimax":
     SCALEDOWN_WINDOW = 600  # stay warm 10 min — cold start is expensive at 8×
     STARTUP_TIMEOUT = 600  # large model + 8 GPUs need longer to initialise
     MEM_FRACTION = 0.90  # MoE keeps fewer weights resident per device
+    TOOL_CALL_PARSER = "hermes"  # MiniMax uses Hermes tool format
 
 elif SERVE_PROFILE == "prod":
     MODEL_ID = "Qwen/Qwen3-Coder-80B-Instruct"
@@ -76,10 +77,10 @@ elif SERVE_PROFILE == "prod":
     SCALEDOWN_WINDOW = 600
     STARTUP_TIMEOUT = 360
     MEM_FRACTION = 0.88
+    TOOL_CALL_PARSER = "qwen25"  # Qwen3-Coder uses same tool format as Qwen2.5
 
 else:
     # test — Qwen2.5-Coder 7B on a single A10G (~$1/hr, ~3 min cold start)
-    # Qwen3-Coder is not yet released as a standalone HF model.
     MODEL_ID = "Qwen/Qwen2.5-Coder-7B-Instruct"
     SERVED_MODEL_NAME = "qwen2.5-coder"
     GPU = "A10G"
@@ -88,6 +89,7 @@ else:
     SCALEDOWN_WINDOW = 300
     STARTUP_TIMEOUT = 300  # 5 min — model load from volume takes ~3 min on A10G
     MEM_FRACTION = 0.88
+    TOOL_CALL_PARSER = "qwen25"  # Qwen2.5-Coder native tool format
 
 # ── Modal app ────────────────────────────────────────────────────────────────
 
@@ -169,4 +171,6 @@ def serve() -> None:
     ]
     if TP_SIZE > 1:
         cmd += ["--tp", str(TP_SIZE)]
+    if TOOL_CALL_PARSER:
+        cmd += ["--tool-call-parser", TOOL_CALL_PARSER, "--enable-auto-tool-choice"]
     subprocess.Popen(cmd)  # noqa: S603 — cmd is fully hardcoded; TP_SIZE is an int
