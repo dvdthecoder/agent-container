@@ -29,8 +29,11 @@ if not TASK:
 if BASE_URL and not BASE_URL.endswith("/v1"):
     BASE_URL = f"{BASE_URL}/v1"
 
-# aider requires the model to be prefixed with openai/ for custom endpoints
-model_arg = f"openai/{MODEL}" if MODEL and "/" not in MODEL else MODEL or "openai/unknown"
+# Pass the raw model name — litellm does NOT strip the openai/ prefix before
+# forwarding to the API, so vLLM would receive "openai/qwen2.5-coder" and
+# return 404 (model not found).  --openai-api-base already routes to the
+# custom endpoint; no provider prefix is needed.
+model_arg = MODEL or "unknown"
 
 print(
     f"[aider] task={TASK!r}  model={model_arg}  base_url={BASE_URL}  workdir={WORKDIR}",
