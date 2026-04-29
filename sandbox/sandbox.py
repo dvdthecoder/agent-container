@@ -21,16 +21,24 @@ from sandbox.config import SandboxConfig
 from sandbox.result import AgentTaskResult, SuiteResult
 from sandbox.spec import AgentTaskSpec
 
-# Base image — git + Node (for opencode) + Python pre-installed.
+# Base image — git + aider + opencode (Node) pre-installed.
 # Built once by Modal and cached; subsequent runs reuse the cached layer.
+#
+# Both agent backends are installed so either can be selected at runtime:
+#   --backend aider    (default) direct Chat Completions, no proxy
+#   --backend opencode           Responses API adapter, multi-turn loop
 _BASE_IMAGE = (
     modal.Image.debian_slim(python_version="3.11")
     .apt_install("git", "curl")
+    # aider — direct Chat Completions, no proxy needed (Phase 1 default)
+    .pip_install("aider-chat")
+    # opencode — requires Node.js (Phase 2, Responses API adapter)
     .run_commands(
         "curl -fsSL https://deb.nodesource.com/setup_lts.x | bash -",
         "apt-get install -y nodejs",
         "npm install -g opencode-ai",
     )
+    .add_local_file("agent/aider_runner.py", "/aider_runner.py", copy=True)
     .add_local_file("agent/opencode_runner.py", "/opencode_runner.py", copy=True)
 )
 

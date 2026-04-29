@@ -25,12 +25,14 @@ class AgentBackend(Protocol):
 def get_backend(name: str) -> AgentBackend:
     """Return the backend for *name*, raising ``ValueError`` if unknown."""
     # Deferred imports keep the individual backend modules independent.
+    from agent.backends.aider import AiderBackend
     from agent.backends.claude_code import ClaudeCodeBackend
     from agent.backends.gemini import GeminiBackend
     from agent.backends.opencode import OpenCodeBackend
     from agent.backends.stub import StubBackend
 
     registry: dict[str, AgentBackend] = {
+        "aider": AiderBackend(),
         "opencode": OpenCodeBackend(),
         "claude": ClaudeCodeBackend(),
         "gemini": GeminiBackend(),

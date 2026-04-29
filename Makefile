@@ -21,7 +21,7 @@ example:
 	agent-run run \
 		--repo https://github.com/dvdthecoder/agent-container-fixture \
 		--task "add a hello world function to the codebase" \
-		--backend opencode \
+		--backend aider \
 		--timeout 600
 
 # ── cleanup — stop any stray sandbox containers left by failed runs ──────────
