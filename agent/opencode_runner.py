@@ -88,7 +88,8 @@ def _convert_tools(tools: list) -> list:
 def _convert_input_items(items: list) -> list:
     """Convert Responses API input items to Chat Completions messages.
 
-    Handles plain message dicts, tool_result items, and string items.
+    Handles plain message dicts, tool_result items, function_call items,
+    and string items.
     """
     messages = []
     for item in items:
@@ -104,6 +105,25 @@ def _convert_input_items(items: list) -> list:
                     "role": "tool",
                     "tool_call_id": item.get("tool_use_id", ""),
                     "content": str(item.get("output", "")),
+                }
+            )
+        elif item_type == "function_call":
+            # Responses API function_call output item → assistant message with tool_calls.
+            call_id = item.get("call_id") or item.get("id", "")
+            messages.append(
+                {
+                    "role": "assistant",
+                    "content": None,
+                    "tool_calls": [
+                        {
+                            "id": call_id,
+                            "type": "function",
+                            "function": {
+                                "name": item.get("name", ""),
+                                "arguments": item.get("arguments", "{}"),
+                            },
+                        }
+                    ],
                 }
             )
         elif item_type in ("message", ""):
@@ -181,14 +201,9 @@ class _ProxyHandler(http.server.BaseHTTPRequestHandler):
             if key in req:
                 chat_req[key] = req[key]
 
-        # Strip tools until SGLang image is upgraded to support --tool-call-parser
-        # qwen25 (see #81). Qwen2.5-Coder generates tool-call JSON from training
-        # without needing the schema at inference time.
+        # Pass tools through to SGLang (requires --tool-call-parser qwen25 in serve.py).
         if req.get("tools"):
-            print(
-                f"[proxy] stripping {len(req['tools'])} tools (pending #81)",
-                file=sys.stderr,
-            )
+            chat_req["tools"] = _convert_tools(req["tools"])
 
         stream = chat_req["stream"]
         chat_body = json.dumps(chat_req).encode()
@@ -228,34 +243,73 @@ class _ProxyHandler(http.server.BaseHTTPRequestHandler):
             self._send(502, json.dumps({"error": str(exc)}).encode())
 
     def _translate_chat_response(self, raw: bytes) -> bytes:
-        """Convert a chat completions response to Responses API format."""
+        """Convert a chat completions response to Responses API format.
+
+        Handles both plain text responses and tool_calls from the model.
+        """
         try:
             chat = json.loads(raw)
         except json.JSONDecodeError:
             return raw
-        text = chat.get("choices", [{}])[0].get("message", {}).get("content", "") or ""
-        resp = {
-            "id": chat.get("id", "resp_proxy"),
-            "object": "response",
-            "model": chat.get("model", RAW_MODEL),
-            "output": [
+        message = chat.get("choices", [{}])[0].get("message", {})
+        text = message.get("content") or ""
+        tool_calls = message.get("tool_calls") or []
+
+        output = []
+        if text:
+            output.append(
                 {
                     "type": "message",
                     "role": "assistant",
                     "content": [{"type": "output_text", "text": text}],
                 }
-            ],
+            )
+        for tc in tool_calls:
+            fn = tc.get("function", {})
+            call_id = tc.get("id", "")
+            output.append(
+                {
+                    "type": "function_call",
+                    "id": call_id,
+                    "call_id": call_id,
+                    "name": fn.get("name", ""),
+                    "arguments": fn.get("arguments", "{}"),
+                }
+            )
+        if not output:
+            # Fallback — empty text message so the Responses API is always valid.
+            output.append(
+                {
+                    "type": "message",
+                    "role": "assistant",
+                    "content": [{"type": "output_text", "text": ""}],
+                }
+            )
+
+        resp = {
+            "id": chat.get("id", "resp_proxy"),
+            "object": "response",
+            "model": chat.get("model", RAW_MODEL),
+            "output": output,
             "usage": chat.get("usage", {}),
         }
         return json.dumps(resp).encode()
 
     def _stream_chat_to_responses(self, resp: object) -> None:
-        """Stream chat completions SSE and re-emit as Responses API events."""
+        """Stream chat completions SSE and re-emit as Responses API events.
+
+        Text deltas are forwarded immediately.  Tool calls are buffered and
+        included in the final response.completed event so opencode can execute
+        them once the full call is assembled.
+        """
         self.send_response(200)
         self.send_header("Content-Type", "text/event-stream")
         self.send_header("Cache-Control", "no-cache")
         self.end_headers()
         full_text: list[str] = []
+        # tool_calls_buf: index → {"id": ..., "name": ..., "arguments": ...}
+        tool_calls_buf: dict[int, dict] = {}
+
         for raw_line in resp:
             line = raw_line.decode("utf-8", errors="replace").rstrip()
             if not line.startswith("data:"):
@@ -267,14 +321,58 @@ class _ProxyHandler(http.server.BaseHTTPRequestHandler):
                 chunk = json.loads(data)
             except json.JSONDecodeError:
                 continue
-            delta = chunk.get("choices", [{}])[0].get("delta", {}).get("content") or ""
-            if delta:
-                full_text.append(delta)
-                event = json.dumps({"type": "response.output_text.delta", "delta": delta})
+            delta = chunk.get("choices", [{}])[0].get("delta", {})
+            text_delta = delta.get("content") or ""
+            if text_delta:
+                full_text.append(text_delta)
+                event = json.dumps({"type": "response.output_text.delta", "delta": text_delta})
                 self._write_sse(event)
+            # Accumulate tool call chunks.
+            for tc_delta in delta.get("tool_calls") or []:
+                idx = tc_delta.get("index", 0)
+                if idx not in tool_calls_buf:
+                    tool_calls_buf[idx] = {"id": "", "name": "", "arguments": ""}
+                buf = tool_calls_buf[idx]
+                if tc_delta.get("id"):
+                    buf["id"] = tc_delta["id"]
+                fn = tc_delta.get("function", {})
+                if fn.get("name"):
+                    buf["name"] += fn["name"]
+                if fn.get("arguments"):
+                    buf["arguments"] += fn["arguments"]
 
-        # Emit completed event.
+        # Build output items for response.completed.
+        output = []
         text = "".join(full_text)
+        if text:
+            output.append(
+                {
+                    "type": "message",
+                    "role": "assistant",
+                    "content": [{"type": "output_text", "text": text}],
+                }
+            )
+        for idx in sorted(tool_calls_buf):
+            buf = tool_calls_buf[idx]
+            call_id = buf["id"]
+            output.append(
+                {
+                    "type": "function_call",
+                    "id": call_id,
+                    "call_id": call_id,
+                    "name": buf["name"],
+                    "arguments": buf["arguments"],
+                }
+            )
+        if not output:
+            output.append(
+                {
+                    "type": "message",
+                    "role": "assistant",
+                    "content": [{"type": "output_text", "text": ""}],
+                }
+            )
+
         completed = json.dumps(
             {
                 "type": "response.completed",
@@ -282,13 +380,7 @@ class _ProxyHandler(http.server.BaseHTTPRequestHandler):
                     "id": "resp_proxy",
                     "object": "response",
                     "model": RAW_MODEL,
-                    "output": [
-                        {
-                            "type": "message",
-                            "role": "assistant",
-                            "content": [{"type": "output_text", "text": text}],
-                        }
-                    ],
+                    "output": output,
                 },
             }
         )
