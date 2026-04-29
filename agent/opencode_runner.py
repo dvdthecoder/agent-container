@@ -102,7 +102,10 @@ class _ProxyHandler(http.server.BaseHTTPRequestHandler):
             messages = [{"role": "user", "content": str(raw_input)}]
 
         chat_req: dict = {
-            "model": req.get("model", RAW_MODEL),
+            # Always use the bare model name (e.g. "qwen2.5-coder") — never
+            # forward opencode's provider-prefixed string ("openai/qwen2.5-coder")
+            # to SGLang, which only recognises its --served-model-name value.
+            "model": RAW_MODEL,
             "messages": messages,
         }
         # Forward optional fields that both APIs share.
@@ -256,8 +259,18 @@ def _start_proxy(target_base_url: str) -> None:
 # ---------------------------------------------------------------------------
 
 
-def _preflight() -> bool:
-    """Hit BASE_URL/v1/models and print what comes back. Returns True if OK."""
+# How long to wait for a cold serve to become ready before giving up.
+# SGLang on A10G takes ~3 min to load Qwen2.5-Coder-7B from the volume.
+_SERVE_COLDSTART_BUDGET = int(os.environ.get("SERVE_COLDSTART_BUDGET", "300"))
+_SERVE_POLL_INTERVAL = 10  # seconds between probe attempts
+
+
+def _wait_for_serve() -> bool:
+    """Block until BASE_URL/v1/models returns 200, or the cold-start budget expires.
+
+    Returns True if the endpoint is ready, False if it never came up.
+    Logs each probe attempt so progress is visible in real time.
+    """
     if not BASE_URL:
         print(
             "[preflight] OPENAI_BASE_URL is not set — using built-in model",
@@ -266,22 +279,42 @@ def _preflight() -> bool:
         return True
 
     url = f"{BASE_URL}/v1/models"
-    print(f"[preflight] checking model endpoint: {url}", file=sys.stderr)
-    try:
-        http_req = urllib.request.Request(  # noqa: S310 — URL comes from operator-controlled env var
-            url, headers={"Authorization": f"Bearer {API_KEY}"}
+    deadline = time.monotonic() + _SERVE_COLDSTART_BUDGET
+    attempt = 0
+
+    while time.monotonic() < deadline:
+        attempt += 1
+        elapsed = int(time.monotonic() - (deadline - _SERVE_COLDSTART_BUDGET))
+        print(
+            f"[preflight] attempt {attempt}  elapsed={elapsed}s  url={url}",
+            file=sys.stderr,
         )
-        with urllib.request.urlopen(http_req, timeout=30) as resp:  # noqa: S310
-            body = resp.read().decode("utf-8", errors="replace")
-            print(f"[preflight] endpoint OK ({resp.status}): {body[:200]}", file=sys.stderr)
-            return True
-    except urllib.error.HTTPError as e:
-        body = e.read().decode("utf-8", errors="replace")[:200]
-        print(f"[preflight] HTTP {e.code} from {url}: {body}", file=sys.stderr)
-        return False
-    except Exception as e:
-        print(f"[preflight] FAILED to reach {url}: {e}", file=sys.stderr)
-        return False
+        try:
+            http_req = urllib.request.Request(  # noqa: S310
+                url, headers={"Authorization": f"Bearer {API_KEY}"}
+            )
+            with urllib.request.urlopen(http_req, timeout=20) as resp:  # noqa: S310
+                body = resp.read().decode("utf-8", errors="replace")
+                print(
+                    f"[preflight] serve ready ({resp.status}): {body[:200]}",
+                    file=sys.stderr,
+                )
+                return True
+        except urllib.error.HTTPError as e:
+            print(f"[preflight] HTTP {e.code} — retrying", file=sys.stderr)
+        except Exception as exc:
+            print(f"[preflight] {exc} — retrying in {_SERVE_POLL_INTERVAL}s", file=sys.stderr)
+
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            break
+        time.sleep(min(_SERVE_POLL_INTERVAL, remaining))
+
+    print(
+        f"[preflight] serve not ready after {_SERVE_COLDSTART_BUDGET}s — aborting",
+        file=sys.stderr,
+    )
+    return False
 
 
 # ---------------------------------------------------------------------------
@@ -421,7 +454,8 @@ def main() -> int:
 
     print(f"[runner] task={TASK!r}  model={MODEL_ID}  timeout={TIMEOUT_SECONDS}s", file=sys.stderr)
 
-    _preflight()
+    if not _wait_for_serve():
+        return 1
 
     if BASE_URL:
         _start_proxy(BASE_URL)
