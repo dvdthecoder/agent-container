@@ -37,9 +37,17 @@ print(
     file=sys.stderr,
 )
 
+# Git identity must be set before aider runs — without it, aider's commit
+# step fails/hangs even with --yes.
+subprocess.run(["git", "config", "user.email", "agent@agent-container"], cwd=WORKDIR)  # noqa: S603
+subprocess.run(["git", "config", "user.name", "Agent Container"], cwd=WORKDIR)  # noqa: S603
+
 cmd = [
     "aider",
     "--yes",  # accept all changes without prompting
+    "--map-tokens",
+    "0",  # disable repo map — avoids silent multi-minute scan on fresh clone
+    "--no-pretty",  # plain-text output; avoids terminal escape codes in sandbox streams
     "--model",
     model_arg,
     "--openai-api-base",
