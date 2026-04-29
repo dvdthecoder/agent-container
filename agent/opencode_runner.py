@@ -206,8 +206,12 @@ class _ProxyHandler(http.server.BaseHTTPRequestHandler):
                 chat_req[key] = req[key]
 
         # Pass tools through to SGLang (requires --tool-call-parser qwen25 in serve.py).
+        # Force non-streaming when tools are present: SGLang v0.4.7's qwen25 parser
+        # hangs indefinitely in streaming mode waiting for </tool_call> completion.
+        # Non-streaming returns the full response atomically, which the parser handles.
         if req.get("tools"):
             chat_req["tools"] = _convert_tools(req["tools"])
+            chat_req["stream"] = False  # override — required for tool-call parser in v0.4.7
 
         stream = chat_req["stream"]
         chat_body = json.dumps(chat_req).encode()
@@ -219,6 +223,11 @@ class _ProxyHandler(http.server.BaseHTTPRequestHandler):
             file=sys.stderr,
         )
 
+        # Per-request timeout: short enough to detect SGLang hangs quickly.
+        # TIMEOUT_SECONDS is the whole-run budget; individual inference calls
+        # should not be allowed to block for the full run duration.
+        _request_timeout = min(120, TIMEOUT_SECONDS)
+
         http_req = urllib.request.Request(  # noqa: S310
             url,
             data=chat_body,
@@ -229,7 +238,7 @@ class _ProxyHandler(http.server.BaseHTTPRequestHandler):
             method="POST",
         )
         try:
-            with urllib.request.urlopen(http_req, timeout=TIMEOUT_SECONDS) as resp:  # noqa: S310
+            with urllib.request.urlopen(http_req, timeout=_request_timeout) as resp:  # noqa: S310
                 if stream:
                     self._stream_chat_to_responses(resp)
                 else:
@@ -247,6 +256,12 @@ class _ProxyHandler(http.server.BaseHTTPRequestHandler):
                 file=sys.stderr,
             )
             self._send(e.code, body_err)
+        except TimeoutError as exc:
+            # Per-request timeout expired — SGLang is hung.  Return 504 so
+            # opencode can decide whether to retry rather than waiting forever.
+            msg = f"upstream timeout after {_request_timeout}s — SGLang did not respond"
+            print(f"[proxy] {msg}: {exc}", file=sys.stderr)
+            self._send(504, json.dumps({"error": msg}).encode())
         except Exception as exc:
             print(f"[proxy] upstream exception: {exc}", file=sys.stderr)
             self._send(502, json.dumps({"error": str(exc)}).encode())
