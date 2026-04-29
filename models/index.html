@@ -643,13 +643,30 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#why-sglang" class="md-nav__link">
+  <a href="#inference-server-vllm" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Why SGLang
+        Inference server — vLLM
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Inference server — vLLM">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#why-not-sglang" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why not SGLang?
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -900,13 +917,30 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#why-sglang" class="md-nav__link">
+  <a href="#inference-server-vllm" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Why SGLang
+        Inference server — vLLM
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Inference server — vLLM">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#why-not-sglang" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why not SGLang?
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -942,13 +976,17 @@
 
 
 <h1 id="model-setup">Model Setup<a class="headerlink" href="#model-setup" title="Permanent link">&para;</a></h1>
-<p>The model runs on Modal GPU via <code>modal/serve.py</code> — the same platform that runs the agent sandbox.
-Deploy once, it scales to zero when idle, weights are cached so cold starts after the first are fast.</p>
+<p>The model runs on Modal GPU via <code>modal/serve.py</code>. Deploy once, it scales to zero when idle,
+weights are cached so cold starts after the first are fast.</p>
 <p>Three env vars tell the agent sandbox where the model is:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nv">OPENAI_BASE_URL</span><span class="o">=</span>https://your-org--agent-container-serve.modal.run/v1
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nv">OPENAI_BASE_URL</span><span class="o">=</span>https://your-org--agent-container-serve-serve.modal.run
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nv">OPENAI_API_KEY</span><span class="o">=</span>modal<span class="w">        </span><span class="c1"># any non-empty string — it&#39;s your own endpoint</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="nv">OPENCODE_MODEL</span><span class="o">=</span>qwen3-coder<span class="w">  </span><span class="c1"># must match SERVED_MODEL_NAME in modal/serve.py</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="nv">OPENCODE_MODEL</span><span class="o">=</span>qwen2.5-coder<span class="w">  </span><span class="c1"># must match SERVED_MODEL_NAME in modal/serve.py</span>
 </code></pre></div>
+<div class="admonition note">
+<p class="admonition-title">No /v1 suffix</p>
+<p>Set <code>OPENAI_BASE_URL</code> without a trailing <code>/v1</code>. The inference server and adapter add it.</p>
+</div>
 <hr />
 <h2 id="gpu-profiles">GPU profiles<a class="headerlink" href="#gpu-profiles" title="Permanent link">&para;</a></h2>
 <p>Three profiles are built into <code>modal/serve.py</code>. Pick one based on your quality and cost needs:</p>
@@ -965,31 +1003,31 @@ Deploy once, it scales to zero when idle, weights are cached so cold starts afte
 <tbody>
 <tr>
 <td><code>test</code> (default)</td>
-<td>Qwen3-Coder 8B</td>
+<td>Qwen2.5-Coder-7B</td>
 <td>A10G</td>
 <td>32k</td>
 <td><code>modal deploy modal/serve.py</code></td>
 </tr>
 <tr>
 <td><code>prod</code></td>
-<td>Qwen3-Coder 80B</td>
+<td>Qwen3-Coder-80B</td>
 <td>2× A100 80GB</td>
 <td>128k</td>
 <td><code>SERVE_PROFILE=prod modal deploy modal/serve.py</code></td>
 </tr>
 <tr>
 <td><code>minimax</code></td>
-<td>MiniMax M2.5</td>
+<td>MiniMax-M2.5</td>
 <td>8× A100 80GB</td>
 <td>1M</td>
 <td><code>SERVE_PROFILE=minimax modal deploy modal/serve.py</code></td>
 </tr>
 </tbody>
 </table>
-<p><strong>Start with <code>test</code></strong> — it deploys in ~30 seconds, cold starts in ~30s, and is cheap enough for
-iterating. Promote to <code>prod</code> or <code>minimax</code> when you want production-grade output.</p>
+<p><strong>Start with <code>test</code></strong> — cheap, ~30s cold start, good for iterating. Promote to <code>prod</code> or <code>minimax</code>
+when you want production-grade output quality.</p>
 <h3 id="model-names">Model names<a class="headerlink" href="#model-names" title="Permanent link">&para;</a></h3>
-<p>After deploy, set <code>OPENCODE_MODEL</code> to match the <code>SERVED_MODEL_NAME</code> in <code>modal/serve.py</code>:</p>
+<p>Set <code>OPENCODE_MODEL</code> to match <code>SERVED_MODEL_NAME</code> in <code>modal/serve.py</code>:</p>
 <table>
 <thead>
 <tr>
@@ -999,7 +1037,11 @@ iterating. Promote to <code>prod</code> or <code>minimax</code> when you want pr
 </thead>
 <tbody>
 <tr>
-<td><code>test</code> / <code>prod</code></td>
+<td><code>test</code></td>
+<td><code>qwen2.5-coder</code></td>
+</tr>
+<tr>
+<td><code>prod</code></td>
 <td><code>qwen3-coder</code></td>
 </tr>
 <tr>
@@ -1015,30 +1057,31 @@ iterating. Promote to <code>prod</code> or <code>minimax</code> when you want pr
 <a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>│                                                 │
 <a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>│  Agent sandbox          Model server            │
 <a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>│  ┌──────────────┐       ┌─────────────────┐     │
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>│  │ opencode     │──────▶│ SGLang          │     │
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>│  │ (your task)  │ HTTP  │ Qwen3-Coder     │     │
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>│  └──────────────┘       │ or MiniMax M2.5 │     │
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>│                         └─────────────────┘     │
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>└─────────────────────────────────────────────────┘
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>│  │ aider        │──────▶│ vLLM            │     │
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>│  │ (your task)  │ HTTP  │ Qwen / MiniMax  │     │
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>│  └──────────────┘       └─────────────────┘     │
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>└─────────────────────────────────────────────────┘
 </code></pre></div>
 <p>The sandbox and the model server communicate over Modal's internal network. No traffic leaves Modal.</p>
 <hr />
-<h2 id="why-sglang">Why SGLang<a class="headerlink" href="#why-sglang" title="Permanent link">&para;</a></h2>
-<p>SGLang's <strong>RadixAttention</strong> automatically caches shared KV prefixes across requests. Agent runs
-against the same repo re-use the cached system prompt and repo context — only task-specific tokens
-are computed fresh.</p>
-<p>This matters for agent-container because:</p>
+<h2 id="inference-server-vllm">Inference server — vLLM<a class="headerlink" href="#inference-server-vllm" title="Permanent link">&para;</a></h2>
+<p><a href="https://github.com/vllm-project/vllm">vLLM</a> provides a stable OpenAI-compatible
+<code>/v1/chat/completions</code> API with first-class tool calling support. It serves all three model
+profiles and handles:</p>
 <ul>
-<li>Every run against the same repo shares a large common prefix (system prompt + file tree)</li>
-<li>Multiple CI runs against the same repo in parallel all hit the prefix cache</li>
+<li>Tool calling natively (<code>--enable-auto-tool-choice --tool-call-parser</code>)</li>
+<li>Tensor parallelism for multi-GPU profiles (<code>--tensor-parallel-size</code>)</li>
+<li>KV prefix caching — agent runs against the same repo share cached context</li>
 </ul>
-<p>Benchmark: <code>make test-e2e</code> covers end-to-end wall time. Issue #48 tracks a formal throughput
-comparison at 1/4/8 concurrent runs.</p>
+<h3 id="why-not-sglang">Why not SGLang?<a class="headerlink" href="#why-not-sglang" title="Permanent link">&para;</a></h3>
+<p>SGLang v0.4.7 (the latest cu124 image) has blocking bugs in its tool-call parser that crash
+the server on requests carrying tool schemas. vLLM is the stable primary choice; SGLang is
+tracked in <a href="https://github.com/dvdthecoder/agent-container/issues/86">issue #86</a> as a
+secondary option pending a compatible image release.</p>
 <hr />
 <h2 id="scale-to-zero-and-cold-starts">Scale-to-zero and cold starts<a class="headerlink" href="#scale-to-zero-and-cold-starts" title="Permanent link">&para;</a></h2>
-<p>Modal scales the model server to zero after <code>scaledown_window</code> seconds of inactivity (5–10 min
-depending on profile). You pay only for active inference time.</p>
-<p>Cold start times (first request after scale-down):</p>
+<p>Modal scales the model server to zero after <code>scaledown_window</code> seconds of inactivity.
+You pay only for active inference time.</p>
 <table>
 <thead>
 <tr>
@@ -1049,20 +1092,22 @@ depending on profile). You pay only for active inference time.</p>
 <tbody>
 <tr>
 <td><code>test</code></td>
-<td>~30s</td>
+<td>~1–2 min</td>
 </tr>
 <tr>
 <td><code>prod</code></td>
-<td>~2–3 min</td>
+<td>~3–5 min</td>
 </tr>
 <tr>
 <td><code>minimax</code></td>
-<td>~5–8 min</td>
+<td>~8–12 min</td>
 </tr>
 </tbody>
 </table>
-<p>Model weights are stored in a Modal Volume (<code>agent-container-models</code>) and are not re-downloaded
-on cold start after the first deploy.</p>
+<p>Model weights are stored in a Modal Volume (<code>agent-container-models</code>) and are not
+re-downloaded on cold start after the first deploy.</p>
+<p>The agent sandbox waits for the model to be ready before starting (preflight probe with
+configurable timeout via <code>SERVE_COLDSTART_BUDGET</code>).</p>
 
 
 

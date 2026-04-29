@@ -642,10 +642,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#opencode-default" class="md-nav__link">
+  <a href="#aider-default" class="md-nav__link">
     <span class="md-ellipsis">
       
-        OpenCode (default)
+        aider (default)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#opencode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        OpenCode
       
     </span>
   </a>
@@ -877,10 +888,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#opencode-default" class="md-nav__link">
+  <a href="#aider-default" class="md-nav__link">
     <span class="md-ellipsis">
       
-        OpenCode (default)
+        aider (default)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#opencode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        OpenCode
       
     </span>
   </a>
@@ -952,75 +974,90 @@
 
 
 <h1 id="agent-backends">Agent Backends<a class="headerlink" href="#agent-backends" title="Permanent link">&para;</a></h1>
-<p>Three coding agents can run inside the sandbox. All produce the same <code>AgentTaskResult</code> — PR
-creation, the dashboard, and MCP integration work identically regardless of which backend you use.</p>
+<p>Four coding agent backends can run inside the sandbox. All produce the same <code>AgentTaskResult</code>
+— PR creation, the dashboard, and MCP integration work identically regardless of which backend
+you use.</p>
 <h2 id="selecting-a-backend">Selecting a backend<a class="headerlink" href="#selecting-a-backend" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>agent-run<span class="w"> </span>--backend<span class="w"> </span>opencode<span class="w"> </span>...<span class="w">   </span><span class="c1"># default</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>agent-run<span class="w"> </span>--backend<span class="w"> </span>claude<span class="w">  </span>...
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>agent-run<span class="w"> </span>--backend<span class="w"> </span>gemini<span class="w">  </span>...
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>agent-run<span class="w"> </span>run<span class="w"> </span>--backend<span class="w"> </span>aider<span class="w">    </span>...<span class="w">   </span><span class="c1"># default</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>agent-run<span class="w"> </span>run<span class="w"> </span>--backend<span class="w"> </span>opencode<span class="w"> </span>...
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>agent-run<span class="w"> </span>run<span class="w"> </span>--backend<span class="w"> </span>claude<span class="w">   </span>...
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>agent-run<span class="w"> </span>run<span class="w"> </span>--backend<span class="w"> </span>gemini<span class="w">   </span>...
 </code></pre></div>
 <p>Or in Python:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">spec</span> <span class="o">=</span> <span class="n">AgentTaskSpec</span><span class="p">(</span>
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    <span class="n">repo</span><span class="o">=</span><span class="s2">&quot;https://github.com/org/myapp&quot;</span><span class="p">,</span>
 <a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    <span class="n">task</span><span class="o">=</span><span class="s2">&quot;Fix the login bug&quot;</span><span class="p">,</span>
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    <span class="n">backend</span><span class="o">=</span><span class="s2">&quot;claude&quot;</span><span class="p">,</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    <span class="n">backend</span><span class="o">=</span><span class="s2">&quot;aider&quot;</span><span class="p">,</span>
 <a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="p">)</span>
 </code></pre></div>
 <hr />
-<h2 id="opencode-default">OpenCode (default)<a class="headerlink" href="#opencode-default" title="Permanent link">&para;</a></h2>
-<p><a href="https://opencode.ai">OpenCode</a> is an open-source coding agent that runs inside the sandbox and
-talks to your self-hosted model endpoint on Modal.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nv">AGENT_BACKEND</span><span class="o">=</span>opencode<span class="w">   </span><span class="c1"># or omit — this is the default</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="c1"># Set after deploying modal/serve.py:</span>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="nv">OPENAI_BASE_URL</span><span class="o">=</span>https://your-org--agent-container-serve.modal.run/v1
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="nv">OPENAI_API_KEY</span><span class="o">=</span>modal
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="nv">OPENCODE_MODEL</span><span class="o">=</span>qwen3-coder<span class="w">   </span><span class="c1"># or minimax-m2.5</span>
+<h2 id="aider-default">aider (default)<a class="headerlink" href="#aider-default" title="Permanent link">&para;</a></h2>
+<p><a href="https://aider.chat">aider</a> is a coding agent that calls <code>/v1/chat/completions</code> directly —
+no proxy, no translation layer. It uses text-based diff editing: the model returns a structured
+diff and aider applies it to the workspace.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nv">OPENAI_BASE_URL</span><span class="o">=</span>https://your-org--agent-container-serve-serve.modal.run
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nv">OPENAI_API_KEY</span><span class="o">=</span>modal
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="nv">OPENCODE_MODEL</span><span class="o">=</span>qwen2.5-coder
 </code></pre></div>
-<p><strong>Best for</strong>: the default setup. Everything stays on Modal — no external API keys, no code leaves
-your infrastructure.</p>
+<p><strong>How it works:</strong> aider sends the relevant file contents and task to the model and receives
+back a structured edit in diff format. It applies the diff, commits the result, and exits.
+No function calling required at the inference level — works reliably with any model.</p>
+<p><strong>Best for:</strong> the default setup. Fastest path to a working diff and PR. Works with any
+OpenAI-compatible endpoint out of the box.</p>
 <p>Invoked inside the container as:
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>python3<span class="w"> </span>/opencode_runner.py<span class="w"> </span><span class="s2">&quot;&lt;task prompt&gt;&quot;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>aider<span class="w"> </span>--yes<span class="w"> </span>--no-git<span class="w"> </span>--model<span class="w"> </span>&lt;model&gt;<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">      </span>--openai-api-base<span class="w"> </span>&lt;url&gt;<span class="w"> </span>--openai-api-key<span class="w"> </span>&lt;key&gt;<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">      </span>--message<span class="w"> </span><span class="s2">&quot;&lt;task&gt;&quot;</span><span class="w"> </span>/workspace
 </code></pre></div></p>
-<p><code>opencode_runner.py</code> drives opencode non-interactively via its ACP (Agent Client Protocol)
-JSON-RPC interface (<code>opencode acp</code>), streaming output to stdout as the agent works.</p>
+<hr />
+<h2 id="opencode">OpenCode<a class="headerlink" href="#opencode" title="Permanent link">&para;</a></h2>
+<p><a href="https://opencode.ai">opencode</a> is a multi-turn coding agent with a full tool-calling loop.
+It can run commands, read files, write code, check errors, and iterate — more capable than
+aider for complex tasks.</p>
+<p>opencode v1.14+ calls the OpenAI Responses API (<code>POST /v1/responses</code>). A thin adapter
+translates this to Chat Completions and back — see <a href="../architecture/#opencode-adapter-thin-proxy">Architecture</a>.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nv">OPENAI_BASE_URL</span><span class="o">=</span>https://your-org--agent-container-serve-serve.modal.run
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="nv">OPENAI_API_KEY</span><span class="o">=</span>modal
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="nv">OPENCODE_MODEL</span><span class="o">=</span>qwen2.5-coder
+</code></pre></div>
+<p><strong>Best for:</strong> complex multi-step tasks where the agent needs to reason, run tests, and iterate.
+Requires a model with reliable tool calling (use <code>prod</code> or <code>minimax</code> profile).</p>
+<p>Invoked inside the container as:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>python3<span class="w"> </span>/opencode_runner.py<span class="w"> </span><span class="s2">&quot;&lt;task prompt&gt;&quot;</span>
+</code></pre></div></p>
 <hr />
 <h2 id="claude-code-cli">Claude Code CLI<a class="headerlink" href="#claude-code-cli" title="Permanent link">&para;</a></h2>
 <p>Anthropic's official <a href="https://claude.ai/claude-code">Claude Code</a> CLI runs inside the container.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nv">AGENT_BACKEND</span><span class="o">=</span>claude
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="nv">ANTHROPIC_API_KEY</span><span class="o">=</span>sk-ant-...
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nv">AGENT_BACKEND</span><span class="o">=</span>claude
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="nv">ANTHROPIC_API_KEY</span><span class="o">=</span>sk-ant-...
 </code></pre></div>
 <p>Invoked inside the container as:
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>claude<span class="w"> </span>--print<span class="w"> </span><span class="s2">&quot;&lt;task prompt&gt;&quot;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>claude<span class="w"> </span>--print<span class="w"> </span><span class="s2">&quot;&lt;task prompt&gt;&quot;</span>
 </code></pre></div></p>
 <div class="admonition warning">
 <p class="admonition-title">Privacy note</p>
 <p>Claude Code sends prompts to Anthropic's API. Code context leaves your Modal sandbox.
-Use the <code>opencode</code> backend for full air-gap.</p>
+Use <code>aider</code> or <code>opencode</code> for full air-gap with your self-hosted model.</p>
 </div>
 <hr />
 <h2 id="gemini-cli">Gemini CLI<a class="headerlink" href="#gemini-cli" title="Permanent link">&para;</a></h2>
 <p>Google's <a href="https://github.com/google-gemini/gemini-cli">Gemini CLI</a> runs inside the container.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nv">AGENT_BACKEND</span><span class="o">=</span>gemini
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="nv">GEMINI_API_KEY</span><span class="o">=</span>...
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="c1"># or for Vertex AI (GCP)</span>
-<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="nv">GOOGLE_CLOUD_PROJECT</span><span class="o">=</span>...
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="nv">AGENT_BACKEND</span><span class="o">=</span>gemini
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="nv">GEMINI_API_KEY</span><span class="o">=</span>...
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="c1"># or for Vertex AI (GCP)</span>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="nv">GOOGLE_CLOUD_PROJECT</span><span class="o">=</span>...
 </code></pre></div>
 <p>Invoked inside the container as:
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>gemini<span class="w"> </span>--yolo<span class="w"> </span>-p<span class="w"> </span><span class="s2">&quot;&lt;task prompt&gt;&quot;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>gemini<span class="w"> </span>--yolo<span class="w"> </span>-p<span class="w"> </span><span class="s2">&quot;&lt;task prompt&gt;&quot;</span>
 </code></pre></div></p>
-<div class="admonition note">
-<p class="admonition-title">Air-gap with Vertex AI</p>
-<p>Using Vertex AI keeps prompts within your GCP project. For full on-prem air-gap, use the
-<code>opencode</code> backend with your self-hosted Modal endpoint.</p>
-</div>
 <hr />
 <h2 id="comparison">Comparison<a class="headerlink" href="#comparison" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
 <th></th>
-<th>OpenCode</th>
+<th>aider</th>
+<th>opencode</th>
 <th>Claude Code</th>
 <th>Gemini CLI</th>
 </tr>
@@ -1029,11 +1066,13 @@ Use the <code>opencode</code> backend for full air-gap.</p>
 <tr>
 <td>Model</td>
 <td>Self-hosted on Modal</td>
+<td>Self-hosted on Modal</td>
 <td>Anthropic API</td>
 <td>Google AI / Vertex</td>
 </tr>
 <tr>
-<td>External API key needed</td>
+<td>External API key</td>
+<td>❌</td>
 <td>❌</td>
 <td>✅</td>
 <td>✅</td>
@@ -1041,12 +1080,35 @@ Use the <code>opencode</code> backend for full air-gap.</p>
 <tr>
 <td>Air-gap capable</td>
 <td>✅</td>
+<td>✅</td>
 <td>❌</td>
-<td>✅ (Vertex AI)</td>
+<td>✅ (Vertex)</td>
+</tr>
+<tr>
+<td>Proxy needed</td>
+<td>❌</td>
+<td>✅ (thin adapter)</td>
+<td>❌</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>Tool calling required</td>
+<td>❌ (diff format)</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Multi-turn reasoning</td>
+<td>❌</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
 </tr>
 <tr>
 <td>Default</td>
 <td>✅</td>
+<td>❌</td>
 <td>❌</td>
 <td>❌</td>
 </tr>
@@ -1054,10 +1116,10 @@ Use the <code>opencode</code> backend for full air-gap.</p>
 </table>
 <hr />
 <h2 id="stub-backend-testing-only">Stub backend (testing only)<a class="headerlink" href="#stub-backend-testing-only" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="nv">AGENT_BACKEND</span><span class="o">=</span>stub
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="nv">AGENT_BACKEND</span><span class="o">=</span>stub
 </code></pre></div>
-<p>Used in integration tests. Echoes the task prompt to stdout and exits 0 without calling any model
-or making any code changes. Exercises the full sandbox lifecycle at near-zero cost.</p>
+<p>Used in integration tests. Echoes the task prompt to stdout and exits 0 without calling any
+model or making code changes. Exercises the full sandbox lifecycle at near-zero cost.</p>
 
 
 
