@@ -79,9 +79,11 @@ def run_agent(
                 logger.log("runner", msg, level="error")
             try:
                 sb.terminate()
-            except Exception:  # noqa: S110
+            except Exception:  # noqa: BLE001, S110
                 pass
-            return "".join(stdout_lines).rstrip(), 1
+            # Raise instead of returning — sandbox.py must not attempt collect_diff
+            # or any further exec on a terminated container (those calls block).
+            raise TimeoutError(msg)
     else:
         t_out.join()
         t_err.join(timeout=_STREAM_JOIN_TIMEOUT)

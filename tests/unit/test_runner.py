@@ -122,3 +122,33 @@ def test_custom_workdir_is_forwarded():
     run_agent(sb, OpenCodeBackend(), "task", workdir="/custom")
     _, kwargs = sb.exec.call_args
     assert kwargs.get("workdir") == "/custom"
+
+
+# ------------------------------------------------------------------ timeout
+
+
+def test_timeout_raises_and_terminates_sandbox():
+    """Agent timeout must raise TimeoutError (not return) so sandbox.py never
+    attempts collect_diff on the terminated container."""
+    import threading
+
+    proc = MagicMock()
+    # Stream blocks forever — simulates a hung agent process.
+    event = threading.Event()
+
+    def _blocking_iter():
+        event.wait(timeout=5)  # released by terminate call or test end
+        return iter([])
+
+    proc.stdout.__iter__ = lambda self: _blocking_iter()
+    proc.stderr.__iter__ = lambda self: iter([])
+    proc.returncode = 0
+    proc.wait.return_value = 0
+
+    sb = MagicMock()
+    sb.exec.return_value = proc
+
+    with pytest.raises(TimeoutError, match="timeout"):
+        run_agent(sb, OpenCodeBackend(), "task", timeout=0.1)
+
+    sb.terminate.assert_called_once()
