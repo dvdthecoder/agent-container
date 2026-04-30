@@ -3,10 +3,17 @@
 Usage: python3 aider_runner.py <task>
 
 Environment variables read:
-  OPENAI_BASE_URL  — vLLM endpoint (no /v1 suffix)
+  OPENAI_BASE_URL  — vLLM endpoint, with /v1 suffix (e.g. https://host/v1)
   OPENAI_API_KEY   — API key (any non-empty string for self-hosted)
   OPENCODE_MODEL   — model name as served by vLLM (e.g. qwen2.5-coder)
   OPENCODE_WORKDIR — workspace directory inside the sandbox (default: /workspace)
+
+Note: do NOT pass --openai-api-base to aider.  aider converts that flag into
+os.environ["OPENAI_API_BASE"], which litellm handles differently from
+OPENAI_BASE_URL — it strips the /v1 suffix, causing requests to land at
+/chat/completions instead of /v1/chat/completions (404).
+OPENAI_BASE_URL is already set in the container env and is read correctly
+by the OpenAI SDK without any path mangling.
 """
 
 from __future__ import annotations
@@ -16,7 +23,6 @@ import subprocess
 import sys
 
 TASK = " ".join(sys.argv[1:]) if len(sys.argv) > 1 else ""
-BASE_URL = os.environ.get("OPENAI_BASE_URL", "").rstrip("/")
 API_KEY = os.environ.get("OPENAI_API_KEY", "modal")
 MODEL = os.environ.get("OPENCODE_MODEL", "")
 WORKDIR = os.environ.get("OPENCODE_WORKDIR", "/workspace")
@@ -25,18 +31,14 @@ if not TASK:
     print("Usage: aider_runner.py <task>", file=sys.stderr)
     sys.exit(1)
 
-# aider expects base_url with /v1
-if BASE_URL and not BASE_URL.endswith("/v1"):
-    BASE_URL = f"{BASE_URL}/v1"
-
 # litellm requires the openai/ provider prefix to route via the OpenAI
 # provider — it strips the prefix before sending to the API, so vLLM
-# receives the clean model name.  Without it litellm errors immediately:
+# receives the clean model name.  Without it litellm errors:
 # "LLM Provider NOT provided".
 model_arg = f"openai/{MODEL}" if MODEL and "/" not in MODEL else MODEL or "openai/unknown"
 
 print(
-    f"[aider] task={TASK!r}  model={model_arg}  base_url={BASE_URL}  workdir={WORKDIR}",
+    f"[aider] task={TASK!r}  model={model_arg}  workdir={WORKDIR}",
     file=sys.stderr,
 )
 
@@ -53,14 +55,13 @@ cmd = [
     "--no-pretty",  # plain-text output; avoids terminal escape codes in sandbox streams
     "--model",
     model_arg,
-    "--openai-api-base",
-    BASE_URL,
     "--openai-api-key",
     API_KEY,
     "--message",
     TASK,
+    # No --openai-api-base — OPENAI_BASE_URL env var is already set in the
+    # container and is read correctly by the OpenAI SDK.
 ]
 
 # Run from WORKDIR so aider picks up the git repo there.
-# Do NOT use --no-git + directory: aider rejects directories without git.
 sys.exit(subprocess.run(cmd, cwd=WORKDIR).returncode)  # noqa: S603
