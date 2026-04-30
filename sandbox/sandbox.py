@@ -258,11 +258,16 @@ class ModalSandbox:
 
 
 def _terminate(sb: modal.Sandbox | None) -> None:
-    """Terminate sandbox, logging outcome but never propagating errors."""
+    """Terminate sandbox, logging outcome but never propagating errors.
+
+    ``wait=True`` blocks until Modal confirms the container has stopped —
+    without it, terminate() fires and returns immediately (fire-and-forget),
+    leaving the container running in the Modal dashboard after the CLI exits.
+    """
     if sb is None:
         return
     try:
-        sb.terminate()
+        sb.terminate(wait=True)
         print("[sandbox] container terminated", file=sys.stderr, flush=True)
     except Exception as exc:  # noqa: BLE001
         # Log so we know terminate failed — still best-effort, never raise.
