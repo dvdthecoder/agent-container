@@ -117,16 +117,18 @@ def test_run_creates_pr_when_agent_produces_diff(mock_create):
 
 
 @patch("sandbox.sandbox.modal.Sandbox.create")
-def test_run_skips_pr_when_no_diff(mock_create):
+def test_run_fails_when_no_diff(mock_create):
+    """Empty diff after exit 0 is treated as failure — agent made no changes."""
     sb = MagicMock()
     mock_create.return_value = sb
-    sb.exec.return_value = _make_proc()  # diff stdout="" → falsy
+    sb.exec.return_value = _make_proc()  # diff stdout="" → empty
 
     result = ModalSandbox(_config()).run(_spec(create_pr=True))
 
-    assert result.success is True
+    assert result.success is False
     assert result.branch is None
     assert result.pr_url is None
+    assert "no changes" in result.error
 
 
 @patch("sandbox.sandbox.modal.Sandbox.create")
@@ -275,11 +277,13 @@ def test_terminate_failure_does_not_mask_result(mock_create):
     sb = MagicMock()
     sb.object_id = "sb-term-fail"
     mock_create.return_value = sb
-    sb.exec.return_value = _make_proc()
+    diff_proc = _make_proc(stdout="diff --git a/f b/f\n+fix")
+    stat_proc = _make_proc(stdout=" 1 file changed")
+    sb.exec.side_effect = [_make_proc(), _make_proc(stdout="done"), diff_proc, stat_proc]
     sb.terminate.side_effect = RuntimeError("terminate failed")
 
     # should not raise — terminate errors are swallowed
-    result = ModalSandbox(_config()).run(_spec())
+    result = ModalSandbox(_config()).run(_spec(create_pr=False))
 
     assert result.success is True
 

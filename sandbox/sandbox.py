@@ -142,6 +142,16 @@ class ModalSandbox:
 
                 diff, diff_stat = git_ops.collect_diff(sb, base_branch=spec.base_branch)
 
+                # aider (and other backends) exit 0 even on model errors — an
+                # empty diff means nothing was written.  Treat as a failure so
+                # the run is not silently reported as success with no changes.
+                if exit_code == 0 and not diff:
+                    raise PhaseError(
+                        "RUNNING",
+                        "agent exited 0 but made no changes (empty diff)",
+                        time.monotonic() - start,
+                    )
+
                 branch: str | None = None
                 pr_url: str | None = None
                 if exit_code == 0 and diff and spec.create_pr:
