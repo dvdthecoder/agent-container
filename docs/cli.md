@@ -15,7 +15,7 @@ agent-run [OPTIONS]
 | `--repo URL` | required | Git repo URL (`https://` or `git@`) |
 | `--task TEXT` | required* | Task description |
 | `--task-file PATH` | required* | Read task from a Markdown file |
-| `--backend` | `opencode` | `opencode` \| `claude` \| `gemini` \| `stub` |
+| `--backend` | `aider` | `aider` \| `opencode` \| `claude` \| `gemini` \| `stub` |
 | `--branch` | `main` | Base branch to clone and branch from |
 | `--image` | from config | Docker image override |
 | `--timeout` | `300` | Seconds before the run is killed |
@@ -63,6 +63,46 @@ pr_url=$(echo "$result" | python -c "import sys,json; print(json.load(sys.stdin)
 
 ---
 
+## `agent-run logs`
+
+Inspect run history stored in `~/.agent-container/runs.db`.
+
+```
+agent-run logs [RUN_ID] [OPTIONS]
+```
+
+| Flag | Default | Description |
+|---|---|---|
+| `RUN_ID` | — | Show events for this run (omit to list recent runs) |
+| `--level` | — | Filter events by level: `info` \| `warn` \| `error` |
+| `--phase` | — | Filter events by phase: `WARMING` \| `BOOTING` \| `CLONING` \| `RUNNING` \| `TESTING` \| `PR` |
+| `--source` | — | Filter events by source: `runner` \| `aider` \| `tester` \| `sandbox:stderr` |
+| `-n, --limit` | `20` | Number of runs to show in list view |
+| `--db PATH` | `~/.agent-container/runs.db` | Path to a non-default database |
+
+### Examples
+
+```bash
+# List recent runs
+agent-run logs
+
+# All events for a run
+agent-run logs run-20260430-143022-abc123
+
+# Errors only
+agent-run logs run-20260430-143022-abc123 --level error
+
+# Agent output only (RUNNING phase)
+agent-run logs run-20260430-143022-abc123 --phase RUNNING
+
+# Show 50 most recent runs
+agent-run logs -n 50
+```
+
+See [Run Logs](logging.md) for full querying documentation including direct SQL access.
+
+---
+
 ## `agent-run dashboard`
 
 Start the web dashboard.
@@ -96,6 +136,6 @@ All configuration is via environment variables (loaded from `.env` if present).
 | `GEMINI_API_KEY` | — | — | Required for `--backend gemini` |
 | `AGENT_DEFAULT_IMAGE` | — | `mcr.microsoft.com/devcontainers/base:ubuntu-24.04` | Container image |
 | `AGENT_WORKSPACE_TIMEOUT` | — | `300` | Default timeout in seconds |
-| `AGENT_BACKEND` | — | `opencode` | Default backend |
+| `AGENT_BACKEND` | — | `aider` | Default backend |
 | `DASHBOARD_HOST` | — | `127.0.0.1` | Dashboard bind address |
 | `DASHBOARD_PORT` | — | `8080` | Dashboard port |

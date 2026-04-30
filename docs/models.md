@@ -18,16 +18,17 @@ OPENCODE_MODEL=qwen2.5-coder  # must match SERVED_MODEL_NAME in modal/serve.py
 
 ## GPU profiles
 
-Three profiles are built into `modal/serve.py`. Pick one based on your quality and cost needs:
+Four profiles are built into `modal/serve.py`:
 
-| Profile | Model | GPU | Context | Deploy command |
-|---------|-------|-----|---------|----------------|
-| `test` (default) | Qwen2.5-Coder-7B | A10G | 32k | `modal deploy modal/serve.py` |
-| `prod` | Qwen3-Coder-80B | 2× A100 80GB | 128k | `SERVE_PROFILE=prod modal deploy modal/serve.py` |
-| `minimax` | MiniMax-M2.5 | 8× A100 80GB | 1M | `SERVE_PROFILE=minimax modal deploy modal/serve.py` |
+| Profile | Engine | Model | GPU | Context | Deploy command |
+|---------|--------|-------|-----|---------|----------------|
+| `test` (default) | vLLM | Qwen2.5-Coder-7B | A10G | 32k | `modal deploy modal/serve.py` |
+| `prod` | vLLM | Qwen3-Coder-80B | 2× A100 80GB | 128k | `SERVE_PROFILE=prod modal deploy modal/serve.py` |
+| `minimax` | vLLM | MiniMax-M2.5 | 8× A100 80GB | 1M | `SERVE_PROFILE=minimax modal deploy modal/serve.py` |
+| `sglang` | SGLang | Qwen2.5-Coder-7B | A10G | 32k | `SERVE_PROFILE=sglang modal deploy modal/serve.py` |
 
-**Start with `test`** — cheap, ~30s cold start, good for iterating. Promote to `prod` or `minimax`
-when you want production-grade output quality.
+**Start with `test`** — cheap, fast iteration. Promote to `prod` or `minimax` for
+production-grade output quality. Use `sglang` only for Phase 3 validation (see below).
 
 ### Model names
 
@@ -69,12 +70,31 @@ profiles and handles:
 - Tensor parallelism for multi-GPU profiles (`--tensor-parallel-size`)
 - KV prefix caching — agent runs against the same repo share cached context
 
-### Why not SGLang?
+### Why vLLM is the default
 
-SGLang v0.4.7 (the latest cu124 image) has blocking bugs in its tool-call parser that crash
-the server on requests carrying tool schemas. vLLM is the stable primary choice; SGLang is
-tracked in [issue #86](https://github.com/dvdthecoder/agent-container/issues/86) as a
-secondary option pending a compatible image release.
+SGLang v0.4.7 had blocking bugs in its tool-call parser — the `--tool-call-parser qwen25` flag
+crashed the server on the first request carrying tool schemas, and streaming with tools hung
+indefinitely. vLLM is the stable primary choice.
+
+### SGLang — Phase 3 validation
+
+The `sglang` profile exists specifically to validate whether SGLang has fixed those bugs in a
+newer image. It deploys to a **separate Modal app** (`agent-container-serve-sglang`) so the
+vLLM endpoint is never disturbed — both can run simultaneously.
+
+```bash
+# Deploy SGLang alongside the existing vLLM endpoint
+SERVE_PROFILE=sglang modal deploy modal/serve.py
+# → https://your-org--agent-container-serve-sglang-serve.modal.run
+
+# Point at the SGLang endpoint and run the opencode smoke test
+OPENAI_BASE_URL=https://your-org--agent-container-serve-sglang-serve.modal.run \
+  make example BACKEND=opencode
+```
+
+If `make example BACKEND=opencode` produces a non-empty diff and opens a PR, Phase 3 is done
+and SGLang becomes a supported production profile. If tool calling still crashes, the failure
+scopes entirely to the SGLang inference layer — the opencode proxy is proven clean by Phase 2.
 
 ---
 

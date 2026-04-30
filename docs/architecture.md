@@ -80,21 +80,24 @@ See [Agent Backends](agents.md) for full documentation.
 ```
 Step 1 — Clone
   git clone <repo> --branch <base_branch> --depth 1
-  git checkout -b agent/<slug>-<timestamp>
+  # write __pycache__/*.pyc patterns to .git/info/exclude (local-only, never committed)
 
 Step 2 — Agent runs
-  aider --yes --message "<task>" /workspace     # or opencode equivalent
+  aider --yes --map-tokens 1024 --message "<task>" /workspace   # or opencode equivalent
   streams output live to dashboard via SSE
 
 Step 3 — Collect result
-  git diff HEAD                           # full diff string
-  git diff --stat HEAD                    # summary line
+  git diff origin/<base_branch>           # full diff (includes aider commits)
+  git diff --stat origin/<base_branch>    # summary line
 
 Step 4 — Open PR  (if create_pr=True)
-  git push origin agent/<slug>-<timestamp>
-  gh pr create --title "agent: <task>" --body "<diff_stat>"
+  git checkout -b agent/<backend>-<timestamp>
+  git add -A && git commit -m "agent: <task>"   # skipped if agent already committed
+  git push origin agent/<backend>-<timestamp>
+  curl POST <provider_api>/pulls           # GitHub or GitLab REST API
 
 Step 5 — Container destroyed
+  sb.terminate(wait=True)                 # blocks until Modal confirms container stopped
 ```
 
 ## Data flow

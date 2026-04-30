@@ -20,11 +20,12 @@ Each run appears as a card showing:
 - On completion: PR link, diff stat, test results
 
 ```
+● WARMING     polling inference endpoint...
 ● BOOTING     starting Modal sandbox...
 ● CLONING     git clone https://github.com/org/myapp
-● RUNNING     [opencode] Reading api/login.py...
-              [opencode] Identified off-by-one in paginate()
-              [opencode] Writing fix...
+● RUNNING     [aider] writing changes...
+◉ TESTING     pytest — 12 passed
+◉ PR          opening pull request...
 ◉ DONE        PR #42 opened   +12 −3
 ```
 
@@ -32,10 +33,11 @@ Each run appears as a card showing:
 
 | Phase | Meaning |
 |---|---|
+| `WARMING` | Polling `GET /v1/models` until the inference endpoint is ready (handles vLLM cold start) |
 | `BOOTING` | Modal sandbox container starting |
 | `CLONING` | `git clone` running inside container |
 | `RUNNING` | Coding agent executing |
-| `TESTING` | Test suite running (if detected) |
+| `TESTING` | Test suite auto-detected and running |
 | `PR` | Creating branch and opening PR |
 | `DONE` | Run complete, container destroyed |
 | `FAILED` | Error occurred, container destroyed |

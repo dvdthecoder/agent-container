@@ -6,16 +6,22 @@ Give it a task and a repo — it boots a fresh container on [Modal](https://moda
 coding agent inside it, opens a PR, and destroys the container. Nothing persists. Nothing leaks.
 No Docker required on your machine.
 
-```bash
-agent-run \
-  --repo https://github.com/org/myapp \
-  --task "Add rate limiting to /api/login — max 5 requests/min per IP"
+```
+$ agent-run run \
+    --repo https://github.com/org/myapp \
+    --task "Add rate limiting to /api/login — max 5 requests/min per IP" \
+    --backend aider
 
-# booting sandbox...
-# cloning repo...
-# running opencode...
-# opening PR...
-# ✓ Done in 2m 14s — PR #42  +67 −3
+  [sandbox] phase=WARMING   inference endpoint ready  elapsed=87s
+  [sandbox] phase=BOOTING   starting Modal sandbox...
+  [sandbox] phase=CLONING   git clone https://github.com/org/myapp
+  [sandbox] phase=RUNNING   [aider] writing changes...
+  [sandbox] phase=TESTING   pytest — 14 passed
+  [sandbox] phase=PR        opening pull request...
+  [sandbox] container terminated
+
+  Done in 2m 14s
+  PR: https://github.com/org/myapp/pull/42   +67 −3
 ```
 
 ---
@@ -43,10 +49,11 @@ Your terminal / dashboard / Claude Code session
   agent-run CLI  (or Python API, or MCP tool)
         ↓
   Modal Sandbox  ← ephemeral container, destroyed after each run
+  WARMING → BOOTING → CLONING → RUNNING → TESTING → PR
         ↓
-  Coding agent   ← OpenCode / Claude Code CLI / Gemini CLI
+  Coding agent   ← aider / opencode / Claude Code CLI / Gemini CLI
         ↓
-  Model endpoint ← pluggable: MiniMax API / Modal GPU / SGLang / Anthropic
+  Model endpoint ← vLLM on Modal GPU (or Anthropic / Google AI)
         ↓
   GitHub / GitLab PR
 ```

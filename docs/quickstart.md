@@ -21,9 +21,9 @@ modal token new   # browser prompt — saves token to ~/.modal.toml
 Everything runs on Modal — including the model. Deploy it once and it scales to zero when idle.
 
 ```bash
-modal deploy modal/serve.py                        # Qwen3-Coder 8B  — A10G        (start here)
-SERVE_PROFILE=prod    modal deploy modal/serve.py  # Qwen3-Coder 80B — 2×A100 80GB (production)
-SERVE_PROFILE=minimax modal deploy modal/serve.py  # MiniMax M2.5    — 8×A100 80GB (best quality)
+modal deploy modal/serve.py                        # Qwen2.5-Coder 7B  — A10G        (start here)
+SERVE_PROFILE=prod    modal deploy modal/serve.py  # Qwen3-Coder 80B   — 2×A100 80GB (production)
+SERVE_PROFILE=minimax modal deploy modal/serve.py  # MiniMax M2.5      — 8×A100 80GB (best quality)
 ```
 
 Modal prints the endpoint URL after deploy — you need it in the next step:
@@ -48,10 +48,10 @@ MODAL_TOKEN_SECRET=as-...
 # HuggingFace — needed to download model weights during deploy
 HF_TOKEN=hf_...
 
-# Your model endpoint (URL from step 2)
-OPENAI_BASE_URL=https://your-org--agent-container-serve.modal.run/v1
+# Your model endpoint (URL from step 2 — no /v1 suffix)
+OPENAI_BASE_URL=https://your-org--agent-container-serve.modal.run
 OPENAI_API_KEY=modal
-OPENCODE_MODEL=qwen3-coder   # or minimax-m2.5 — see modal/serve.py
+OPENCODE_MODEL=qwen2.5-coder   # must match SERVED_MODEL_NAME in modal/serve.py
 
 # GitHub token — Contents (read) + Pull Requests (read/write)
 GITHUB_TOKEN=ghp_...
@@ -68,11 +68,15 @@ agent-run run \
 Output:
 
 ```
-[sandbox] booting Modal container...
-[clone]   git clone https://github.com/org/myapp
-[agent]   running opencode...
-[pr]      opening PR on branch agent/opencode-20260424-143022
-✓ Done in 1m 52s
+[sandbox] phase=WARMING   inference endpoint ready  elapsed=87s
+[sandbox] phase=BOOTING   starting Modal sandbox...
+[sandbox] phase=CLONING   git clone https://github.com/org/myapp
+[sandbox] phase=RUNNING   [aider] writing changes...
+[sandbox] phase=TESTING   pytest — 12 passed
+[sandbox] phase=PR        opening pull request...
+[sandbox] container terminated
+
+Done in 1m 52s
 PR: https://github.com/org/myapp/pull/42   +12 −3
 ```
 
@@ -103,15 +107,16 @@ claude mcp list   # verify agent-container appears
 Once configured, verify the full pipeline end-to-end against the fixture repo:
 
 ```bash
-make example
-# boots sandbox → clones fixture repo → runs opencode → opens PR
+make example                    # aider backend (default)
+make example BACKEND=opencode   # opencode backend
+# boots sandbox → clones fixture repo → runs agent → opens PR
 ```
 
 ---
 
 ## Next steps
 
-- [Model Setup](models.md) — GPU profiles, SGLang, RadixAttention caching
+- [Model Setup](models.md) — GPU profiles, vLLM, scale-to-zero
 - [Agent Backends](agents.md) — use Claude Code or Gemini CLI instead of OpenCode
 - [MCP Integration](mcp.md) — trigger runs from inside Claude Code
 - [Enterprise & GitLab](enterprise.md) — GitLab MRs, air-gap setup

@@ -191,7 +191,9 @@ def test_push_failure_returns_failed_result(mock_create):
     git_procs = [_make_proc() for _ in range(6)]
     push_proc = _make_proc(returncode=1)
     push_proc.stderr.read.return_value = "remote: Permission denied"
-    sb.exec.side_effect = [clone_proc, _make_proc(), agent_proc, diff_proc, stat_proc, *git_procs, push_proc]
+    sb.exec.side_effect = [
+        clone_proc, _make_proc(), agent_proc, diff_proc, stat_proc, *git_procs, push_proc
+    ]
 
     config = SandboxConfig(github_token="ghp_test")
     result = ModalSandbox(config).run(_spec(repo="https://github.com/org/repo", create_pr=True))
@@ -287,7 +289,9 @@ def test_terminate_failure_does_not_mask_result(mock_create):
     mock_create.return_value = sb
     diff_proc = _make_proc(stdout="diff --git a/f b/f\n+fix")
     stat_proc = _make_proc(stdout=" 1 file changed")
-    sb.exec.side_effect = [_make_proc(), _make_proc(), _make_proc(stdout="done"), diff_proc, stat_proc]
+    sb.exec.side_effect = [
+        _make_proc(), _make_proc(), _make_proc(stdout="done"), diff_proc, stat_proc
+    ]
     sb.terminate.side_effect = RuntimeError("terminate failed")
 
     # should not raise — terminate errors are swallowed

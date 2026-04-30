@@ -63,10 +63,12 @@ nav:
   - Model Setup: models.md
   - Agent Backends: agents.md
   - Dashboard: dashboard.md
+  - Run Logs: logging.md
   - CLI Reference: cli.md
+  - Team Setup: teams.md
   - Enterprise & GitLab: enterprise.md
   - MCP Integration: mcp.md
-  - Contributing: contributing.md
+  - Running & Contributing: contributing.md
 
 plugins:
   - search
