@@ -69,32 +69,83 @@ class TestSandboxConfigFromEnv:
 
 
 class TestSandboxConfigContainerEnv:
+    """container_env() is git tokens only — inference vars live in env_for_backend()."""
+
     def test_empty_when_no_vars_set(self):
         config = SandboxConfig()
         assert config.container_env() == {}
 
-    def test_includes_set_vars_only(self):
+    def test_includes_git_tokens_only(self):
         config = SandboxConfig(
             openai_base_url="https://example.com/v1",
             openai_api_key="modal",
             github_token="ghp_abc",
+            gitlab_token="glpat_xyz",
         )
         env = config.container_env()
 
-        assert env == {
-            "OPENAI_BASE_URL": "https://example.com/v1",
-            "OPENAI_API_KEY": "modal",
-            "GITHUB_TOKEN": "ghp_abc",
-        }
-        assert "GITLAB_TOKEN" not in env
+        assert env == {"GITHUB_TOKEN": "ghp_abc", "GITLAB_TOKEN": "glpat_xyz"}
+        assert "OPENAI_BASE_URL" not in env
+        assert "OPENAI_API_KEY" not in env
         assert "OPENCODE_MODEL" not in env
 
-    def test_excludes_empty_strings(self):
-        config = SandboxConfig(openai_base_url="", github_token="ghp_abc")
+    def test_excludes_empty_tokens(self):
+        config = SandboxConfig(github_token="ghp_abc", gitlab_token="")
         env = config.container_env()
 
+        assert env == {"GITHUB_TOKEN": "ghp_abc"}
+        assert "GITLAB_TOKEN" not in env
+
+
+class TestSandboxConfigEnvForBackend:
+    """env_for_backend() emits inference vars normalised for each backend."""
+
+    def test_aider_includes_base_url_with_v1(self):
+        config = SandboxConfig(openai_base_url="https://host", openai_api_key="modal")
+        env = config.env_for_backend("aider")
+
+        assert env["OPENAI_BASE_URL"] == "https://host/v1"
+        assert env["OPENAI_API_KEY"] == "modal"
+
+    def test_aider_preserves_v1_when_already_present(self):
+        config = SandboxConfig(openai_base_url="https://host/v1")
+        env = config.env_for_backend("aider")
+
+        assert env["OPENAI_BASE_URL"] == "https://host/v1"
+
+    def test_aider_strips_trailing_slash_before_adding_v1(self):
+        config = SandboxConfig(openai_base_url="https://host/")
+        env = config.env_for_backend("aider")
+
+        assert env["OPENAI_BASE_URL"] == "https://host/v1"
+
+    def test_aider_omits_base_url_when_empty(self):
+        config = SandboxConfig(openai_base_url="")
+        env = config.env_for_backend("aider")
+
         assert "OPENAI_BASE_URL" not in env
-        assert env["GITHUB_TOKEN"] == "ghp_abc"
+
+    def test_aider_includes_model_when_set(self):
+        config = SandboxConfig(opencode_model="qwen2.5-coder")
+        env = config.env_for_backend("aider")
+
+        assert env["OPENCODE_MODEL"] == "qwen2.5-coder"
+
+    def test_opencode_normalises_base_url_same_as_aider(self):
+        config = SandboxConfig(openai_base_url="https://host", openai_api_key="modal")
+        assert config.env_for_backend("opencode") == config.env_for_backend("aider")
+
+    def test_claude_returns_empty(self):
+        config = SandboxConfig(openai_base_url="https://host", openai_api_key="modal")
+        assert config.env_for_backend("claude") == {}
+
+    def test_gemini_returns_empty(self):
+        config = SandboxConfig(openai_base_url="https://host", openai_api_key="modal")
+        assert config.env_for_backend("gemini") == {}
+
+    def test_unknown_backend_returns_empty(self):
+        config = SandboxConfig(openai_base_url="https://host")
+        assert config.env_for_backend("unknown-future-backend") == {}
 
 
 class TestSandboxConfigValidateConnection:

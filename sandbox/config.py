@@ -54,18 +54,48 @@ class SandboxConfig:
         return ""
 
     def container_env(self) -> dict[str, str]:
-        """Environment variables to inject into every sandbox container."""
+        """Shared env vars injected into every sandbox container (git tokens only).
+
+        Inference-specific vars are emitted by :meth:`env_for_backend` so each
+        backend receives the vars it needs in the format it expects.
+        """
         env: dict[str, str] = {}
         for key, value in [
-            ("OPENAI_BASE_URL", self.openai_base_url),
-            ("OPENAI_API_KEY", self.openai_api_key),
-            ("OPENCODE_MODEL", self.opencode_model),
             ("GITHUB_TOKEN", self.github_token),
             ("GITLAB_TOKEN", self.gitlab_token),
         ]:
             if value:
                 env[key] = value
         return env
+
+    def env_for_backend(self, backend: str) -> dict[str, str]:
+        """Inference env vars formatted for *backend*.
+
+        Each backend has different expectations for URL format, key names, and
+        which vars are required — this is the single place those differences live.
+
+        The caller merges: ``container_env() | env_for_backend(backend) | spec.env``
+        so spec-level overrides always win.
+        """
+        if backend in ("aider", "opencode"):
+            # Both backends use the OpenAI-compatible API.
+            # OPENAI_BASE_URL must include the /v1 suffix — the OpenAI SDK
+            # appends /chat/completions (or /responses) to whatever base URL it
+            # receives, so omitting /v1 sends requests to the wrong path.
+            raw = self.openai_base_url.rstrip("/")
+            base_url = raw if raw.endswith("/v1") else f"{raw}/v1" if raw else ""
+            env: dict[str, str] = {}
+            if base_url:
+                env["OPENAI_BASE_URL"] = base_url
+            if self.openai_api_key:
+                env["OPENAI_API_KEY"] = self.openai_api_key
+            if self.opencode_model:
+                env["OPENCODE_MODEL"] = self.opencode_model
+            return env
+
+        # claude and gemini use their own API keys injected via spec.env —
+        # they don't need the self-hosted inference vars at all.
+        return {}
 
     def validate_connection(self) -> None:
         """Check Modal CLI is installed and the current token is valid."""

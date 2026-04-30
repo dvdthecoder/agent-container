@@ -323,7 +323,7 @@ def test_spec_env_passed_as_modal_secret(mock_create):
 
 @patch("sandbox.sandbox.modal.Sandbox.create")
 def test_config_env_merged_with_spec_env(mock_create):
-    """config.container_env() is merged with spec.env; spec takes precedence."""
+    """container_env + env_for_backend + spec.env are all merged; spec takes precedence."""
     sb = MagicMock()
     mock_create.return_value = sb
     sb.exec.return_value = _make_proc()
@@ -336,10 +336,13 @@ def test_config_env_merged_with_spec_env(mock_create):
 
     with patch("sandbox.sandbox.modal.Secret.from_dict") as mock_secret:
         mock_secret.return_value = MagicMock()
+        # env_for_backend("opencode") normalises base URL and includes OPENAI_* vars
         ModalSandbox(config).run(_spec(env={"CUSTOM_VAR": "custom"}))
 
     merged = mock_secret.call_args[0][0]
+    # OPENAI_BASE_URL comes from env_for_backend, not container_env
     assert merged["OPENAI_BASE_URL"] == "https://serve.modal.run/v1"
+    # GITHUB_TOKEN comes from container_env
     assert merged["GITHUB_TOKEN"] == "ghp_abc"
     assert merged["CUSTOM_VAR"] == "custom"
 

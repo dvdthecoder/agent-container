@@ -229,9 +229,15 @@ class ModalSandbox:
         image = _BASE_IMAGE
         if spec.image:
             image = modal.Image.from_registry(spec.image)
-        # Merge config-level env vars (model endpoint, git tokens) with
-        # any task-specific overrides from spec.env.
-        env = {**self.config.container_env(), **spec.env}
+        # Build env in three layers (each overrides the previous):
+        #   1. container_env()   — shared baseline (git tokens)
+        #   2. env_for_backend() — inference vars formatted for this backend
+        #   3. spec.env          — task-level overrides
+        env = {
+            **self.config.container_env(),
+            **self.config.env_for_backend(spec.backend),
+            **spec.env,
+        }
         # Give the opencode runner 60s less than the sandbox timeout so it
         # can exit cleanly before Modal forcefully kills the container.
         env.setdefault("OPENCODE_TIMEOUT", str(spec.timeout_seconds - 60))

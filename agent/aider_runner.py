@@ -3,7 +3,9 @@
 Usage: python3 aider_runner.py <task>
 
 Environment variables read:
-  OPENAI_BASE_URL  — vLLM endpoint, with /v1 suffix (e.g. https://host/v1)
+  OPENAI_BASE_URL  — vLLM endpoint, already normalised to include /v1
+                     (e.g. https://host/v1).  Set by SandboxConfig.env_for_backend
+                     before the container starts — do not normalise here.
   OPENAI_API_KEY   — API key (any non-empty string for self-hosted)
   OPENCODE_MODEL   — model name as served by vLLM (e.g. qwen2.5-coder)
   OPENCODE_WORKDIR — workspace directory inside the sandbox (default: /workspace)
@@ -26,14 +28,7 @@ TASK = " ".join(sys.argv[1:]) if len(sys.argv) > 1 else ""
 API_KEY = os.environ.get("OPENAI_API_KEY", "modal")
 MODEL = os.environ.get("OPENCODE_MODEL", "")
 WORKDIR = os.environ.get("OPENCODE_WORKDIR", "/workspace")
-
-# OPENAI_BASE_URL in the container env may not have the /v1 suffix (the .env
-# convention stores the bare host).  The OpenAI SDK requires /v1 in the base
-# URL; without it litellm calls .../chat/completions instead of
-# .../v1/chat/completions and gets a 404.
-# Normalise here so the subprocess inherits the correct value.
-_raw_base = os.environ.get("OPENAI_BASE_URL", "").rstrip("/")
-BASE_URL = _raw_base if _raw_base.endswith("/v1") else f"{_raw_base}/v1" if _raw_base else ""
+BASE_URL = os.environ.get("OPENAI_BASE_URL", "")
 
 if not TASK:
     print("Usage: aider_runner.py <task>", file=sys.stderr)
@@ -72,8 +67,6 @@ cmd = [
 ]
 
 # Run from WORKDIR so aider picks up the git repo there.
-# Pass corrected OPENAI_BASE_URL (with /v1) explicitly so aider's OpenAI SDK
-# client hits the right endpoint.  Do NOT rely on inherited env — the .env
-# convention stores the bare host without /v1.
-env = {**os.environ, "OPENAI_BASE_URL": BASE_URL} if BASE_URL else None
-sys.exit(subprocess.run(cmd, cwd=WORKDIR, env=env).returncode)  # noqa: S603
+# OPENAI_BASE_URL is pre-normalised (includes /v1) by SandboxConfig.env_for_backend
+# before the container starts — no further manipulation needed here.
+sys.exit(subprocess.run(cmd, cwd=WORKDIR).returncode)  # noqa: S603
