@@ -44,15 +44,15 @@ def test_clone_success():
 
     clone(sb, "https://github.com/org/repo", "main")
 
-    sb.exec.assert_called_once_with(
-        "git",
-        "clone",
-        "--branch",
-        "main",
-        "--depth",
-        "1",
-        "https://github.com/org/repo",
-        "/workspace",
+    # First call: git clone; second call: write .git/info/exclude
+    assert sb.exec.call_count == 2
+    first_call = sb.exec.call_args_list[0]
+    assert first_call == (
+        (
+            "git", "clone", "--branch", "main",
+            "--depth", "1", "https://github.com/org/repo", "/workspace",
+        ),
+        {},
     )
 
 

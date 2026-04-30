@@ -45,6 +45,17 @@ def clone(sb: modal.Sandbox, repo: str, base_branch: str) -> None:
     if proc.returncode != 0:
         raise ConfigError(f"git clone failed:\n{stderr}")
 
+    # Exclude common build artifacts from git tracking.
+    # .git/info/exclude is local-only — never committed — so we don't modify
+    # the target repo's .gitignore.  This prevents pytest __pycache__ / .pyc
+    # files from appearing in collect_diff and polluting the PR diff.
+    exclude_proc = sb.exec(
+        "sh",
+        "-c",
+        "printf '__pycache__/\\n*.pyc\\n*.pyo\\n.pytest_cache/\\n' >> /workspace/.git/info/exclude",
+    )
+    exclude_proc.wait()
+
 
 def collect_diff(
     sb: modal.Sandbox,

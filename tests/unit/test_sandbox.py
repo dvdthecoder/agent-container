@@ -72,7 +72,7 @@ def test_run_success_returns_result(mock_create):
     diff_proc = _make_proc(stdout="diff --git a/f b/f\n+fix")
     stat_proc = _make_proc(stdout=" 1 file changed")
 
-    sb.exec.side_effect = [clone_proc, agent_proc, diff_proc, stat_proc]
+    sb.exec.side_effect = [clone_proc, _make_proc(), agent_proc, diff_proc, stat_proc]
 
     # create_pr=False so the test doesn't need to mock PR exec calls.
     result = ModalSandbox(_config()).run(_spec(create_pr=False))
@@ -105,6 +105,7 @@ def test_run_creates_pr_when_agent_produces_diff(mock_create):
 
     sb.exec.side_effect = [
         clone_proc,
+        _make_proc(),  # .git/info/exclude
         agent_proc,
         diff_proc,
         stat_proc,
@@ -146,7 +147,7 @@ def test_run_skips_pr_when_create_pr_false(mock_create):
     agent_proc = _make_proc(stdout="done")
     diff_proc = _make_proc(stdout="diff --git a/f b/f\n+fix")
     stat_proc = _make_proc(stdout=" 1 file changed")
-    sb.exec.side_effect = [clone_proc, agent_proc, diff_proc, stat_proc]
+    sb.exec.side_effect = [clone_proc, _make_proc(), agent_proc, diff_proc, stat_proc]
 
     result = ModalSandbox(_config()).run(_spec(create_pr=False))
 
@@ -166,7 +167,7 @@ def test_run_skips_pr_when_no_github_token(mock_create):
     diff_proc = _make_proc(stdout="diff --git a/f b/f\n+fix")
     stat_proc = _make_proc(stdout=" 1 file changed")
     # Provider is detected and token is missing before any git exec — only 4 calls total.
-    sb.exec.side_effect = [clone_proc, agent_proc, diff_proc, stat_proc]
+    sb.exec.side_effect = [clone_proc, _make_proc(), agent_proc, diff_proc, stat_proc]
 
     result = ModalSandbox(SandboxConfig()).run(
         _spec(repo="https://github.com/org/repo", create_pr=True)
@@ -190,7 +191,7 @@ def test_push_failure_returns_failed_result(mock_create):
     git_procs = [_make_proc() for _ in range(6)]
     push_proc = _make_proc(returncode=1)
     push_proc.stderr.read.return_value = "remote: Permission denied"
-    sb.exec.side_effect = [clone_proc, agent_proc, diff_proc, stat_proc, *git_procs, push_proc]
+    sb.exec.side_effect = [clone_proc, _make_proc(), agent_proc, diff_proc, stat_proc, *git_procs, push_proc]
 
     config = SandboxConfig(github_token="ghp_test")
     result = ModalSandbox(config).run(_spec(repo="https://github.com/org/repo", create_pr=True))
@@ -256,7 +257,7 @@ def test_agent_nonzero_exit_returns_failed_result(mock_create):
     diff_proc = _make_proc()
     stat_proc = _make_proc()
 
-    sb.exec.side_effect = [clone_proc, agent_proc, diff_proc, stat_proc]
+    sb.exec.side_effect = [clone_proc, _make_proc(), agent_proc, diff_proc, stat_proc]
 
     result = ModalSandbox(_config()).run(_spec())
 
@@ -286,7 +287,7 @@ def test_terminate_failure_does_not_mask_result(mock_create):
     mock_create.return_value = sb
     diff_proc = _make_proc(stdout="diff --git a/f b/f\n+fix")
     stat_proc = _make_proc(stdout=" 1 file changed")
-    sb.exec.side_effect = [_make_proc(), _make_proc(stdout="done"), diff_proc, stat_proc]
+    sb.exec.side_effect = [_make_proc(), _make_proc(), _make_proc(stdout="done"), diff_proc, stat_proc]
     sb.terminate.side_effect = RuntimeError("terminate failed")
 
     # should not raise — terminate errors are swallowed
