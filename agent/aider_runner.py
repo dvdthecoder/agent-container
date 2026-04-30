@@ -54,8 +54,8 @@ cmd = [
     "aider",
     "--yes",  # accept all changes without prompting
     "--map-tokens",
-    "0",  # disable repo map — avoids silent multi-minute scan on fresh clone
-    "--no-pretty",  # plain-text output; avoids terminal escape codes in sandbox streams
+    "1024",  # small map — gives model file context without expensive full scan
+    "--no-pretty",  # plain-text output — avoids terminal escape codes in sandbox streams
     "--model",
     model_arg,
     "--openai-api-key",
