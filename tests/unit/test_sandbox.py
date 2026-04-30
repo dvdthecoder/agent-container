@@ -36,6 +36,13 @@ def mock_run_logger():
         yield inst
 
 
+@pytest.fixture(autouse=True)
+def mock_wait_for_inference():
+    """Skip inference endpoint polling — no network in unit tests."""
+    with patch("sandbox.sandbox._wait_for_inference"):
+        yield
+
+
 def _make_proc(stdout: str = "", stderr: str = "", returncode: int = 0) -> MagicMock:
     proc = MagicMock()
     # runner.py streams by iterating over proc.stdout/proc.stderr (bytes lines).

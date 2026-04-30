@@ -11,6 +11,8 @@ from __future__ import annotations
 
 import sys
 import time
+import urllib.error
+import urllib.request
 from collections.abc import Callable
 
 import modal
@@ -124,6 +126,9 @@ class ModalSandbox:
 
                 _emit("phase", phase="CLONING")
                 git_ops.clone(sb, spec.repo, spec.base_branch)
+
+                _emit("phase", phase="WARMING")
+                _wait_for_inference(self.config.openai_base_url, start)
 
                 _emit("phase", phase="RUNNING")
                 backend = get_backend(spec.backend)
@@ -256,6 +261,52 @@ def _terminate(sb: modal.Sandbox | None) -> None:
     except Exception as exc:  # noqa: BLE001
         # Log so we know terminate failed — still best-effort, never raise.
         print(f"[sandbox] terminate failed: {exc}", file=sys.stderr, flush=True)
+
+
+def _wait_for_inference(
+    base_url: str,
+    run_start: float,
+    max_wait: float = 300.0,
+    poll_interval: float = 5.0,
+) -> None:
+    """Poll GET {base_url}/v1/models until 200 or deadline exceeded.
+
+    Skipped when *base_url* is empty (stub / local runs with no inference server).
+    Raises ``PhaseError`` if the endpoint is not ready within *max_wait* seconds.
+    """
+    if not base_url:
+        return
+
+    url = base_url.rstrip("/").rstrip("/v1").rstrip("/") + "/v1/models"
+    deadline = time.monotonic() + max_wait
+
+    while True:
+        elapsed = time.monotonic() - run_start
+        try:
+            with urllib.request.urlopen(url, timeout=10) as resp:  # noqa: S310
+                if resp.status == 200:
+                    print(
+                        f"[sandbox] inference endpoint ready  elapsed={elapsed:.1f}s",
+                        file=sys.stderr,
+                        flush=True,
+                    )
+                    return
+        except Exception:  # noqa: BLE001, S110
+            pass  # still booting — keep polling
+
+        if time.monotonic() >= deadline:
+            raise PhaseError(
+                "WARMING",
+                f"inference endpoint not ready after {max_wait:.0f}s ({url})",
+                elapsed,
+            )
+
+        print(
+            f"[sandbox] waiting for inference endpoint  elapsed={elapsed:.1f}s",
+            file=sys.stderr,
+            flush=True,
+        )
+        time.sleep(poll_interval)
 
 
 def _run_id(sb: modal.Sandbox | None) -> str:
