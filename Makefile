@@ -17,11 +17,15 @@ lint:
 	python3 -m ruff check .
 
 # ── quick manual smoke test against fixture repo ────────────────────────────
+# Usage: make example           (defaults to aider)
+#        make example BACKEND=opencode
+BACKEND ?= aider
+
 example:
 	agent-run run \
 		--repo https://github.com/dvdthecoder/agent-container-fixture \
 		--task "add a hello world function to the codebase" \
-		--backend aider \
+		--backend $(BACKEND) \
 		--timeout 600
 
 # ── cleanup — stop any stray sandbox containers left by failed runs ──────────
