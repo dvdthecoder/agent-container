@@ -1,15 +1,25 @@
-"""Non-interactive opencode runner via ACP (Agent Client Protocol).
+"""Non-interactive opencode runner — Responses API → Chat Completions proxy.
 
 Usage: python3 opencode_runner.py <task>
 
 Environment variables read:
-  OPENAI_BASE_URL  — custom OpenAI-compatible base URL (e.g. SGLang on Modal)
+  OPENAI_BASE_URL  — vLLM endpoint, already normalised to include /v1
+                     (e.g. https://host/v1).  Set by SandboxConfig.env_for_backend.
   OPENAI_API_KEY   — API key for the above endpoint
-  OPENCODE_MODEL   — model name; if it contains '/' it's used as-is (e.g.
-                     'github-models/deepseek/deepseek-v3-0324'); otherwise
-                     it is prefixed with 'openai/' and mapped to the custom
-                     base URL above.
+  OPENCODE_MODEL   — model name as served by vLLM (e.g. qwen2.5-coder)
   OPENCODE_WORKDIR — working directory inside the sandbox (default: /workspace)
+  OPENCODE_TIMEOUT — seconds before the runner gives up (default: 300)
+
+Architecture:
+  opencode v1.14+ calls POST /v1/responses (OpenAI Responses API).
+  vLLM serves POST /v1/chat/completions (Chat Completions API).
+
+  This runner starts a thin in-process proxy on localhost that translates
+  between the two formats, then points opencode at it via config.json.
+
+  The proxy is a pure format adapter — no model-specific logic:
+    Request:  Responses API input + tools  →  Chat Completions messages + tools
+    Response: Chat Completions tool_calls  →  Responses API function_call items
 """
 
 from __future__ import annotations
@@ -18,7 +28,6 @@ import http.server
 import json
 import os
 import queue
-import re
 import subprocess
 import sys
 import threading
@@ -32,192 +41,118 @@ import urllib.request
 
 TASK = " ".join(sys.argv[1:]) if len(sys.argv) > 1 else ""
 CWD = os.environ.get("OPENCODE_WORKDIR", "/workspace")
-BASE_URL = os.environ.get("OPENAI_BASE_URL", "").rstrip("/")
+# SandboxConfig.env_for_backend already normalises to include /v1.
+# Strip it here so we can construct endpoint URLs explicitly.
+_raw_base = os.environ.get("OPENAI_BASE_URL", "").rstrip("/")
+BASE_URL = _raw_base[:-3] if _raw_base.endswith("/v1") else _raw_base
 API_KEY = os.environ.get("OPENAI_API_KEY", "")
 RAW_MODEL = os.environ.get("OPENCODE_MODEL", "")
-
-# Strip trailing /v1 — we add it explicitly where needed.
-if BASE_URL.endswith("/v1"):
-    BASE_URL = BASE_URL[:-3]
-
-# Resolve the model to provider/model format.
-if "/" in RAW_MODEL:
-    MODEL_ID = RAW_MODEL
-else:
-    MODEL_ID = f"openai/{RAW_MODEL}" if RAW_MODEL else "opencode/big-pickle"
-
+MODEL_ID = (
+    f"openai/{RAW_MODEL}" if RAW_MODEL and "/" not in RAW_MODEL else RAW_MODEL or "openai/unknown"
+)
 TIMEOUT_SECONDS = int(os.environ.get("OPENCODE_TIMEOUT", "300"))
 
-# Port the local Responses→ChatCompletions proxy listens on.
 _PROXY_PORT = 8080
 
 
 # ---------------------------------------------------------------------------
-# Responses API → Chat Completions proxy
-#
-# opencode v1.14+ calls POST /v1/responses (OpenAI Responses API).
-# SGLang only serves POST /v1/chat/completions.
-# This proxy intercepts /v1/responses, translates the request/response, and
-# forwards everything else unchanged.
+# Format conversion helpers
 # ---------------------------------------------------------------------------
 
 
 def _convert_tools(tools: list) -> list:
     """Convert Responses API tool definitions to Chat Completions format.
 
-    Responses API:   {"type":"function","name":"x","parameters":{}}
-    Chat Completions: {"type":"function","function":{"name":"x","parameters":{}}}
+    Responses API:    {"type": "function", "name": "x", "parameters": {}}
+    Chat Completions: {"type": "function", "function": {"name": "x", "parameters": {}}}
     """
     out = []
     for t in tools:
         if not isinstance(t, dict):
             continue
         if t.get("type") == "function" and "function" not in t:
-            # Responses API format — wrap in function key.
             out.append(
-                {
-                    "type": "function",
-                    "function": {k: v for k, v in t.items() if k != "type"},
-                }
+                {"type": "function", "function": {k: v for k, v in t.items() if k != "type"}}
             )
         else:
-            # Already in Chat Completions format or unknown — pass through.
             out.append(t)
     return out
-
-
-# Pattern for Qwen2.5's native tool-call output format.
-_TOOL_CALL_RE = re.compile(r"<tool_call>\s*(.*?)\s*</tool_call>", re.DOTALL)
-
-
-def _inject_tools_into_messages(messages: list, tools: list) -> list:
-    """Inject tool schemas as text into the system message (Qwen2.5 native format).
-
-    Avoids passing tools in the Chat Completions 'tools' field, which crashes
-    SGLang v0.4.7's qwen25 parser.  Instead we inject the schemas directly into
-    the system prompt — the format Qwen2.5 was trained with.
-
-    The model will output tool calls as:
-        <tool_call>{"name": "...", "arguments": {...}}</tool_call>
-    which _extract_tool_calls() parses back out.
-    """
-    if not tools:
-        return messages
-
-    tools_section = (
-        "\n\n# Tools\n\n"
-        "You may call one or more functions to assist with the user query.\n\n"
-        "You are provided with function signatures within <tools></tools> XML tags:\n"
-        "<tools>\n" + json.dumps(tools) + "\n</tools>\n\n"
-        "For each function call, return a json object with the function name and "
-        "arguments within <tool_call></tool_call> XML tags:\n"
-        "<tool_call>\n"
-        '{"name": <function-name>, "arguments": <args-dict>}\n'
-        "</tool_call>"
-    )
-    result = list(messages)
-    if result and result[0].get("role") in ("system", "developer"):
-        # Append to existing system message.
-        result[0] = {**result[0], "content": (result[0].get("content") or "") + tools_section}
-    else:
-        result.insert(0, {"role": "system", "content": tools_section.lstrip()})
-    return result
-
-
-def _extract_tool_calls(text: str) -> tuple[str, list]:
-    """Parse <tool_call>...</tool_call> blocks from model output.
-
-    Returns (clean_text, tool_calls) where tool_calls is a list of
-    {"id", "call_id", "name", "arguments"} dicts ready for the Responses API.
-    """
-    tool_calls = []
-    for i, m in enumerate(_TOOL_CALL_RE.finditer(text)):
-        raw = m.group(1).strip()
-        try:
-            call = json.loads(raw)
-        except json.JSONDecodeError:
-            print(f"[proxy] could not parse tool_call JSON: {raw[:200]}", file=sys.stderr)
-            continue
-        call_id = f"call_{i:04d}"
-        tool_calls.append(
-            {
-                "id": call_id,
-                "call_id": call_id,
-                "name": call.get("name", ""),
-                "arguments": json.dumps(call.get("arguments", {})),
-            }
-        )
-    clean = _TOOL_CALL_RE.sub("", text).strip()
-    return clean, tool_calls
 
 
 def _convert_input_items(items: list) -> list:
     """Convert Responses API input items to Chat Completions messages.
 
-    Handles plain message dicts, tool_result items, function_call items,
-    and string items.
+    Handles:
+      - Plain message dicts (role + content)
+      - tool_result items  → role: tool  (Chat Completions standard)
+      - function_call items → assistant message with tool_calls
+      - String items
     """
     messages = []
     for item in items:
         if not isinstance(item, dict):
             messages.append({"role": "user", "content": str(item)})
             continue
+
         item_type = item.get("type", "")
         role = item.get("role", "user")
-        # SGLang v0.4.7 only accepts 'system', 'user', 'assistant', 'tool'.
-        # opencode uses the newer OpenAI 'developer' role — map it to 'system'.
+
+        # opencode sends the newer OpenAI 'developer' role.
+        # Chat Completions only accepts system/user/assistant/tool — map it.
         if role == "developer":
             role = "system"
+
         if item_type == "tool_result":
-            # Responses API tool result → user message in Qwen tool_response format.
-            # Using role="user" keeps the conversation in plain-text mode consistent
-            # with how we inject tool definitions and parse <tool_call> output.
-            result_content = str(item.get("output", ""))
+            # Responses API tool result → Chat Completions tool message.
             messages.append(
                 {
-                    "role": "user",
-                    "content": f"<tool_response>\n{result_content}\n</tool_response>",
+                    "role": "tool",
+                    "tool_call_id": item.get("call_id", ""),
+                    "content": str(item.get("output", "")),
                 }
             )
         elif item_type == "function_call":
-            # Responses API function_call item → assistant message in Qwen format.
-            # Render as <tool_call> text so conversation history is consistent with
-            # how the model generated the call originally.
-            call_json = json.dumps(
-                {
-                    "name": item.get("name", ""),
-                    "arguments": json.loads(item.get("arguments", "{}")),
-                }
-            )
+            # Responses API function_call → assistant message with tool_calls.
             messages.append(
                 {
                     "role": "assistant",
-                    "content": f"<tool_call>\n{call_json}\n</tool_call>",
+                    "tool_calls": [
+                        {
+                            "id": item.get("call_id", item.get("id", "")),
+                            "type": "function",
+                            "function": {
+                                "name": item.get("name", ""),
+                                "arguments": item.get("arguments", "{}"),
+                            },
+                        }
+                    ],
                 }
             )
         elif item_type in ("message", ""):
             content = item.get("content", "")
             if isinstance(content, list):
-                # content blocks — flatten to text for simplicity.
                 text = " ".join(c.get("text", "") for c in content if isinstance(c, dict))
                 messages.append({"role": role, "content": text})
             else:
                 messages.append({"role": role, "content": content})
         else:
-            # Unknown type — best effort.
             messages.append({"role": role, "content": json.dumps(item)})
+
     return messages
 
 
-class _ProxyHandler(http.server.BaseHTTPRequestHandler):
-    """Translate Responses API calls to Chat Completions for SGLang."""
+# ---------------------------------------------------------------------------
+# Proxy handler
+# ---------------------------------------------------------------------------
 
-    target: str = ""  # set to BASE_URL before starting
+
+class _ProxyHandler(http.server.BaseHTTPRequestHandler):
+    """Translate Responses API calls to Chat Completions for vLLM."""
+
+    target: str = ""  # set to BASE_URL before starting the server
 
     def log_message(self, fmt: str, *args: object) -> None:  # noqa: D102
         pass  # suppress default access log
-
-    # ── routing ──────────────────────────────────────────────────────────────
 
     def do_GET(self) -> None:  # noqa: N802
         self._forward(method="GET", body=None)
@@ -231,8 +166,6 @@ class _ProxyHandler(http.server.BaseHTTPRequestHandler):
         else:
             self._forward(method="POST", body=body)
 
-    # ── responses → chat completions ─────────────────────────────────────────
-
     def _handle_responses(self, body: bytes) -> None:
         try:
             req = json.loads(body) if body else {}
@@ -240,16 +173,14 @@ class _ProxyHandler(http.server.BaseHTTPRequestHandler):
             self._send(400, b'{"error":"bad request"}')
             return
 
-        # Log request shape for debugging (truncated, no content).
         tools_count = len(req.get("tools", []))
         input_type = type(req.get("input", "")).__name__
         print(
-            f"[proxy] request: input_type={input_type} tools={tools_count}"
-            f" stream={req.get('stream')}",
+            f"[proxy] request: input_type={input_type}"
+            f" tools={tools_count} stream={req.get('stream')}",
             file=sys.stderr,
         )
 
-        # Convert Responses API input to Chat Completions messages list.
         raw_input = req.get("input", "")
         if isinstance(raw_input, str):
             messages = [{"role": "user", "content": raw_input}]
@@ -259,31 +190,23 @@ class _ProxyHandler(http.server.BaseHTTPRequestHandler):
             messages = [{"role": "user", "content": str(raw_input)}]
 
         chat_req: dict = {
-            # Always use the bare model name (e.g. "qwen2.5-coder") — never
-            # forward opencode's provider-prefixed string ("openai/qwen2.5-coder")
-            # to SGLang, which only recognises its --served-model-name value.
             "model": RAW_MODEL,
             "messages": messages,
             "stream": bool(req.get("stream", False)),
         }
+
+        # Pass tools in the standard Chat Completions tools field.
+        # vLLM handles these correctly with --enable-auto-tool-choice.
+        if req.get("tools"):
+            chat_req["tools"] = _convert_tools(req["tools"])
+            chat_req["tool_choice"] = "auto"
+
         for key in ("temperature", "max_tokens"):
             if key in req:
                 chat_req[key] = req[key]
 
-        # Inject tools as text in the system message rather than passing the 'tools'
-        # field to SGLang.  SGLang v0.4.7's built-in qwen25 tool-call parser crashes
-        # the server process on the first request that carries tool schemas.
-        # Text injection uses Qwen2.5's native training format (<tools>...</tools>)
-        # so the model still sees and uses all tool definitions correctly.
-        # _extract_tool_calls() in the response path parses the <tool_call> output.
-        if req.get("tools"):
-            chat_req["messages"] = _inject_tools_into_messages(
-                chat_req["messages"], _convert_tools(req["tools"])
-            )
-
         stream = chat_req["stream"]
         chat_body = json.dumps(chat_req).encode()
-
         url = f"{self.target}/v1/chat/completions"
         print(
             f"[proxy] → chat/completions  stream={stream}"
@@ -291,11 +214,7 @@ class _ProxyHandler(http.server.BaseHTTPRequestHandler):
             file=sys.stderr,
         )
 
-        # Per-request timeout: short enough to detect SGLang hangs quickly.
-        # TIMEOUT_SECONDS is the whole-run budget; individual inference calls
-        # should not be allowed to block for the full run duration.
         _request_timeout = min(120, TIMEOUT_SECONDS)
-
         http_req = urllib.request.Request(  # noqa: S310
             url,
             data=chat_body,
@@ -310,94 +229,62 @@ class _ProxyHandler(http.server.BaseHTTPRequestHandler):
                 if stream:
                     self._stream_chat_to_responses(resp)
                 else:
-                    raw = resp.read()
-                    translated = self._translate_chat_response(raw)
-                    self._send(200, translated, content_type="application/json")
+                    translated = self._translate_chat_response(resp.read())
+                    self._send(200, translated)
         except urllib.error.HTTPError as e:
             body_err = e.read()
-            # Log the FULL error body — SGLang's Pydantic errors contain the
-            # field-level detail needed to diagnose mismatches (e.g. unknown
-            # role names, bad tool schema fields).  Never truncate on error.
-            body_str = body_err.decode("utf-8", errors="replace")
             print(
-                f"[proxy] upstream {e.code} ({url}):\n{body_str}",
+                f"[proxy] upstream {e.code} ({url}):\n{body_err.decode('utf-8', errors='replace')}",
                 file=sys.stderr,
             )
             self._send(e.code, body_err)
         except TimeoutError as exc:
-            # Per-request timeout expired — SGLang is hung.  Return 504 so
-            # opencode can decide whether to retry rather than waiting forever.
-            msg = f"upstream timeout after {_request_timeout}s — SGLang did not respond"
+            msg = f"upstream timeout after {_request_timeout}s"
             print(f"[proxy] {msg}: {exc}", file=sys.stderr)
             self._send(504, json.dumps({"error": msg}).encode())
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001
             print(f"[proxy] upstream exception: {exc}", file=sys.stderr)
             self._send(502, json.dumps({"error": str(exc)}).encode())
 
     def _translate_chat_response(self, raw: bytes) -> bytes:
-        """Convert a chat completions response to Responses API format.
-
-        Handles plain text, SGLang-parsed tool_calls, and Qwen's native
-        <tool_call>...</tool_call> text format (proxy-level parsing fallback).
-        """
+        """Convert a Chat Completions response to Responses API format."""
         try:
             chat = json.loads(raw)
         except json.JSONDecodeError:
             return raw
+
         message = chat.get("choices", [{}])[0].get("message", {})
         text = message.get("content") or ""
         native_tool_calls = message.get("tool_calls") or []
 
-        # Log what the model returned so we can see whether it's using tools.
         preview = text[:300] if text else "<empty>"
         print(
-            f"[proxy] ← model response: tool_calls={len(native_tool_calls)}"
-            f"  text={len(text)}chars  preview={preview!r}",
+            f"[proxy] ← response: tool_calls={len(native_tool_calls)}"
+            f" text={len(text)}chars preview={preview!r}",
             file=sys.stderr,
         )
 
         output = []
-
-        # Prefer SGLang-parsed tool_calls if present (--tool-call-parser enabled).
-        if native_tool_calls:
-            if text:
-                output.append(
-                    {
-                        "type": "message",
-                        "role": "assistant",
-                        "content": [{"type": "output_text", "text": text}],
-                    }
-                )
-            for tc in native_tool_calls:
-                fn = tc.get("function", {})
-                call_id = tc.get("id", "")
-                output.append(
-                    {
-                        "type": "function_call",
-                        "id": call_id,
-                        "call_id": call_id,
-                        "name": fn.get("name", ""),
-                        "arguments": fn.get("arguments", "{}"),
-                    }
-                )
-        else:
-            # Fall back to proxy-level <tool_call> parsing (Qwen2.5 text format).
-            clean_text, parsed_calls = _extract_tool_calls(text)
-            if parsed_calls:
-                print(
-                    f"[proxy] parsed {len(parsed_calls)} tool call(s) from text",
-                    file=sys.stderr,
-                )
-            if clean_text:
-                output.append(
-                    {
-                        "type": "message",
-                        "role": "assistant",
-                        "content": [{"type": "output_text", "text": clean_text}],
-                    }
-                )
-            for tc in parsed_calls:
-                output.append({"type": "function_call", **tc})
+        if text:
+            output.append(
+                {
+                    "type": "message",
+                    "role": "assistant",
+                    "content": [{"type": "output_text", "text": text}],
+                }
+            )
+        for tc in native_tool_calls:
+            fn = tc.get("function", {})
+            call_id = tc.get("id", "")
+            output.append(
+                {
+                    "type": "function_call",
+                    "id": call_id,
+                    "call_id": call_id,
+                    "name": fn.get("name", ""),
+                    "arguments": fn.get("arguments", "{}"),
+                }
+            )
 
         if not output:
             output.append(
@@ -408,28 +295,25 @@ class _ProxyHandler(http.server.BaseHTTPRequestHandler):
                 }
             )
 
-        resp = {
-            "id": chat.get("id", "resp_proxy"),
-            "object": "response",
-            "model": chat.get("model", RAW_MODEL),
-            "output": output,
-            "usage": chat.get("usage", {}),
-        }
-        return json.dumps(resp).encode()
+        return json.dumps(
+            {
+                "id": chat.get("id", "resp_proxy"),
+                "object": "response",
+                "model": chat.get("model", RAW_MODEL),
+                "output": output,
+                "usage": chat.get("usage", {}),
+            }
+        ).encode()
 
     def _stream_chat_to_responses(self, resp: object) -> None:
-        """Stream chat completions SSE and re-emit as Responses API events.
-
-        Text deltas are forwarded immediately.  Tool calls are buffered and
-        included in the final response.completed event so opencode can execute
-        them once the full call is assembled.
-        """
+        """Stream Chat Completions SSE and re-emit as Responses API events."""
         self.send_response(200)
         self.send_header("Content-Type", "text/event-stream")
         self.send_header("Cache-Control", "no-cache")
         self.end_headers()
+
         full_text: list[str] = []
-        # tool_calls_buf: index → {"id": ..., "name": ..., "arguments": ...}
+        # index → accumulated tool call chunk
         tool_calls_buf: dict[int, dict] = {}
 
         for raw_line in resp:
@@ -443,13 +327,15 @@ class _ProxyHandler(http.server.BaseHTTPRequestHandler):
                 chunk = json.loads(data)
             except json.JSONDecodeError:
                 continue
+
             delta = chunk.get("choices", [{}])[0].get("delta", {})
             text_delta = delta.get("content") or ""
             if text_delta:
                 full_text.append(text_delta)
-                event = json.dumps({"type": "response.output_text.delta", "delta": text_delta})
-                self._write_sse(event)
-            # Accumulate tool call chunks.
+                self._write_sse(
+                    json.dumps({"type": "response.output_text.delta", "delta": text_delta})
+                )
+
             for tc_delta in delta.get("tool_calls") or []:
                 idx = tc_delta.get("index", 0)
                 if idx not in tool_calls_buf:
@@ -463,50 +349,28 @@ class _ProxyHandler(http.server.BaseHTTPRequestHandler):
                 if fn.get("arguments"):
                     buf["arguments"] += fn["arguments"]
 
-        # Build output items for response.completed.
         output = []
         text = "".join(full_text)
-
-        # Prefer SGLang-parsed tool_calls_buf if any were streamed.
-        if tool_calls_buf:
-            if text:
-                output.append(
-                    {
-                        "type": "message",
-                        "role": "assistant",
-                        "content": [{"type": "output_text", "text": text}],
-                    }
-                )
-            for idx in sorted(tool_calls_buf):
-                buf = tool_calls_buf[idx]
-                call_id = buf["id"]
-                output.append(
-                    {
-                        "type": "function_call",
-                        "id": call_id,
-                        "call_id": call_id,
-                        "name": buf["name"],
-                        "arguments": buf["arguments"],
-                    }
-                )
-        else:
-            # Proxy-level <tool_call> parsing fallback (Qwen2.5 text format).
-            clean_text, parsed_calls = _extract_tool_calls(text)
-            if parsed_calls:
-                print(
-                    f"[proxy] (stream) parsed {len(parsed_calls)} tool call(s) from text",
-                    file=sys.stderr,
-                )
-            if clean_text:
-                output.append(
-                    {
-                        "type": "message",
-                        "role": "assistant",
-                        "content": [{"type": "output_text", "text": clean_text}],
-                    }
-                )
-            for tc in parsed_calls:
-                output.append({"type": "function_call", **tc})
+        if text:
+            output.append(
+                {
+                    "type": "message",
+                    "role": "assistant",
+                    "content": [{"type": "output_text", "text": text}],
+                }
+            )
+        for idx in sorted(tool_calls_buf):
+            buf = tool_calls_buf[idx]
+            call_id = buf["id"]
+            output.append(
+                {
+                    "type": "function_call",
+                    "id": call_id,
+                    "call_id": call_id,
+                    "name": buf["name"],
+                    "arguments": buf["arguments"],
+                }
+            )
 
         if not output:
             output.append(
@@ -517,25 +381,23 @@ class _ProxyHandler(http.server.BaseHTTPRequestHandler):
                 }
             )
 
-        completed = json.dumps(
-            {
-                "type": "response.completed",
-                "response": {
-                    "id": "resp_proxy",
-                    "object": "response",
-                    "model": RAW_MODEL,
-                    "output": output,
-                },
-            }
+        self._write_sse(
+            json.dumps(
+                {
+                    "type": "response.completed",
+                    "response": {
+                        "id": "resp_proxy",
+                        "object": "response",
+                        "model": RAW_MODEL,
+                        "output": output,
+                    },
+                }
+            )
         )
-        self._write_sse(completed)
         self.wfile.flush()
 
     def _write_sse(self, data: str) -> None:
-        line = f"data: {data}\n\n".encode()
-        self.wfile.write(line)
-
-    # ── plain forward ─────────────────────────────────────────────────────────
+        self.wfile.write(f"data: {data}\n\n".encode())
 
     def _forward(self, method: str, body: bytes | None) -> None:
         url = f"{self.target}{self.path}"
@@ -543,9 +405,7 @@ class _ProxyHandler(http.server.BaseHTTPRequestHandler):
             k: v for k, v in self.headers.items() if k.lower() not in ("host", "content-length")
         }
         headers.setdefault("Authorization", f"Bearer {API_KEY}")
-        http_req = urllib.request.Request(  # noqa: S310
-            url, data=body, headers=headers, method=method
-        )
+        http_req = urllib.request.Request(url, data=body, headers=headers, method=method)  # noqa: S310
         try:
             with urllib.request.urlopen(http_req, timeout=30) as resp:  # noqa: S310
                 raw = resp.read()
@@ -553,7 +413,7 @@ class _ProxyHandler(http.server.BaseHTTPRequestHandler):
                 self._send(resp.status, raw, content_type=ct)
         except urllib.error.HTTPError as e:
             self._send(e.code, e.read())
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001
             self._send(502, json.dumps({"error": str(exc)}).encode())
 
     def _send(self, code: int, body: bytes, content_type: str = "application/json") -> None:
@@ -565,7 +425,7 @@ class _ProxyHandler(http.server.BaseHTTPRequestHandler):
 
 
 def _start_proxy(target_base_url: str) -> None:
-    """Start the Responses→ChatCompletions proxy in a background thread."""
+    """Start the Responses → Chat Completions proxy in a background thread."""
     _ProxyHandler.target = target_base_url
     server = http.server.ThreadingHTTPServer(("127.0.0.1", _PROXY_PORT), _ProxyHandler)
     t = threading.Thread(target=server.serve_forever, daemon=True)
@@ -574,90 +434,21 @@ def _start_proxy(target_base_url: str) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Pre-flight: verify the model endpoint is reachable
-# ---------------------------------------------------------------------------
-
-
-# How long to wait for a cold serve to become ready before giving up.
-# SGLang on A10G takes ~3 min to load Qwen2.5-Coder-7B from the volume.
-_SERVE_COLDSTART_BUDGET = int(os.environ.get("SERVE_COLDSTART_BUDGET", "300"))
-_SERVE_POLL_INTERVAL = 10  # seconds between probe attempts
-
-
-def _wait_for_serve() -> bool:
-    """Block until BASE_URL/v1/models returns 200, or the cold-start budget expires.
-
-    Returns True if the endpoint is ready, False if it never came up.
-    Logs each probe attempt so progress is visible in real time.
-    """
-    if not BASE_URL:
-        print(
-            "[preflight] OPENAI_BASE_URL is not set — using built-in model",
-            file=sys.stderr,
-        )
-        return True
-
-    url = f"{BASE_URL}/v1/models"
-    deadline = time.monotonic() + _SERVE_COLDSTART_BUDGET
-    attempt = 0
-
-    while time.monotonic() < deadline:
-        attempt += 1
-        elapsed = int(time.monotonic() - (deadline - _SERVE_COLDSTART_BUDGET))
-        print(
-            f"[preflight] attempt {attempt}  elapsed={elapsed}s  url={url}",
-            file=sys.stderr,
-        )
-        try:
-            http_req = urllib.request.Request(  # noqa: S310
-                url, headers={"Authorization": f"Bearer {API_KEY}"}
-            )
-            with urllib.request.urlopen(http_req, timeout=20) as resp:  # noqa: S310
-                body = resp.read().decode("utf-8", errors="replace")
-                print(
-                    f"[preflight] serve ready ({resp.status}): {body[:200]}",
-                    file=sys.stderr,
-                )
-                return True
-        except urllib.error.HTTPError as e:
-            print(f"[preflight] HTTP {e.code} — retrying", file=sys.stderr)
-        except Exception as exc:
-            print(f"[preflight] {exc} — retrying in {_SERVE_POLL_INTERVAL}s", file=sys.stderr)
-
-        remaining = deadline - time.monotonic()
-        if remaining <= 0:
-            break
-        time.sleep(min(_SERVE_POLL_INTERVAL, remaining))
-
-    print(
-        f"[preflight] serve not ready after {_SERVE_COLDSTART_BUDGET}s — aborting",
-        file=sys.stderr,
-    )
-    return False
-
-
-# ---------------------------------------------------------------------------
-# Write opencode config
+# opencode config
 # ---------------------------------------------------------------------------
 
 
 def _write_config() -> None:
     """Write ~/.config/opencode/config.json pointing at the local proxy."""
-    if not BASE_URL or not API_KEY or not RAW_MODEL or "/" in RAW_MODEL:
+    if not RAW_MODEL or "/" in RAW_MODEL:
         return
 
-    # Point opencode at the local proxy (port 8080) instead of SGLang directly.
-    # The proxy translates POST /v1/responses → POST /v1/chat/completions.
     proxy_url = f"http://127.0.0.1:{_PROXY_PORT}"
-
     cfg = {
         "model": MODEL_ID,
         "provider": {
             "openai": {
-                "options": {
-                    "apiKey": API_KEY,
-                    "baseURL": proxy_url,
-                },
+                "options": {"apiKey": API_KEY, "baseURL": proxy_url},
                 "models": {
                     RAW_MODEL: {
                         "name": RAW_MODEL,
@@ -684,9 +475,8 @@ def _write_config() -> None:
 
 class AcpClient:
     def __init__(self) -> None:
-        # Pipe opencode's stderr to ours so we can see its logs.
         self._proc = subprocess.Popen(  # noqa: S603
-            ["opencode", "acp"],  # noqa: S607 — opencode installed via npm in the container
+            ["opencode", "acp"],  # noqa: S607
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=sys.stderr,
@@ -726,9 +516,8 @@ class AcpClient:
         elif kind in ("session_completed", "session_error"):
             print(f"[acp] session ended: {kind}", file=sys.stderr)
             self._stop_reason = kind
-        else:
-            if kind:
-                print(f"[acp] notification: {kind}", file=sys.stderr)
+        elif kind:
+            print(f"[acp] notification: {kind}", file=sys.stderr)
 
     def send(self, req: dict, timeout: float = 15.0) -> dict:
         assert self._proc.stdin is not None  # noqa: S101
@@ -757,7 +546,7 @@ class AcpClient:
     def terminate(self) -> None:
         try:
             self._proc.terminate()
-        except Exception:  # noqa: S110
+        except Exception:  # noqa: BLE001, S110
             pass
 
 
@@ -771,10 +560,10 @@ def main() -> int:
         print("Usage: opencode_runner.py <task>", file=sys.stderr)
         return 1
 
-    print(f"[runner] task={TASK!r}  model={MODEL_ID}  timeout={TIMEOUT_SECONDS}s", file=sys.stderr)
-
-    if not _wait_for_serve():
-        return 1
+    print(
+        f"[runner] task={TASK!r}  model={MODEL_ID}  workdir={CWD}  timeout={TIMEOUT_SECONDS}s",
+        file=sys.stderr,
+    )
 
     if BASE_URL:
         _start_proxy(BASE_URL)
@@ -798,14 +587,12 @@ def main() -> int:
         print(f"[acp] {method} → {status} ({elapsed:.1f}s)", file=sys.stderr)
         return result
 
-    # 1. Initialize
     init = req("initialize", {"protocolVersion": 1, "capabilities": {}})
     if "error" in init:
         print(f"[runner] ACP initialize failed: {init['error']}", file=sys.stderr)
         client.terminate()
         return 1
 
-    # 2. Create session
     new_sess = req("session/new", {"cwd": CWD, "mcpServers": []})
     sid = new_sess.get("result", {}).get("sessionId", "")
     if not sid:
@@ -813,10 +600,8 @@ def main() -> int:
         client.terminate()
         return 1
 
-    # 3. Resume
     req("session/resume", {"sessionId": sid, "cwd": CWD})
 
-    # 4. Send prompt and wait for completion.
     print(
         f"[runner] sending prompt, polling for completion (max {TIMEOUT_SECONDS}s) ...",
         file=sys.stderr,
@@ -827,18 +612,18 @@ def main() -> int:
         timeout=30.0,
     )
 
-    # Blocking mode: RPC response carries stopReason.
     stop_reason = result.get("result", {}).get("stopReason", "")
     if stop_reason:
         if stop_reason != "end_turn":
-            error = result.get("error", "")
-            print(f"[runner] unexpected stop: {stop_reason or error}", file=sys.stderr)
+            print(
+                f"[runner] unexpected stop: {stop_reason or result.get('error', '')}",
+                file=sys.stderr,
+            )
             client.terminate()
             return 1
         client.terminate()
         return 0
 
-    # Notification-driven mode: poll until session_completed or timeout.
     deadline = time.monotonic() + float(TIMEOUT_SECONDS)
     last_log = time.monotonic()
     while time.monotonic() < deadline:
@@ -846,26 +631,22 @@ def main() -> int:
             break
         if time.monotonic() - last_log >= 30:
             elapsed = TIMEOUT_SECONDS - (deadline - time.monotonic())
-            chunks = len(client._output_lines)
             print(
-                f"[runner] waiting ... {elapsed:.0f}s elapsed, {chunks} chunks received",
+                f"[runner] waiting ... {elapsed:.0f}s elapsed,"
+                f" {len(client._output_lines)} chunks received",
                 file=sys.stderr,
             )
             last_log = time.monotonic()
         time.sleep(0.5)
 
     stop_reason = client._stop_reason
-    chunks_received = len(client._output_lines)
     print(
-        f"[runner] finished: stop_reason={stop_reason!r}  chunks={chunks_received}",
+        f"[runner] finished: stop_reason={stop_reason!r}  chunks={len(client._output_lines)}",
         file=sys.stderr,
     )
 
     if stop_reason != "session_completed":
-        print(
-            f"[runner] unexpected stop: {stop_reason or 'timeout'}",
-            file=sys.stderr,
-        )
+        print(f"[runner] unexpected stop: {stop_reason or 'timeout'}", file=sys.stderr)
         client.terminate()
         return 1
 
