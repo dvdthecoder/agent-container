@@ -286,7 +286,7 @@ def _wait_for_inference(
             with urllib.request.urlopen(url, timeout=10) as resp:  # noqa: S310
                 if resp.status == 200:
                     print(
-                        f"[sandbox] inference endpoint ready  elapsed={elapsed:.1f}s",
+                        f"[warmup] inference endpoint ready  elapsed={elapsed:.1f}s",
                         file=sys.stderr,
                         flush=True,
                     )
@@ -302,7 +302,7 @@ def _wait_for_inference(
             )
 
         print(
-            f"[sandbox] waiting for inference endpoint  elapsed={elapsed:.1f}s",
+            f"[warmup] waiting for inference endpoint  elapsed={elapsed:.1f}s",
             file=sys.stderr,
             flush=True,
         )
