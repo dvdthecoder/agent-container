@@ -17,14 +17,15 @@ lint:
 	python3 -m ruff check .
 
 # ── quick manual smoke test against fixture repo ────────────────────────────
-# Usage: make example           (defaults to aider)
+# Usage: make example                    (aider, unique task each run)
 #        make example BACKEND=opencode
-BACKEND ?= aider
+BACKEND  ?= aider
+TASK_ID  := $(shell python3 -c "import uuid; print(uuid.uuid4().hex[:6])")
 
 example:
 	agent-run run \
 		--repo https://github.com/dvdthecoder/agent-container-fixture \
-		--task "add a hello world function to the codebase" \
+		--task "update hello_world to return the string 'Hello, World! run-$(TASK_ID)'" \
 		--backend $(BACKEND) \
 		--timeout 600
 

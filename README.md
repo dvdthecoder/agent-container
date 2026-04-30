@@ -9,100 +9,94 @@ destroys the container. Nothing persists. Nothing leaks. No Docker required on y
 ## What it does
 
 ```
-$ agent-run \
-    --task "Add rate limiting to /api/login — max 5 requests/min per IP" \
-    --repo https://github.com/org/myapp
+$ agent-run run \
+    --repo https://github.com/org/myapp \
+    --task "Fix the off-by-one error in pagination" \
+    --backend aider
 
-  booting sandbox...        (Modal ephemeral container)
-  cloning repo...
-  running opencode...
-  opening PR...
+  [sandbox] phase=WARMING   inference endpoint ready  elapsed=94s
+  [sandbox] phase=BOOTING   starting Modal sandbox...
+  [sandbox] phase=CLONING   git clone https://github.com/org/myapp
+  [sandbox] phase=RUNNING   [aider] writing changes...
+  [sandbox] phase=TESTING   pytest — 12 passed
+  [sandbox] phase=PR        opening pull request...
+  [sandbox] container terminated
 
-  ✓ Done in 2m 14s
+  Done in 148s
   PR: https://github.com/org/myapp/pull/42   +67 −3
 ```
 
-A Modal sandbox boots with the specified image, the agent clones the repo and makes the changes, a
-PR is opened, and the sandbox is destroyed. The agent never touches your local machine.
+The agent never touches your local machine. The sandbox boots, does the work, opens the PR, and
+is destroyed — all on Modal.
 
 ---
 
 ## Architecture
 
 ```
-┌──────────────────────────────────────────────────────────┐
-│  agent-run CLI  /  Dashboard (localhost:8000)            │
-│  Python API     /  MCP server (Claude Code, Gemini CLI)  │
-└──────────────────────┬───────────────────────────────────┘
-                       │
-                       ▼
-┌──────────────────────────────────────────────────────────┐
-│  Modal — agent sandbox (ephemeral container per run)     │
-│  boot → clone → run agent → diff → PR → destroy         │
-└──────────────────────┬───────────────────────────────────┘
-                       │  Modal internal network
-                       ▼
-┌──────────────────────────────────────────────────────────┐
-│  Modal — model serving (modal/serve.py)                  │
-│  SGLang + Qwen3-Coder / MiniMax M2.5                    │
-│  Scale-to-zero. Weights cached in Modal Volume.          │
-└──────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│  agent-run CLI  /  Dashboard (localhost:8000)                   │
+│  Python API     /  MCP server (Claude Code, Gemini CLI)         │
+└──────────────────────────────┬──────────────────────────────────┘
+                               │
+                               ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  Modal — agent sandbox (ephemeral container, one per run)       │
+│                                                                 │
+│  WARMING → BOOTING → CLONING → RUNNING → TESTING → PR          │
+│                                                                 │
+│  Backends:                                                      │
+│    aider      — Chat Completions direct, whole-file edit format │
+│    opencode   — Responses API proxy → Chat Completions adapter  │
+│    claude     — Claude Code CLI (Anthropic API)                 │
+│    gemini     — Gemini CLI (Google AI)                          │
+└──────────────────────────────┬──────────────────────────────────┘
+                               │  POST /v1/chat/completions
+                               ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  Modal — model serving (modal/serve.py)                         │
+│  vLLM + Qwen2.5-Coder / Qwen3-Coder / MiniMax M2.5             │
+│  Scale-to-zero. Weights cached in Modal Volume.                 │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-**Everything runs on Modal.** The agent sandbox and the model endpoint are both Modal resources
-communicating over Modal's internal network. No external API keys required.
+**Everything runs on Modal.** The agent sandbox and the model endpoint are separate Modal resources.
+The sandbox calls the inference server over the network. No external API keys required for
+self-hosted backends.
+
+### Pipeline phases
+
+| Phase | What happens |
+|---|---|
+| WARMING | Polls `GET /v1/models` until the inference endpoint is ready (handles vLLM cold start) |
+| BOOTING | Creates the Modal sandbox container |
+| CLONING | `git clone --depth 1` of the target repo |
+| RUNNING | Runs the coding agent backend; streams output to your terminal in real time |
+| TESTING | Auto-detects and runs the project test suite (pytest / npm / cargo / go) |
+| PR | Pushes a timestamped branch and opens a pull request via the provider REST API |
 
 ---
 
 ## Quickstart
 
-```
- YOU                          MODAL
-  │                             │
-  │  1. pip install             │
-  │     modal token new ───────▶│ authenticate
-  │                             │
-  │  2. modal deploy ──────────▶│ build image
-  │     modal/serve.py          │ download weights (once)
-  │                             │ start SGLang server
-  │                             │◀─── prints endpoint URL
-  │                             │
-  │  3. cp .env.example .env    │
-  │     paste URL + tokens      │
-  │                             │
-  │  4. make dashboard ─────────┼──▶ http://localhost:8000
-  │     (or agent-run CLI)      │         │
-  │                             │         │ submit task
-  │                             │         ▼
-  │                             │    boot sandbox
-  │                             │    git clone repo
-  │                             │    run opencode ──▶ SGLang (your model)
-  │                             │    git diff
-  │                             │    open PR
-  │                             │    destroy sandbox
-  │                             │◀─── PR URL + diff stat
-  │◀────────────────────────────│
-  ✓ Done
-```
-
 ### 1. Install
 
 ```bash
-pip install agent-container
+pip install -e .
 modal token new   # browser prompt — saves to ~/.modal.toml
 ```
 
 ### 2. Deploy your model
 
 ```bash
-modal deploy modal/serve.py                        # Qwen3-Coder 8B  — cheap, good for testing
-SERVE_PROFILE=prod    modal deploy modal/serve.py  # Qwen3-Coder 80B — production quality
-SERVE_PROFILE=minimax modal deploy modal/serve.py  # MiniMax M2.5    — best SWE-bench score
+modal deploy modal/serve.py                        # Qwen2.5-Coder 7B  — A10G, cheap, for testing
+SERVE_PROFILE=prod    modal deploy modal/serve.py  # Qwen3-Coder 80B   — 2× A100 80GB, production
+SERVE_PROFILE=minimax modal deploy modal/serve.py  # MiniMax M2.5      — 8× A100 80GB, best quality
 ```
 
-Modal prints the endpoint URL on deploy — you need it in the next step:
+Modal prints the endpoint URL after deploy:
 ```
-✓ Created web endpoint: https://your-org--agent-container-serve.modal.run
+Created web endpoint: https://your-org--agent-container-serve-serve.modal.run
 ```
 
 ### 3. Configure
@@ -111,7 +105,7 @@ Modal prints the endpoint URL on deploy — you need it in the next step:
 cp .env.example .env
 ```
 
-Fill in four things:
+Fill in:
 
 ```bash
 MODAL_TOKEN_ID=ak-...
@@ -119,9 +113,10 @@ MODAL_TOKEN_SECRET=as-...
 
 HF_TOKEN=hf_...          # huggingface.co/settings/tokens — read access
 
-OPENAI_BASE_URL=https://your-org--agent-container-serve.modal.run/v1   # from step 2
+# Paste the URL from step 2 — bare host, no /v1 suffix needed
+OPENAI_BASE_URL=https://your-org--agent-container-serve-serve.modal.run
 OPENAI_API_KEY=modal
-OPENCODE_MODEL=qwen3-coder   # or minimax-m2.5
+OPENCODE_MODEL=qwen2.5-coder   # must match SERVED_MODEL_NAME in modal/serve.py
 
 GITHUB_TOKEN=ghp_...   # Contents (read) + Pull Requests (read/write)
 ```
@@ -129,52 +124,110 @@ GITHUB_TOKEN=ghp_...   # Contents (read) + Pull Requests (read/write)
 ### 4. Run
 
 ```bash
+# Smoke test against the fixture repo
+make example                    # aider backend
+make example BACKEND=opencode   # opencode backend
+
+# Real repo
 agent-run run \
   --repo https://github.com/org/myapp \
-  --task "Fix the off-by-one error in pagination"
+  --task "Fix the off-by-one error in pagination" \
+  --backend aider
 ```
-
-That's it. No Docker, no servers beyond Modal.
 
 ### Common commands
 
 ```bash
-make example            # smoke test against fixture repo (full pipeline)
-make test               # unit tests — no external services
-make dashboard          # live dashboard at http://localhost:8000
-make mcp                # MCP server (stdio) for Claude Code / Gemini CLI
-make lint               # ruff check + format check
+make example                # smoke test — unique task per run, always real work
+make example BACKEND=opencode
+make test                   # unit tests — no external services
+make dashboard              # live dashboard at http://localhost:8000
+make mcp                    # MCP server (stdio) for Claude Code / Gemini CLI
+make lint                   # ruff check
+make stop-sandboxes         # clean up any stray Modal containers
 ```
-
----
-
-## Model profiles
-
-Three GPU profiles in `modal/serve.py`:
-
-| Profile | Model | GPU | Context | Best for |
-|---|---|---|---|---|
-| `test` (default) | Qwen3-Coder 8B | A10G | 32k | Development, CI |
-| `prod` | Qwen3-Coder 80B | 2× A100 80GB | 128k | Production PRs |
-| `minimax` | MiniMax M2.5 | 8× A100 80GB | 1M | Best quality |
-
-Scale-to-zero is on by default — you only pay while runs are active. Model weights are cached in a
-Modal Volume so cold starts after the first don't re-download.
-
-See [Model setup docs](docs/models.md) for details on SGLang, RadixAttention caching, and GPU sizing.
 
 ---
 
 ## Agent backends
 
-```bash
-agent-run --backend opencode ...   # default — opencode via OPENAI_BASE_URL
-agent-run --backend claude  ...    # Claude Code CLI — Anthropic API
-agent-run --backend gemini  ...    # Gemini CLI — Google AI / Vertex AI
-```
+| Backend | API called | Requirement |
+|---|---|---|
+| `aider` | `POST /v1/chat/completions` direct | `OPENAI_BASE_URL` pointing at vLLM |
+| `opencode` | `POST /v1/responses` → proxy → Chat Completions | Same as aider |
+| `claude` | Anthropic API | `ANTHROPIC_API_KEY` in `spec.env` |
+| `gemini` | Google AI API | `GEMINI_API_KEY` in `spec.env` |
 
-All backends produce the same `AgentTaskResult`. PR creation, dashboard, MCP are identical
-regardless of backend. The `opencode` backend uses the self-hosted Modal endpoint by default.
+The `opencode` backend starts a thin in-process proxy inside the sandbox that translates the
+OpenAI Responses API to Chat Completions. vLLM only speaks Chat Completions — the proxy is a
+pure format adapter with no model-specific logic.
+
+All backends produce the same `AgentTaskResult`. Dashboard, MCP, and PR creation are identical
+regardless of backend.
+
+### Per-backend configuration
+
+`SandboxConfig.env_for_backend(backend)` is the single place that maps config values to the env
+vars each backend needs, in the exact format it expects:
+
+- **aider / opencode**: `OPENAI_BASE_URL` with `/v1` suffix guaranteed, `OPENAI_API_KEY`, `OPENCODE_MODEL`
+- **claude / gemini**: no inference vars (inject `ANTHROPIC_API_KEY` / `GEMINI_API_KEY` via `spec.env`)
+
+---
+
+## Model profiles
+
+Three GPU profiles in `modal/serve.py`, selected by `SERVE_PROFILE`:
+
+| Profile | Model | GPU | Context | Best for |
+|---|---|---|---|---|
+| `test` (default) | Qwen2.5-Coder 7B | A10G | 32k | Development, CI |
+| `prod` | Qwen3-Coder 80B | 2× A100 80GB | 128k | Production PRs |
+| `minimax` | MiniMax M2.5 | 8× A100 80GB | 1M | Best quality / SWE-bench |
+
+Scale-to-zero is on by default — you only pay while runs are active. Model weights are cached in a
+Modal Volume so cold starts after the first don't re-download weights.
+
+---
+
+## Fixture repo
+
+[dvdthecoder/agent-container-fixture](https://github.com/dvdthecoder/agent-container-fixture) is
+the canonical smoke-test target. It contains:
+
+- `greet.py` — a `hello_world()` function the agent edits on each run
+- `mathlib.py` + `test_mathlib.py` — a `sum_to_n()` function with intentional bugs and
+  failing pytest tests; useful for testing whether the agent can fix a broken test suite
+
+`make example` targets this repo with a unique task ID per run (`run-<hex>`) so the agent always
+has real work to do even when the function already exists.
+
+---
+
+## Python API
+
+```python
+from sandbox import ModalSandbox, SandboxConfig
+from sandbox.spec import AgentTaskSpec
+
+config = SandboxConfig.from_env()
+
+spec = AgentTaskSpec(
+    repo="https://github.com/org/myapp",
+    task="Fix the off-by-one error in pagination",
+    base_branch="main",
+    backend="aider",
+    create_pr=True,
+    run_tests=True,
+)
+
+result = ModalSandbox(config).run(spec)
+
+print(result.success)     # True
+print(result.pr_url)      # https://github.com/org/myapp/pull/42
+print(result.diff_stat)   # +67 −3
+print(result.tests)       # SuiteResult(passed=12, failed=0, ...)
+```
 
 ---
 
@@ -188,40 +241,11 @@ make dashboard
 Live view of all running, completed, and failed agent runs. Streams phase changes and agent output
 in real time via Server-Sent Events.
 
-```
-● BOOTING     starting Modal sandbox...
-● CLONING     git clone https://github.com/org/myapp
-● RUNNING     [opencode] Reading api/login.py...
-◉ DONE        PR #42 opened   +67 −3
-```
-
 ---
 
-## Python API
+## MCP integration
 
-```python
-from sandbox import ModalSandbox, SandboxConfig, AgentTaskSpec
-
-config = SandboxConfig.from_env()
-
-spec = AgentTaskSpec(
-    repo="https://github.com/org/myapp",
-    task="Add rate limiting to /api/login — max 5 req/min per IP",
-    base_branch="main",
-    create_pr=True,
-)
-
-result = ModalSandbox(config).run(spec)
-
-print(result.pr_url)      # https://github.com/org/myapp/pull/42
-print(result.diff_stat)   # +67 −3
-```
-
----
-
-## MCP integration (Claude Code / Gemini CLI)
-
-`.claude/settings.json` is already checked in — fill in your tokens:
+`.claude/settings.json` is checked in — fill in your tokens:
 
 ```json
 {
@@ -241,14 +265,6 @@ print(result.diff_stat)   # +67 −3
 }
 ```
 
-Then inside Claude Code:
-```
-"Fix the pagination bug in org/myapp"
-→ Claude calls sandbox_run MCP tool
-→ Modal sandbox boots, agent edits, PR opens
-→ "Done. PR #42: +67 −3"
-```
-
 Tools exposed: `sandbox_run`, `sandbox_list`, `sandbox_status`, `sandbox_stop`.
 
 ---
@@ -262,9 +278,6 @@ GITLAB_TOKEN=glpat-...
 GITLAB_URL=https://gitlab.yourcompany.com   # omit for gitlab.com
 ```
 
-**Full air-gap setup**: GitLab on-prem + Modal in a private VPC + SGLang on-prem = no code, no
-prompt, no diff ever touches the public internet.
-
 ---
 
 ## Testing
@@ -277,17 +290,136 @@ make test-e2e           # real Modal sandbox + real model
 
 ---
 
-## Milestones
+## Build phases
 
-| Milestone | Scope | Status |
+| Phase | Scope | Status |
 |---|---|---|
-| M1: Core dataclasses | `SandboxConfig`, `AgentTaskSpec`, `AgentTaskResult` | ✅ |
-| M2: Modal sandbox | `ModalSandbox` boot/run/teardown, CLI | ✅ |
-| M3: Agent internals | Backends, runner, tester, git ops, GitHub/GitLab providers | ✅ |
-| M4: Dashboard | FastAPI SSE API, live terminal UI | ✅ |
-| M5: Model serving | `modal/serve.py` — SGLang + Qwen3-Coder on Modal GPU | ✅ |
-| M6: MCP + backends | MCP server, Claude Code + Gemini CLI backends | ✅ |
-| M7: Hardening | CI workflows, examples, docs | ✅ |
+| Phase 1 | vLLM + aider: direct Chat Completions, end-to-end PR | ✅ |
+| Phase 2 | Clean opencode proxy: pure Responses API ↔ Chat Completions adapter | ✅ |
+| Phase 3 | SGLang verification: point Phase 2 at SGLang, scope inference-layer failures | planned |
+
+---
+
+## Challenges solved
+
+This section documents the hard problems encountered during Phase 1 and Phase 2, and the
+engineering decisions that resolved them.
+
+### 1. vLLM cold start — 404s during boot
+
+**Problem:** vLLM on an A10G takes ~75s for CUDA graph compilation. During this window, Modal
+returns 404 for all routes including `/v1/chat/completions`. The agent would start, hit 404s, and
+either silently fail or loop until timeout.
+
+**Fix:** Added a WARMING phase that polls `GET /v1/models` before the sandbox is even created.
+The run doesn't proceed to BOOTING until the inference endpoint confirms it is ready. WARMING is
+the first phase — no container is wasted on a cold server.
+
+---
+
+### 2. aider's `--openai-api-base` flag mangles the URL
+
+**Problem:** aider has an `--openai-api-base` flag for custom endpoints. When set, aider calls
+`os.environ["OPENAI_API_BASE"] = value`. litellm reads `OPENAI_API_BASE` and strips the `/v1`
+suffix before building the request URL, resulting in requests to `/chat/completions` instead of
+`/v1/chat/completions` — a 404 on every model call.
+
+**Fix:** Removed `--openai-api-base` from the aider command entirely. `OPENAI_BASE_URL` (note:
+`BASE`, not `API_BASE`) is read correctly by the OpenAI SDK without path mangling. The `/v1`
+suffix is guaranteed by `SandboxConfig.env_for_backend("aider")` before the container starts.
+
+---
+
+### 3. Config provider owns per-backend env vars
+
+**Problem:** Each backend has different expectations for env var names and URL format. aider needs
+`OPENAI_BASE_URL` with `/v1`. opencode needs the same. claude and gemini don't use these vars at
+all. URL normalisation was scattered — in runner scripts, in config, inconsistently.
+
+**Fix:** `SandboxConfig.env_for_backend(backend)` is the single source of truth. It maps config
+values to the exact env vars each backend needs, in the format it expects. Runner scripts read
+env vars verbatim — no normalisation at runtime. Adding a new inference engine means changing one
+method.
+
+---
+
+### 4. Sandbox not terminating — `terminate()` is fire-and-forget
+
+**Problem:** `modal.Sandbox.terminate()` defaults to `wait=False`. It dispatches the kill signal
+and returns immediately. The container kept running in the Modal dashboard after the CLI exited —
+visible as "still running" long after the job completed.
+
+**Fix:** Changed to `sb.terminate(wait=True)`. The call now blocks until Modal confirms the
+container has stopped. "[sandbox] container terminated" in the logs means the container is
+actually gone.
+
+---
+
+### 5. Hanging CLI after agent timeout
+
+**Problem:** When `run_agent` hit its timeout, it called `sb.terminate()` then returned
+`(output, exit_code=1)`. `sandbox.py` then called `collect_diff(sb, ...)` — `sb.exec()` on a
+terminated Modal container blocks indefinitely. The CLI appeared frozen and required manual
+killing.
+
+**Fix:** `run_agent` now raises `TimeoutError` in the timeout path instead of returning. This
+unwinds through `sandbox.py`'s inner `except Exception` block, which skips `collect_diff`,
+terminates the sandbox (no-op — already done), and returns a failure result immediately.
+
+---
+
+### 6. Model asking clarifying questions instead of writing code
+
+**Problem:** `--map-tokens 0` was used to disable the aider repo map and avoid a multi-minute
+scan on fresh clones. Without any repo context, the model responded with clarifying questions
+("where should I add this function?") instead of editing files — resulting in an empty diff and a
+false failure.
+
+**Fix:** Changed to `--map-tokens 1024`. This gives the model a concise file list and function
+signature summary (a few seconds on small-to-medium repos) without the expensive full scan. The
+model can now pick a sensible target file and proceed without asking.
+
+---
+
+### 7. `__pycache__` polluting PR diffs
+
+**Problem:** The TESTING phase runs pytest, which compiles `.py` files to `__pycache__/*.pyc`.
+These binary files were not gitignored in the target repo, so they appeared in `collect_diff`
+as the only changes — masking whether the agent wrote any real code. PR #3 from the opencode
+smoke test contained only `.pyc` file changes.
+
+**Fix:** After cloning, `git_ops.clone()` writes common build artifact patterns to
+`.git/info/exclude` — a local-only file that is never committed. This keeps the diff clean without
+touching the target repo's `.gitignore`.
+
+---
+
+### 8. opencode calls Responses API — vLLM doesn't implement it
+
+**Problem:** opencode v1.14+ calls `POST /v1/responses` (OpenAI Responses API). No self-hosted
+inference server (vLLM, SGLang) implements this endpoint. Every opencode request returned 404.
+
+**Fix:** `opencode_runner.py` starts a thin in-process HTTP proxy on `localhost:8080` that
+intercepts `/v1/responses` and translates to Chat Completions: converts input items to messages,
+maps `tool_result` to `role:tool`, maps `function_call` to assistant messages with `tool_calls`,
+passes tools in the standard `tools` field, and translates the response back. opencode is
+configured to point at the proxy via `~/.config/opencode/config.json`. The proxy is a pure
+format adapter — no model-specific logic.
+
+---
+
+### 9. SGLang v0.4.7 tool-calling crashes (resolved by switching to vLLM)
+
+**Problem:** SGLang v0.4.7 had multiple blocking bugs: the `--enable-auto-tool-choice` flag did
+not exist, `--tool-call-parser qwen25` crashed the server process on the first request with tool
+schemas, and streaming with tools hung indefinitely. The original opencode proxy worked around
+all of these with Qwen-native text injection (`<tools>...</tools>`) and text-level parsing of
+`<tool_call>` output.
+
+**Fix:** Switched the primary inference server to vLLM. vLLM has correct, stable implementations
+of `--enable-auto-tool-choice` and `--tool-call-parser`. All SGLang-specific workarounds were
+removed from `opencode_runner.py` in Phase 2 — the proxy became a clean format adapter
+(170 lines added, 389 removed).
 
 ---
 
