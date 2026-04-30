@@ -120,15 +120,15 @@ class ModalSandbox:
         sb: modal.Sandbox | None = None
         try:
             try:
+                _emit("phase", phase="WARMING")
+                _wait_for_inference(self.config.openai_base_url, start)
+
                 _emit("phase", phase="BOOTING")
                 sb = self._create(spec)
                 logger.set_sandbox_id(_run_id(sb))
 
                 _emit("phase", phase="CLONING")
                 git_ops.clone(sb, spec.repo, spec.base_branch)
-
-                _emit("phase", phase="WARMING")
-                _wait_for_inference(self.config.openai_base_url, start)
 
                 _emit("phase", phase="RUNNING")
                 backend = get_backend(spec.backend)
