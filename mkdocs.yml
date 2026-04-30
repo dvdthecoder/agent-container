@@ -26,7 +26,6 @@ theme:
   features:
     - navigation.tabs
     - navigation.sections
-    - navigation.expand
     - navigation.top
     - search.suggest
     - search.highlight
@@ -58,17 +57,20 @@ markdown_extensions:
 
 nav:
   - Home: index.md
-  - Architecture: architecture.md
-  - Quickstart: quickstart.md
-  - Model Setup: models.md
-  - Agent Backends: agents.md
-  - Dashboard: dashboard.md
-  - Run Logs: logging.md
-  - CLI Reference: cli.md
-  - Team Setup: teams.md
-  - Enterprise & GitLab: enterprise.md
-  - MCP Integration: mcp.md
-  - Running & Contributing: contributing.md
+  - Get Started:
+    - Quickstart: quickstart.md
+    - Architecture: architecture.md
+    - Model Setup: models.md
+  - Using It:
+    - Agent Backends: agents.md
+    - MCP Integration: mcp.md
+    - Dashboard: dashboard.md
+    - Run Logs: logging.md
+    - CLI Reference: cli.md
+  - Deployment:
+    - Team Setup: teams.md
+    - Enterprise & GitLab: enterprise.md
+    - Running & Contributing: contributing.md
 
 plugins:
   - search
