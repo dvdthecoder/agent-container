@@ -167,12 +167,18 @@ def _serve_vllm() -> None:
         "python3",
         "-m",
         "vllm.entrypoints.openai.api_server",
-        "--model", MODEL_ID,
-        "--download-dir", "/model-cache",
-        "--served-model-name", SERVED_MODEL_NAME,
-        "--host", "0.0.0.0",  # noqa: S104 — container-internal binding
-        "--port", "8000",
-        "--max-model-len", str(CONTEXT_LENGTH),
+        "--model",
+        MODEL_ID,
+        "--download-dir",
+        "/model-cache",
+        "--served-model-name",
+        SERVED_MODEL_NAME,
+        "--host",
+        "0.0.0.0",  # noqa: S104 — container-internal binding
+        "--port",
+        "8000",
+        "--max-model-len",
+        str(CONTEXT_LENGTH),
         "--trust-remote-code",
     ]
     if TP_SIZE > 1:
@@ -196,12 +202,18 @@ def _serve_sglang() -> None:
         "python3",
         "-m",
         "sglang.launch_server",
-        "--model", MODEL_ID,
-        "--download-dir", "/model-cache",
-        "--served-model-name", SERVED_MODEL_NAME,
-        "--host", "0.0.0.0",  # noqa: S104
-        "--port", "8000",
-        "--context-length", str(CONTEXT_LENGTH),
+        "--model",
+        MODEL_ID,
+        "--download-dir",
+        "/model-cache",
+        "--served-model-name",
+        SERVED_MODEL_NAME,
+        "--host",
+        "0.0.0.0",  # noqa: S104
+        "--port",
+        "8000",
+        "--context-length",
+        str(CONTEXT_LENGTH),
         "--trust-remote-code",
     ]
     if TP_SIZE > 1:

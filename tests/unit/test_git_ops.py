@@ -49,8 +49,14 @@ def test_clone_success():
     first_call = sb.exec.call_args_list[0]
     assert first_call == (
         (
-            "git", "clone", "--branch", "main",
-            "--depth", "1", "https://github.com/org/repo", "/workspace",
+            "git",
+            "clone",
+            "--branch",
+            "main",
+            "--depth",
+            "1",
+            "https://github.com/org/repo",
+            "/workspace",
         ),
         {},
     )
