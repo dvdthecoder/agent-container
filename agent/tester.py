@@ -28,7 +28,7 @@ _DETECT_CONDITIONS: list[tuple[str, str]] = [
 
 # Command to run for each runner (executed in /workspace).
 _RUN_COMMANDS: dict[str, list[str]] = {
-    "pytest": ["python", "-m", "pytest", "--tb=short", "-q"],
+    "pytest": ["python3", "-m", "pytest", "--tb=short", "-q"],
     "npm": ["npm", "test", "--", "--no-coverage"],
     "cargo": ["cargo", "test"],
     "go": ["go", "test", "./..."],

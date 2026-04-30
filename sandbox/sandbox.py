@@ -49,7 +49,7 @@ _BASE_IMAGE = (
     modal.Image.debian_slim(python_version="3.11")
     .apt_install("git", "curl")
     # aider — direct Chat Completions, no proxy needed (Phase 1 default)
-    .pip_install("aider-chat")
+    .pip_install("aider-chat", "pytest")
     # opencode — requires Node.js (Phase 2, Responses API adapter)
     .run_commands(
         "curl -fsSL https://deb.nodesource.com/setup_lts.x | bash -",
