@@ -27,6 +27,14 @@ API_KEY = os.environ.get("OPENAI_API_KEY", "modal")
 MODEL = os.environ.get("OPENCODE_MODEL", "")
 WORKDIR = os.environ.get("OPENCODE_WORKDIR", "/workspace")
 
+# OPENAI_BASE_URL in the container env may not have the /v1 suffix (the .env
+# convention stores the bare host).  The OpenAI SDK requires /v1 in the base
+# URL; without it litellm calls .../chat/completions instead of
+# .../v1/chat/completions and gets a 404.
+# Normalise here so the subprocess inherits the correct value.
+_raw_base = os.environ.get("OPENAI_BASE_URL", "").rstrip("/")
+BASE_URL = _raw_base if _raw_base.endswith("/v1") else f"{_raw_base}/v1" if _raw_base else ""
+
 if not TASK:
     print("Usage: aider_runner.py <task>", file=sys.stderr)
     sys.exit(1)
@@ -38,7 +46,7 @@ if not TASK:
 model_arg = f"openai/{MODEL}" if MODEL and "/" not in MODEL else MODEL or "openai/unknown"
 
 print(
-    f"[aider] task={TASK!r}  model={model_arg}  workdir={WORKDIR}",
+    f"[aider] task={TASK!r}  model={model_arg}  workdir={WORKDIR}  base_url={BASE_URL}",
     file=sys.stderr,
 )
 
@@ -64,4 +72,8 @@ cmd = [
 ]
 
 # Run from WORKDIR so aider picks up the git repo there.
-sys.exit(subprocess.run(cmd, cwd=WORKDIR).returncode)  # noqa: S603
+# Pass corrected OPENAI_BASE_URL (with /v1) explicitly so aider's OpenAI SDK
+# client hits the right endpoint.  Do NOT rely on inherited env — the .env
+# convention stores the bare host without /v1.
+env = {**os.environ, "OPENAI_BASE_URL": BASE_URL} if BASE_URL else None
+sys.exit(subprocess.run(cmd, cwd=WORKDIR, env=env).returncode)  # noqa: S603
