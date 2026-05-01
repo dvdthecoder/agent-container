@@ -174,10 +174,13 @@ if SERVE_PROFILE == "sglang":
         _cmd += ["--tensor-parallel-size", str(TP_SIZE)]
     if TOOL_CALL_PARSER:
         _cmd += ["--tool-call-parser", TOOL_CALL_PARSER]
-    # Modal containers don't expose nvcc — FlashInfer JIT compilation fails
-    # when building CUDA graphs.  Disable them for Phase 3 validation; the
-    # performance loss is acceptable for a smoke test.
-    _cmd += ["--disable-cuda-graph"]
+    # Modal containers don't expose nvcc.  FlashInfer (SGLang's default
+    # attention backend) JIT-compiles CUDA kernels and fails with
+    # "Could not find nvcc".  Switch to the Triton backend which ships
+    # pre-compiled and needs no nvcc at runtime.
+    # Also disable CUDA graphs for the same reason — the graph capture
+    # path also triggers FlashInfer JIT compilation.
+    _cmd += ["--attention-backend", "triton", "--disable-cuda-graph"]
 else:
     # vLLM — default for test / prod / minimax profiles.
     _cmd = [
