@@ -146,6 +146,48 @@
     .run-repo { font-size: 12px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .run-phase { font-size: 11px; color: var(--muted); }
 
+    .badge-source {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 1px 5px;
+      border-radius: 3px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    .badge-source.cli      { background: #21262d; color: var(--muted); border: 1px solid var(--border); }
+    .badge-source.dashboard { background: rgba(88,166,255,.15); color: var(--accent); border: 1px solid rgba(88,166,255,.3); }
+
+    /* --------------------------------------------------------- serve panel */
+    #serve-panel {
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    #serve-panel h2 { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; }
+    #serve-status-badge {
+      display: inline-block;
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+    #serve-status-badge.active { background: rgba(63,185,80,.2); color: var(--green); }
+    #serve-status-badge.unknown { background: rgba(139,148,158,.15); color: var(--muted); }
+    .serve-row { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
+    #deploy-btn {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 12px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    #deploy-btn:hover { border-color: var(--accent); color: var(--accent); }
+    #deploy-btn:disabled { opacity: .4; cursor: not-allowed; }
+
     /* --------------------------------------------------------- detail panel */
     #detail {
       display: flex;
@@ -240,6 +282,20 @@
 <main>
   <!-- ------------------------------------------------ sidebar -->
   <div id="sidebar">
+    <!-- ---- serve panel ---- -->
+    <div id="serve-panel">
+      <h2>Model server <span id="serve-status-badge" class="unknown">unknown</span></h2>
+      <div class="serve-row">
+        <select id="srv-profile" style="flex:1">
+          <option value="test">test — Qwen2.5-Coder 7B (A10G)</option>
+          <option value="prod">prod — Qwen3-Coder 80B (2×A100)</option>
+          <option value="prod-minimax" data-profile="prod" data-model="minimax-m2.5">prod — MiniMax M2.5 (8×A100)</option>
+          <option value="experiment">experiment — SGLang (A10G)</option>
+        </select>
+        <button id="deploy-btn" type="button" onclick="deployServe()">Deploy</button>
+      </div>
+    </div>
+
     <form id="new-run-form" onsubmit="return false">
       <h2>New run</h2>
       <div>
@@ -289,6 +345,40 @@
 const runs = {};       // run_id → { state, card el, sse }
 let activeRunId = null;
 
+// ------------------------------------------------------------------ serve panel
+async function deployServe() {
+  const sel = document.getElementById('srv-profile');
+  const opt = sel.options[sel.selectedIndex];
+  const profile = opt.dataset.profile || opt.value;
+  const model   = opt.dataset.model   || null;
+  const btn = document.getElementById('deploy-btn');
+  btn.disabled = true;
+  btn.textContent = 'Deploying…';
+  try {
+    await apiPost('/api/serve/deploy', { profile, model });
+  } catch (e) {
+    alert('Deploy failed: ' + e.message);
+  } finally {
+    setTimeout(() => { btn.disabled = false; btn.textContent = 'Deploy'; }, 8000);
+  }
+}
+
+async function pollServeStatus() {
+  try {
+    const { apps } = await fetch('/api/serve/status').then(r => r.json());
+    const badge = document.getElementById('serve-status-badge');
+    if (apps && apps.length) {
+      badge.textContent = apps[0].state || 'active';
+      badge.className = 'active';
+    } else {
+      badge.textContent = 'no app';
+      badge.className = 'serve-status-badge unknown';
+    }
+  } catch { /* ignore */ }
+}
+setInterval(pollServeStatus, 30000);
+pollServeStatus();
+
 // ------------------------------------------------------------------ API helpers
 async function apiPost(path, body) {
   const r = await fetch(path, {
@@ -309,17 +399,19 @@ async function startRun() {
   const btn = document.getElementById('start-btn');
   btn.disabled = true;
 
+  const backend     = document.getElementById('inp-backend').value;
+  const base_branch = document.getElementById('inp-branch').value || 'main';
   try {
     const { run_id } = await apiPost('/api/runs', {
       repo,
       task,
-      backend:         document.getElementById('inp-backend').value,
-      base_branch:     document.getElementById('inp-branch').value || 'main',
+      backend,
+      base_branch,
       create_pr:       document.getElementById('inp-pr').checked,
       run_tests:       document.getElementById('inp-tests').checked,
       timeout_seconds: 300,
     });
-    addRun(run_id, repo, task, document.getElementById('inp-backend').value);
+    addRun(run_id, repo, task, backend, 'dashboard', base_branch);
     openRun(run_id);
   } catch (e) {
     alert('Failed to start run: ' + e.message);
@@ -329,14 +421,16 @@ async function startRun() {
 }
 
 // ------------------------------------------------------------------ run card
-function addRun(run_id, repo, task, backend) {
+function addRun(run_id, repo, task, backend, initiated_by, base_branch) {
+  initiated_by = initiated_by || 'cli';
   const card = document.createElement('div');
   card.className = 'run-card';
   card.dataset.runId = run_id;
   card.innerHTML = `
     <div class="run-card-header">
       <div class="phase-dot BOOTING" id="dot-${run_id}"></div>
-      <span class="run-id">${run_id}</span>
+      <span class="run-id">${escHtml(run_id)}</span>
+      <span class="badge-source ${escHtml(initiated_by)}">${escHtml(initiated_by)}</span>
     </div>
     <div class="run-repo">${escHtml(repo)}</div>
     <div class="run-phase" id="phase-label-${run_id}">BOOTING</div>
@@ -344,7 +438,7 @@ function addRun(run_id, repo, task, backend) {
   card.onclick = () => openRun(run_id);
   document.getElementById('run-list').prepend(card);
 
-  runs[run_id] = { repo, task, backend, phase: 'BOOTING', card, logLines: [] };
+  runs[run_id] = { repo, task, backend, initiated_by, base_branch: base_branch || 'main', phase: 'BOOTING', card, logLines: [] };
 }
 
 function updateCard(run_id, phase) {
@@ -381,8 +475,10 @@ function openRun(run_id) {
       <a class="repo-link" href="${escHtml(r.repo)}" target="_blank">${escHtml(r.repo)}</a>
       <div id="detail-meta">
         <span class="badge">${escHtml(r.backend)}</span>
+        <span class="badge">${escHtml(r.base_branch)}</span>
+        <span class="badge-source ${escHtml(r.initiated_by)}">${escHtml(r.initiated_by)}</span>
         <span id="detail-phase">${r.phase}</span>
-        <a id="pr-link" class="hidden" href="#" target="_blank">Open PR</a>
+        <a id="pr-link" class="hidden" href="#" target="_blank">Open PR →</a>
       </div>
       <div style="font-size:12px;color:var(--muted);margin-top:4px">${escHtml(r.task)}</div>
     </div>
@@ -502,9 +598,10 @@ function escHtml(s) {
 (async () => {
   try {
     const list = await fetch('/api/runs').then(r => r.json());
-    for (const run of list.reverse()) {
-      addRun(run.run_id, run.repo, run.task || '', run.backend || 'opencode');
-      updateCard(run.run_id, run.phase);
+    // list is newest-first from SQLite; prepend in order so newest ends up on top
+    for (const run of list) {
+      addRun(run.run_id, run.repo, run.task || '', run.backend || 'opencode', run.initiated_by, run.base_branch);
+      updateCard(run.run_id, run.phase || 'DONE');
     }
   } catch { /* dashboard works offline */ }
 })();
