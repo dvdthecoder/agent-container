@@ -174,6 +174,10 @@ if SERVE_PROFILE == "sglang":
         _cmd += ["--tensor-parallel-size", str(TP_SIZE)]
     if TOOL_CALL_PARSER:
         _cmd += ["--tool-call-parser", TOOL_CALL_PARSER]
+    # Modal containers don't expose nvcc — FlashInfer JIT compilation fails
+    # when building CUDA graphs.  Disable them for Phase 3 validation; the
+    # performance loss is acceptable for a smoke test.
+    _cmd += ["--disable-cuda-graph"]
 else:
     # vLLM — default for test / prod / minimax profiles.
     _cmd = [
