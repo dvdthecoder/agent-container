@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>agent-container dashboard</title>
   <style>
-    /* --------------------------------------------------------- reset & base */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
@@ -31,34 +30,37 @@
       min-height: 100vh;
     }
 
-    /* --------------------------------------------------------- layout */
+    /* ---- layout ---- */
     header {
       border-bottom: 1px solid var(--border);
       padding: 12px 24px;
       display: flex;
       align-items: center;
       gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: var(--bg);
     }
-
-    header h1 { font-size: 15px; font-weight: 600; color: var(--text); }
+    header h1 { font-size: 15px; font-weight: 600; }
     header span { font-size: 11px; color: var(--muted); }
 
-    main {
+    .layout {
       display: grid;
-      grid-template-columns: 340px 1fr;
-      gap: 0;
+      grid-template-columns: 300px 1fr;
       height: calc(100vh - 49px);
     }
 
-    /* --------------------------------------------------------- sidebar */
+    /* ---- left sidebar ---- */
     #sidebar {
       border-right: 1px solid var(--border);
       overflow-y: auto;
       display: flex;
       flex-direction: column;
+      gap: 0;
     }
 
-    #new-run-form {
+    .panel {
       padding: 16px;
       border-bottom: 1px solid var(--border);
       display: flex;
@@ -66,7 +68,13 @@
       gap: 8px;
     }
 
-    #new-run-form h2 { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+    .panel-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
 
     label { font-size: 12px; color: var(--muted); display: block; margin-bottom: 2px; }
 
@@ -82,12 +90,9 @@
       font-family: inherit;
       resize: vertical;
     }
+    input:focus, select:focus, textarea:focus { border-color: var(--accent); }
 
-    input:focus, select:focus, textarea:focus {
-      border-color: var(--accent);
-    }
-
-    #start-btn {
+    .btn-primary {
       background: var(--accent);
       color: #000;
       border: none;
@@ -96,31 +101,79 @@
       font-weight: 600;
       padding: 8px 14px;
       cursor: pointer;
+      width: 100%;
       margin-top: 4px;
     }
+    .btn-primary:hover { opacity: .88; }
+    .btn-primary:disabled { opacity: .4; cursor: not-allowed; }
 
-    #start-btn:hover { opacity: .88; }
-    #start-btn:disabled { opacity: .4; cursor: not-allowed; }
-
-    /* --------------------------------------------------------- run list */
-    #run-list { flex: 1; overflow-y: auto; }
-
-    .run-card {
-      padding: 12px 16px;
-      border-bottom: 1px solid var(--border);
+    .btn-secondary {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 12px;
       cursor: pointer;
-      transition: background .1s;
+      white-space: nowrap;
+    }
+    .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-secondary:disabled { opacity: .4; cursor: not-allowed; }
+
+    /* serve status */
+    .serve-row { display: flex; gap: 8px; align-items: center; }
+    .serve-row select { flex: 1; }
+    #serve-status-badge {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 4px;
+    }
+    #serve-status-badge.active  { background: rgba(63,185,80,.2);  color: var(--green); }
+    #serve-status-badge.unknown { background: rgba(139,148,158,.15); color: var(--muted); }
+
+    /* ---- main run list ---- */
+    #main {
+      overflow-y: auto;
     }
 
-    .run-card:hover  { background: rgba(88,166,255,.06); }
-    .run-card.active { background: rgba(88,166,255,.10); border-left: 2px solid var(--accent); }
+    #run-list {
+      display: flex;
+      flex-direction: column;
+    }
 
-    .run-card-header {
+    #empty-state {
+      padding: 48px 32px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    /* ---- run row ---- */
+    .run-row {
+      border-bottom: 1px solid var(--border);
+    }
+
+    .run-summary {
       display: flex;
       align-items: center;
-      gap: 8px;
-      margin-bottom: 2px;
+      gap: 10px;
+      padding: 10px 20px;
+      cursor: pointer;
+      user-select: none;
+      transition: background .1s;
     }
+    .run-summary:hover { background: rgba(88,166,255,.05); }
+    .run-row.expanded .run-summary { background: rgba(88,166,255,.08); }
+
+    .expand-icon {
+      font-size: 10px;
+      color: var(--muted);
+      width: 12px;
+      flex-shrink: 0;
+      transition: transform .15s;
+    }
+    .run-row.expanded .expand-icon { transform: rotate(90deg); }
 
     .phase-dot {
       width: 8px;
@@ -128,7 +181,6 @@
       border-radius: 50%;
       flex-shrink: 0;
     }
-
     .phase-dot.BOOTING  { background: var(--yellow); animation: pulse 1s infinite; }
     .phase-dot.CLONING  { background: var(--yellow); animation: pulse 1s infinite; }
     .phase-dot.RUNNING  { background: var(--accent);  animation: pulse 1s infinite; }
@@ -142,134 +194,101 @@
       50%       { opacity: .35; }
     }
 
-    .run-id { font-family: var(--mono); font-size: 11px; color: var(--muted); }
-    .run-repo { font-size: 12px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .run-phase { font-size: 11px; color: var(--muted); }
+    .run-id-text {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--muted);
+      flex-shrink: 0;
+      width: 160px;
+    }
 
-    .badge-source {
+    .run-repo-text {
+      font-size: 12px;
+      color: var(--text);
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .run-phase-text {
+      font-size: 11px;
+      color: var(--muted);
+      flex-shrink: 0;
+      width: 64px;
+      text-align: right;
+    }
+
+    .badge {
       font-size: 10px;
       font-weight: 600;
-      padding: 1px 5px;
+      padding: 1px 6px;
       border-radius: 3px;
+      flex-shrink: 0;
       text-transform: uppercase;
       letter-spacing: .04em;
     }
-    .badge-source.cli      { background: #21262d; color: var(--muted); border: 1px solid var(--border); }
+    .badge-backend {
+      background: var(--surface);
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+    .badge-source.cli       { background: #21262d; color: var(--muted); border: 1px solid var(--border); }
     .badge-source.dashboard { background: rgba(88,166,255,.15); color: var(--accent); border: 1px solid rgba(88,166,255,.3); }
 
-    /* --------------------------------------------------------- serve panel */
-    #serve-panel {
-      padding: 16px;
-      border-bottom: 1px solid var(--border);
-    }
-    #serve-panel h2 { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; }
-    #serve-status-badge {
-      display: inline-block;
-      font-size: 11px;
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-weight: 600;
-      margin-left: 8px;
-    }
-    #serve-status-badge.active { background: rgba(63,185,80,.2); color: var(--green); }
-    #serve-status-badge.unknown { background: rgba(139,148,158,.15); color: var(--muted); }
-    .serve-row { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
-    #deploy-btn {
+    /* ---- expanded log detail ---- */
+    .run-detail {
+      display: none;
+      border-top: 1px solid var(--border);
       background: var(--surface);
-      color: var(--text);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      font-size: 12px;
-      font-weight: 600;
-      padding: 5px 12px;
-      cursor: pointer;
-      white-space: nowrap;
     }
-    #deploy-btn:hover { border-color: var(--accent); color: var(--accent); }
-    #deploy-btn:disabled { opacity: .4; cursor: not-allowed; }
+    .run-row.expanded .run-detail { display: block; }
 
-    /* --------------------------------------------------------- detail panel */
-    #detail {
+    .run-detail-meta {
       display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-
-    #detail-header {
-      padding: 16px 20px 12px;
+      gap: 12px;
+      align-items: center;
+      padding: 10px 20px;
       border-bottom: 1px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
+      flex-wrap: wrap;
     }
-
-    #detail-header .repo-link {
-      color: var(--accent);
-      font-size: 14px;
-      font-weight: 600;
-      text-decoration: none;
-    }
-
-    #detail-header .repo-link:hover { text-decoration: underline; }
-
-    #detail-meta {
-      display: flex;
-      gap: 16px;
-      font-size: 12px;
+    .run-detail-meta .meta-item {
+      font-size: 11px;
       color: var(--muted);
     }
-
-    #detail-meta .badge {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      padding: 1px 7px;
-      font-family: var(--mono);
-      font-size: 11px;
+    .run-detail-meta .meta-item span {
+      color: var(--text);
     }
 
-    #pr-link {
-      display: inline-block;
-      background: var(--green);
-      color: #000;
-      font-size: 12px;
-      font-weight: 600;
-      padding: 3px 10px;
-      border-radius: 4px;
-      text-decoration: none;
-    }
-
-    #pr-link:hover { opacity: .85; }
-    #pr-link.hidden { display: none; }
-
-    #log-area {
-      flex: 1;
-      overflow-y: auto;
-      padding: 16px 20px;
+    .run-log {
+      padding: 12px 20px;
       font-family: var(--mono);
       font-size: 12px;
       line-height: 1.55;
       white-space: pre-wrap;
       word-break: break-all;
-      color: var(--text);
-      background: var(--bg);
+      max-height: 400px;
+      overflow-y: auto;
     }
 
-    .log-line { }
+    .log-line  { color: var(--text); }
     .log-phase { color: var(--accent); font-weight: 700; }
     .log-done-ok   { color: var(--green); font-weight: 700; }
     .log-done-fail { color: var(--red);   font-weight: 700; }
     .log-ts { color: var(--muted); user-select: none; margin-right: 8px; }
 
-    /* --------------------------------------------------------- empty state */
-    #empty {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100%;
-      color: var(--muted);
-      font-size: 14px;
+    .pr-link {
+      display: inline-block;
+      background: var(--green);
+      color: #000;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+      text-decoration: none;
+      margin-left: auto;
     }
+    .pr-link:hover { opacity: .85; }
   </style>
 </head>
 <body>
@@ -279,32 +298,40 @@
   <span>dashboard</span>
 </header>
 
-<main>
-  <!-- ------------------------------------------------ sidebar -->
+<div class="layout">
+  <!-- ---- sidebar ---- -->
   <div id="sidebar">
-    <!-- ---- serve panel ---- -->
-    <div id="serve-panel">
-      <h2>Model server <span id="serve-status-badge" class="unknown">unknown</span></h2>
-      <div class="serve-row">
-        <select id="srv-profile" style="flex:1">
+
+    <!-- serve panel -->
+    <div class="panel">
+      <div class="panel-title">
+        Model server
+        <span id="serve-status-badge" class="unknown">unknown</span>
+      </div>
+      <div>
+        <label for="srv-profile">Profile</label>
+        <select id="srv-profile">
           <option value="test">test — Qwen2.5-Coder 7B (A10G)</option>
           <option value="prod">prod — Qwen3-Coder 80B (2×A100)</option>
           <option value="prod-minimax" data-profile="prod" data-model="minimax-m2.5">prod — MiniMax M2.5 (8×A100)</option>
           <option value="experiment">experiment — SGLang (A10G)</option>
         </select>
-        <button id="deploy-btn" type="button" onclick="deployServe()">Deploy</button>
+      </div>
+      <div>
+        <button id="deploy-btn" class="btn-secondary" type="button" onclick="deployServe()">Deploy</button>
       </div>
     </div>
 
-    <form id="new-run-form" onsubmit="return false">
-      <h2>New run</h2>
+    <!-- new run form -->
+    <div class="panel">
+      <div class="panel-title">New run</div>
       <div>
         <label for="inp-repo">Repo URL</label>
         <input id="inp-repo" type="url" placeholder="https://github.com/org/repo" required />
       </div>
       <div>
         <label for="inp-task">Task</label>
-        <textarea id="inp-task" rows="3" placeholder="Describe what the agent should do…" required></textarea>
+        <textarea id="inp-task" rows="4" placeholder="Describe what the agent should do…" required></textarea>
       </div>
       <div>
         <label for="inp-backend">Backend</label>
@@ -321,29 +348,40 @@
         <input id="inp-branch" type="text" value="main" />
       </div>
       <div style="display:flex;gap:12px;align-items:center;">
-        <label style="display:flex;align-items:center;gap:4px;margin:0">
+        <label style="display:flex;align-items:center;gap:4px;margin:0;font-size:12px">
           <input id="inp-pr" type="checkbox" checked /> Create PR
         </label>
-        <label style="display:flex;align-items:center;gap:4px;margin:0">
+        <label style="display:flex;align-items:center;gap:4px;margin:0;font-size:12px">
           <input id="inp-tests" type="checkbox" checked /> Run tests
         </label>
       </div>
-      <button id="start-btn" type="button" onclick="startRun()">Start run</button>
-    </form>
+      <button id="start-btn" class="btn-primary" type="button" onclick="startRun()">Start run</button>
+    </div>
 
-    <div id="run-list"></div>
   </div>
 
-  <!-- ------------------------------------------------ detail -->
-  <div id="detail">
-    <div id="empty">Select a run or start one →</div>
+  <!-- ---- main run list ---- -->
+  <div id="main">
+    <div id="run-list">
+      <div id="empty-state">No runs yet — start one from the sidebar.</div>
+    </div>
   </div>
-</main>
+</div>
 
 <script>
 // ------------------------------------------------------------------ state
-const runs = {};       // run_id → { state, card el, sse }
-let activeRunId = null;
+const runs = {};  // run_id → { meta, logLines[], sse, expanded }
+
+// ------------------------------------------------------------------ API
+async function apiPost(path, body) {
+  const r = await fetch(path, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
 
 // ------------------------------------------------------------------ serve panel
 async function deployServe() {
@@ -372,47 +410,39 @@ async function pollServeStatus() {
       badge.className = 'active';
     } else {
       badge.textContent = 'no app';
-      badge.className = 'serve-status-badge unknown';
+      badge.className = 'unknown';
     }
   } catch { /* ignore */ }
 }
 setInterval(pollServeStatus, 30000);
 pollServeStatus();
 
-// ------------------------------------------------------------------ API helpers
-async function apiPost(path, body) {
-  const r = await fetch(path, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
-  if (!r.ok) throw new Error(await r.text());
-  return r.json();
-}
-
 // ------------------------------------------------------------------ start run
 async function startRun() {
-  const repo  = document.getElementById('inp-repo').value.trim();
-  const task  = document.getElementById('inp-task').value.trim();
+  const repo    = document.getElementById('inp-repo').value.trim();
+  const task    = document.getElementById('inp-task').value.trim();
   if (!repo || !task) return;
-
-  const btn = document.getElementById('start-btn');
-  btn.disabled = true;
 
   const backend     = document.getElementById('inp-backend').value;
   const base_branch = document.getElementById('inp-branch').value || 'main';
+  const btn = document.getElementById('start-btn');
+  btn.disabled = true;
+
   try {
     const { run_id } = await apiPost('/api/runs', {
-      repo,
-      task,
-      backend,
-      base_branch,
+      repo, task, backend, base_branch,
       create_pr:       document.getElementById('inp-pr').checked,
       run_tests:       document.getElementById('inp-tests').checked,
       timeout_seconds: 300,
     });
-    addRun(run_id, repo, task, backend, 'dashboard', base_branch);
-    openRun(run_id);
+    addRow({
+      run_id, repo, task, backend,
+      initiated_by: 'dashboard',
+      base_branch,
+      phase: 'BOOTING',
+    });
+    toggleRow(run_id, true);
+    subscribeSSE(run_id);
   } catch (e) {
     alert('Failed to start run: ' + e.message);
   } finally {
@@ -420,92 +450,80 @@ async function startRun() {
   }
 }
 
-// ------------------------------------------------------------------ run card
-function addRun(run_id, repo, task, backend, initiated_by, base_branch) {
-  initiated_by = initiated_by || 'cli';
-  const card = document.createElement('div');
-  card.className = 'run-card';
-  card.dataset.runId = run_id;
-  card.innerHTML = `
-    <div class="run-card-header">
-      <div class="phase-dot BOOTING" id="dot-${run_id}"></div>
-      <span class="run-id">${escHtml(run_id)}</span>
-      <span class="badge-source ${escHtml(initiated_by)}">${escHtml(initiated_by)}</span>
+// ------------------------------------------------------------------ run row
+function addRow(meta, prepend = true) {
+  const { run_id, repo, task, backend, initiated_by, base_branch, phase } = meta;
+
+  if (runs[run_id]) {
+    // already exists — update meta only
+    runs[run_id].meta = meta;
+    return;
+  }
+
+  // remove empty state
+  const empty = document.getElementById('empty-state');
+  if (empty) empty.remove();
+
+  const row = document.createElement('div');
+  row.className = 'run-row';
+  row.id = `row-${run_id}`;
+  row.innerHTML = `
+    <div class="run-summary" onclick="toggleRow('${run_id}')">
+      <span class="expand-icon">▶</span>
+      <div class="phase-dot ${escHtml(phase)}" id="dot-${run_id}"></div>
+      <span class="run-id-text">${escHtml(run_id)}</span>
+      <span class="run-repo-text">${escHtml(repo)}</span>
+      <span class="badge badge-backend">${escHtml(backend)}</span>
+      <span class="badge badge-source ${escHtml(initiated_by || 'cli')}">${escHtml(initiated_by || 'cli')}</span>
+      <span class="run-phase-text" id="phase-label-${run_id}">${escHtml(phase)}</span>
     </div>
-    <div class="run-repo">${escHtml(repo)}</div>
-    <div class="run-phase" id="phase-label-${run_id}">BOOTING</div>
-  `;
-  card.onclick = () => openRun(run_id);
-  document.getElementById('run-list').prepend(card);
-
-  runs[run_id] = { repo, task, backend, initiated_by, base_branch: base_branch || 'main', phase: 'BOOTING', card, logLines: [] };
-}
-
-function updateCard(run_id, phase) {
-  const r = runs[run_id];
-  if (!r) return;
-  r.phase = phase;
-  const dot = document.getElementById('dot-' + run_id);
-  if (dot) {
-    dot.className = `phase-dot ${phase}`;
-  }
-  const label = document.getElementById('phase-label-' + run_id);
-  if (label) label.textContent = phase;
-  if (r.card) {
-    r.card.className = 'run-card' + (activeRunId === run_id ? ' active' : '');
-  }
-}
-
-// ------------------------------------------------------------------ detail panel
-function openRun(run_id) {
-  if (activeRunId === run_id) return;
-
-  // Deactivate old card
-  if (activeRunId && runs[activeRunId]) {
-    runs[activeRunId].card.classList.remove('active');
-  }
-
-  activeRunId = run_id;
-  const r = runs[run_id];
-  r.card.classList.add('active');
-
-  const detail = document.getElementById('detail');
-  detail.innerHTML = `
-    <div id="detail-header">
-      <a class="repo-link" href="${escHtml(r.repo)}" target="_blank">${escHtml(r.repo)}</a>
-      <div id="detail-meta">
-        <span class="badge">${escHtml(r.backend)}</span>
-        <span class="badge">${escHtml(r.base_branch)}</span>
-        <span class="badge-source ${escHtml(r.initiated_by)}">${escHtml(r.initiated_by)}</span>
-        <span id="detail-phase">${r.phase}</span>
-        <a id="pr-link" class="hidden" href="#" target="_blank">Open PR →</a>
+    <div class="run-detail">
+      <div class="run-detail-meta">
+        <div class="meta-item">branch <span>${escHtml(base_branch)}</span></div>
+        <div class="meta-item">task <span>${escHtml(task ? task.slice(0, 80) + (task.length > 80 ? '…' : '') : '')}</span></div>
+        <a id="pr-link-${run_id}" class="pr-link" style="display:none" href="#" target="_blank">Open PR →</a>
       </div>
-      <div style="font-size:12px;color:var(--muted);margin-top:4px">${escHtml(r.task)}</div>
+      <div class="run-log" id="log-${run_id}"></div>
     </div>
-    <div id="log-area"></div>
   `;
 
-  // Replay buffered log lines
-  const logArea = document.getElementById('log-area');
-  for (const line of r.logLines) {
-    logArea.appendChild(line.cloneNode(true));
-  }
-  logArea.scrollTop = logArea.scrollHeight;
+  const list = document.getElementById('run-list');
+  if (prepend) list.prepend(row);
+  else         list.append(row);
 
-  // Subscribe to SSE if not already
-  if (!r.sse && !isTerminal(r.phase)) {
-    subscribeSSE(run_id);
+  runs[run_id] = { meta, logLines: [], sse: null, expanded: false };
+}
+
+function toggleRow(run_id, forceOpen) {
+  const row = document.getElementById(`row-${run_id}`);
+  if (!row) return;
+  const r = runs[run_id];
+  const open = forceOpen !== undefined ? forceOpen : !r.expanded;
+  r.expanded = open;
+  row.classList.toggle('expanded', open);
+
+  if (open) {
+    // scroll log to bottom
+    const log = document.getElementById(`log-${run_id}`);
+    if (log) log.scrollTop = log.scrollHeight;
   }
 }
 
-function isTerminal(phase) {
-  return phase === 'DONE' || phase === 'FAILED';
+function updatePhase(run_id, phase) {
+  const r = runs[run_id];
+  if (r) r.meta.phase = phase;
+
+  const dot = document.getElementById(`dot-${run_id}`);
+  if (dot) dot.className = `phase-dot ${phase}`;
+
+  const label = document.getElementById(`phase-label-${run_id}`);
+  if (label) label.textContent = phase;
 }
 
 // ------------------------------------------------------------------ SSE
 function subscribeSSE(run_id) {
   const r = runs[run_id];
-  if (!r) return;
+  if (!r || r.sse) return;
 
   const sse = new EventSource(`/api/runs/${run_id}/stream`);
   r.sse = sse;
@@ -516,24 +534,17 @@ function subscribeSSE(run_id) {
     handleEvent(run_id, ev);
   };
 
-  sse.onerror = () => {
-    sse.close();
-    r.sse = null;
-  };
+  sse.onerror = () => { sse.close(); r.sse = null; };
 }
 
 function handleEvent(run_id, ev) {
   const r = runs[run_id];
   if (!r) return;
-
-  const ts = new Date(ev.ts * 1000).toLocaleTimeString('en-US', { hour12: false });
+  const ts = new Date((ev.ts || Date.now() / 1000) * 1000)
+    .toLocaleTimeString('en-US', { hour12: false });
 
   if (ev.type === 'phase') {
-    updateCard(run_id, ev.phase);
-    if (activeRunId === run_id) {
-      const el = document.getElementById('detail-phase');
-      if (el) el.textContent = ev.phase;
-    }
+    updatePhase(run_id, ev.phase);
     appendLog(run_id, ts, `▶ ${ev.phase}`, 'log-phase');
 
   } else if (ev.type === 'log') {
@@ -541,20 +552,11 @@ function handleEvent(run_id, ev) {
 
   } else if (ev.type === 'done') {
     const phase = ev.success ? 'DONE' : 'FAILED';
-    updateCard(run_id, phase);
+    updatePhase(run_id, phase);
 
-    if (activeRunId === run_id) {
-      const el = document.getElementById('detail-phase');
-      if (el) el.textContent = phase;
-
-      if (ev.pr_url) {
-        const link = document.getElementById('pr-link');
-        if (link) {
-          link.href = ev.pr_url;
-          link.textContent = 'Open PR →';
-          link.classList.remove('hidden');
-        }
-      }
+    if (ev.pr_url) {
+      const link = document.getElementById(`pr-link-${run_id}`);
+      if (link) { link.href = ev.pr_url; link.style.display = 'inline-block'; }
     }
 
     const cls = ev.success ? 'log-done-ok' : 'log-done-fail';
@@ -571,17 +573,16 @@ function appendLog(run_id, ts, text, cls) {
   const r = runs[run_id];
   if (!r) return;
 
-  const span = document.createElement('div');
-  span.className = cls;
-  span.innerHTML = `<span class="log-ts">${escHtml(ts)}</span>${escHtml(text)}`;
-  r.logLines.push(span);
+  const div = document.createElement('div');
+  div.className = cls;
+  div.innerHTML = `<span class="log-ts">${escHtml(ts)}</span>${escHtml(text)}`;
+  r.logLines.push(div);
 
-  if (activeRunId === run_id) {
-    const logArea = document.getElementById('log-area');
-    if (logArea) {
-      logArea.appendChild(span.cloneNode(true));
-      logArea.scrollTop = logArea.scrollHeight;
-    }
+  const log = document.getElementById(`log-${run_id}`);
+  if (log) {
+    log.appendChild(div);
+    // auto-scroll only if expanded
+    if (r.expanded) log.scrollTop = log.scrollHeight;
   }
 }
 
@@ -594,14 +595,36 @@ function escHtml(s) {
     .replace(/"/g, '&quot;');
 }
 
-// ------------------------------------------------------------------ boot — load existing runs
+function isTerminal(phase) {
+  return phase === 'DONE' || phase === 'FAILED';
+}
+
+// ------------------------------------------------------------------ boot
 (async () => {
   try {
     const list = await fetch('/api/runs').then(r => r.json());
-    // list is newest-first from SQLite; prepend in order so newest ends up on top
+    // list is newest-first; prepend each so newest stays on top
     for (const run of list) {
-      addRun(run.run_id, run.repo, run.task || '', run.backend || 'opencode', run.initiated_by, run.base_branch);
-      updateCard(run.run_id, run.phase || 'DONE');
+      addRow({
+        run_id:       run.run_id,
+        repo:         run.repo,
+        task:         run.task || '',
+        backend:      run.backend || 'opencode',
+        initiated_by: run.initiated_by || 'cli',
+        base_branch:  run.base_branch || 'main',
+        phase:        run.phase || 'DONE',
+      });
+      updatePhase(run.run_id, run.phase || 'DONE');
+
+      // re-attach SSE for runs that are still active
+      if (!isTerminal(run.phase) && run.initiated_by === 'dashboard') {
+        subscribeSSE(run.run_id);
+      }
+
+      if (run.pr_url) {
+        const link = document.getElementById(`pr-link-${run.run_id}`);
+        if (link) { link.href = run.pr_url; link.style.display = 'inline-block'; }
+      }
     }
   } catch { /* dashboard works offline */ }
 })();
