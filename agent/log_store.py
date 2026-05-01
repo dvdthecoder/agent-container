@@ -43,17 +43,20 @@ _DEFAULT_DB = Path.home() / ".agent-container" / "runs.db"
 
 _DDL = """
 CREATE TABLE IF NOT EXISTS runs (
-    run_id      TEXT PRIMARY KEY,
-    repo        TEXT NOT NULL,
-    task        TEXT NOT NULL,
-    backend     TEXT NOT NULL,
-    started_at  TEXT NOT NULL,
-    finished_at TEXT,
-    outcome     TEXT,
-    branch      TEXT,
-    pr_url      TEXT,
-    duration_s  REAL,
-    sandbox_id  TEXT
+    run_id          TEXT PRIMARY KEY,
+    repo            TEXT NOT NULL,
+    task            TEXT NOT NULL,
+    backend         TEXT NOT NULL,
+    initiated_by    TEXT NOT NULL DEFAULT 'cli',
+    base_branch     TEXT NOT NULL DEFAULT 'main',
+    timeout_seconds INTEGER NOT NULL DEFAULT 600,
+    started_at      TEXT NOT NULL,
+    finished_at     TEXT,
+    outcome         TEXT,
+    branch          TEXT,
+    pr_url          TEXT,
+    duration_s      REAL,
+    sandbox_id      TEXT
 );
 
 CREATE TABLE IF NOT EXISTS events (
@@ -82,6 +85,9 @@ class RunRow:
     repo: str
     task: str
     backend: str
+    initiated_by: str
+    base_branch: str
+    timeout_seconds: int
     started_at: str
     finished_at: str | None
     outcome: str | None
@@ -124,10 +130,26 @@ class RunLogger:
         self._db_path.parent.mkdir(parents=True, exist_ok=True)
         self._conn = sqlite3.connect(str(self._db_path), check_same_thread=False)
         self._conn.executescript(_DDL)
+        self._migrate()
         self._conn.commit()
         self._lock = threading.Lock()
         self._start = time.monotonic()
         self._phase = ""
+
+    def _migrate(self) -> None:
+        """Add columns introduced after initial schema (idempotent)."""
+        existing = {
+            row[1]
+            for row in self._conn.execute("PRAGMA table_info(runs)").fetchall()
+        }
+        migrations = [
+            ("initiated_by", "TEXT NOT NULL DEFAULT 'cli'"),
+            ("base_branch", "TEXT NOT NULL DEFAULT 'main'"),
+            ("timeout_seconds", "INTEGER NOT NULL DEFAULT 600"),
+        ]
+        for col, defn in migrations:
+            if col not in existing:
+                self._conn.execute(f"ALTER TABLE runs ADD COLUMN {col} {defn}")  # noqa: S608
 
     # ------------------------------------------------------------------ write
 
@@ -138,11 +160,15 @@ class RunLogger:
         task: str,
         backend: str,
         db_path: Path | None = None,
+        initiated_by: str = "cli",
+        base_branch: str = "main",
+        timeout_seconds: int = 600,
+        run_id: str | None = None,
     ) -> RunLogger:
         """Create a new logger and insert the run row."""
-        run_id = new_run_id()
-        logger = cls(run_id, db_path)
-        logger._insert_run(repo, task, backend)
+        rid = run_id or new_run_id()
+        logger = cls(rid, db_path)
+        logger._insert_run(repo, task, backend, initiated_by, base_branch, timeout_seconds)
         return logger
 
     def phase(self, phase: str) -> None:
@@ -204,12 +230,22 @@ class RunLogger:
 
     # ------------------------------------------------------------------ private
 
-    def _insert_run(self, repo: str, task: str, backend: str) -> None:
+    def _insert_run(
+        self,
+        repo: str,
+        task: str,
+        backend: str,
+        initiated_by: str = "cli",
+        base_branch: str = "main",
+        timeout_seconds: int = 600,
+    ) -> None:
         now = datetime.now(UTC).isoformat()
         with self._lock:
             self._conn.execute(
-                "INSERT INTO runs (run_id, repo, task, backend, started_at) VALUES (?,?,?,?,?)",
-                (self.run_id, repo, task, backend, now),
+                "INSERT INTO runs"
+                " (run_id, repo, task, backend, initiated_by, base_branch, timeout_seconds, started_at)"
+                " VALUES (?,?,?,?,?,?,?,?)",
+                (self.run_id, repo, task, backend, initiated_by, base_branch, timeout_seconds, now),
             )
             self._conn.commit()
 

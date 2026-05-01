@@ -99,6 +99,10 @@ class ModalSandbox:
             repo=spec.repo,
             task=spec.resolved_task(),
             backend=spec.backend,
+            initiated_by=spec.initiated_by,
+            base_branch=spec.base_branch,
+            timeout_seconds=spec.timeout_seconds,
+            run_id=spec.run_id,
         )
 
         current_phase: list[str] = ["INIT"]  # mutable cell so _emit can update it

@@ -20,6 +20,8 @@ class AgentTaskSpec:
     create_pr: bool = True
     run_tests: bool = True  # auto-detect and run the project test suite
     backend: str = "opencode"  # opencode | claude | gemini
+    initiated_by: str = "cli"  # cli | dashboard
+    run_id: str | None = None  # pre-allocated run ID (dashboard sets this)
 
     def __post_init__(self) -> None:
         if self.task is None and self.task_file is None:
