@@ -15,6 +15,8 @@ import urllib.error
 import urllib.request
 from collections.abc import Callable
 
+from modal.exception import SandboxTerminatedError, SandboxTimeoutError
+
 import modal
 from agent import git_ops, runner, tester
 from agent.backends import get_backend
@@ -263,15 +265,26 @@ def _terminate(sb: modal.Sandbox | None) -> None:
     ``wait=True`` blocks until Modal confirms the container has stopped —
     without it, terminate() fires and returns immediately (fire-and-forget),
     leaving the container running in the Modal dashboard after the CLI exits.
+
+    SandboxTimeoutError and SandboxTerminatedError are treated as success:
+    both mean the container is already gone (killed by Modal timeout or a
+    prior terminate call).  Only unexpected exceptions are logged as failures.
     """
     if sb is None:
         return
+    sandbox_id = getattr(sb, "object_id", "unknown")
     try:
         sb.terminate(wait=True)
-        print("[sandbox] container terminated", file=sys.stderr, flush=True)
+        print(f"[sandbox] container terminated  id={sandbox_id}", file=sys.stderr, flush=True)
+    except (SandboxTimeoutError, SandboxTerminatedError):
+        # Already gone — Modal killed it by timeout or a previous terminate call.
+        # This is not an error; the container is not running.
+        print(f"[sandbox] container already stopped  id={sandbox_id}", file=sys.stderr, flush=True)
     except Exception as exc:  # noqa: BLE001
-        # Log so we know terminate failed — still best-effort, never raise.
-        print(f"[sandbox] terminate failed: {exc}", file=sys.stderr, flush=True)
+        # Genuinely unexpected — log but never raise.
+        print(
+            f"[sandbox] terminate failed  id={sandbox_id}  err={exc}", file=sys.stderr, flush=True
+        )  # noqa: E501
 
 
 def _wait_for_inference(

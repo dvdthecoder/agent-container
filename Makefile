@@ -33,7 +33,7 @@ example:
 stop-sandboxes:
 	@echo "Stopping all active agent-container-sandbox containers..."
 	@modal container list 2>/dev/null \
-		| awk '/agent-container/ {print $$1}' \
+		| awk '/agent-container-sandbox/ {print $$1}' \
 		| grep '^ta-' \
 		| xargs -r -I{} modal container stop {} \
 		&& echo "Done." || echo "No containers to stop."
