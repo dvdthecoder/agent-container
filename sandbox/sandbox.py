@@ -290,13 +290,18 @@ def _terminate(sb: modal.Sandbox | None) -> None:
 def _wait_for_inference(
     base_url: str,
     run_start: float,
-    max_wait: float = 300.0,
-    poll_interval: float = 5.0,
+    max_wait: float = 600.0,
+    poll_interval: float = 30.0,
 ) -> None:
     """Poll GET {base_url}/v1/models until 200 or deadline exceeded.
 
     Skipped when *base_url* is empty (stub / local runs with no inference server).
     Raises ``PhaseError`` if the endpoint is not ready within *max_wait* seconds.
+
+    poll_interval is intentionally long (30 s).  Modal's web_server proxy queues
+    requests while the port is not yet accepting connections — frequent polling
+    accumulates dozens of pending Modal function calls that all flush at once when
+    the server starts.  30 s keeps the queue small (≤ 20 calls over 10 min).
     """
     if not base_url:
         return
@@ -307,7 +312,7 @@ def _wait_for_inference(
     while True:
         elapsed = time.monotonic() - run_start
         try:
-            with urllib.request.urlopen(url, timeout=10) as resp:  # noqa: S310
+            with urllib.request.urlopen(url, timeout=5) as resp:  # noqa: S310
                 if resp.status == 200:
                     print(
                         f"[warmup] inference endpoint ready  elapsed={elapsed:.1f}s",

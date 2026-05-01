@@ -89,7 +89,7 @@ elif SERVE_PROFILE == "sglang":
     CONTEXT_LENGTH = 32_768
     TP_SIZE = 1
     SCALEDOWN_WINDOW = 300
-    STARTUP_TIMEOUT = 300
+    STARTUP_TIMEOUT = 600  # torch_native + model download needs ~5-6 min cold start
     # SGLang tool-call parser for Qwen2.5 models.
     # In v0.4.7 this crashed the server on the first request with tool schemas.
     # Phase 3 validates whether the current SGLang image has fixed this.
