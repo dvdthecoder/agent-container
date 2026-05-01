@@ -7,6 +7,7 @@ POST /runs              — start a new run (returns run_id immediately)
 GET  /runs/{id}         — get a single run (SQLite metadata + live phase if active)
 DELETE /runs/{id}        — cancel a queued/running run (best-effort)
 GET  /runs/{id}/stream  — SSE stream of lifecycle events (dashboard runs only)
+GET  /runs/{id}/events  — past log events from SQLite (for replay on page load)
 GET  /serve/status      — model server status (deployed / idle / unknown)
 POST /serve/deploy      — trigger a modal deploy for the given profile
 """
@@ -164,6 +165,28 @@ def cancel_run(run_id: str) -> None:
     if ws is None:
         raise HTTPException(status_code=404, detail="run not found")
     store.push_event(run_id, "done", {"success": False, "error": "cancelled"})
+
+
+@router.get("/runs/{run_id}/events")
+def run_events(run_id: str) -> list[dict[str, Any]]:
+    """Return past log events from SQLite for replay on page load."""
+    try:
+        rows = run_store.events(run_id)
+    except FileNotFoundError:
+        return []
+    return [
+        {
+            "type": "log",
+            "ts": row.ts,
+            "elapsed_s": row.elapsed_s,
+            "phase": row.phase,
+            "source": row.source,
+            "level": row.level,
+            "text": row.message,
+        }
+        for row in rows
+        if row.source.startswith("sandbox:")  # only agent output lines
+    ]
 
 
 @router.get("/runs/{run_id}/stream")

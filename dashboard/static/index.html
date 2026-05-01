@@ -503,7 +503,22 @@ function toggleRow(run_id, forceOpen) {
   row.classList.toggle('expanded', open);
 
   if (open) {
-    // scroll log to bottom
+    // First expand — replay log history from SQLite if not already loaded
+    if (!r.historyLoaded) {
+      r.historyLoaded = true;
+      fetch(`/api/runs/${run_id}/events`)
+        .then(res => res.json())
+        .then(events => {
+          // Only prepend if no live lines have arrived yet (avoid duplicates)
+          if (r.logLines.length === 0) {
+            for (const ev of events) {
+              const ts = new Date(ev.ts).toLocaleTimeString('en-US', { hour12: false });
+              appendLog(run_id, ts, ev.text || '', 'log-line');
+            }
+          }
+        })
+        .catch(() => {});
+    }
     const log = document.getElementById(`log-${run_id}`);
     if (log) log.scrollTop = log.scrollHeight;
   }

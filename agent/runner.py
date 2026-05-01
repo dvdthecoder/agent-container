@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import sys
 import threading
+from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 import modal
@@ -26,12 +27,16 @@ def run_agent(
     workdir: str = "/workspace",
     logger: RunLogger | None = None,
     timeout: float | None = None,
+    on_log: Callable[[str, str], None] | None = None,
 ) -> tuple[str, int]:
     """Run *backend* with *task* inside *sb*. Returns ``(combined_output, exit_code)``.
 
     stdout and stderr are streamed to the local terminal in real time so
     failures during long runs are visible before the sandbox times out.
     Each line is also persisted to *logger* when provided.
+
+    *on_log(label, line)* is called for every line as it arrives — use this
+    to forward live output to the dashboard without waiting for the run to finish.
 
     If *timeout* seconds elapse before the process finishes, the sandbox
     is terminated immediately and a non-zero exit code is returned.
@@ -52,6 +57,11 @@ def run_agent(
                 if logger is not None:
                     level = "error" if label == "stderr" else "info"
                     logger.log(f"sandbox:{label}", line.rstrip(), level=level)
+                if on_log is not None:
+                    try:
+                        on_log(label, line.rstrip())
+                    except Exception:  # noqa: BLE001, S110
+                        pass
         except Exception as exc:  # noqa: S110
             # Sandbox killed mid-stream — log and exit thread cleanly.
             msg = f"[sandbox:{label}] stream closed: {exc}"

@@ -141,10 +141,18 @@ class ModalSandbox:
                 # Give the agent spec.timeout_seconds - 60s (same headroom
                 # given to OPENCODE_TIMEOUT) before we hard-terminate.
                 agent_timeout = float(spec.timeout_seconds - 60)
+
+                def _on_log(label: str, line: str) -> None:
+                    _emit("log", text=line, source=label)
+
                 agent_output, exit_code = runner.run_agent(
-                    sb, backend, spec.resolved_task(), logger=logger, timeout=agent_timeout
+                    sb,
+                    backend,
+                    spec.resolved_task(),
+                    logger=logger,
+                    timeout=agent_timeout,
+                    on_log=_on_log,
                 )
-                _emit("log", text=agent_output)
 
                 suite: SuiteResult | None = None
                 if exit_code == 0 and spec.run_tests:
