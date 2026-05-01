@@ -94,7 +94,7 @@ elif SERVE_PROFILE == "sglang":
     # 'qwen25' is deprecated — renamed to 'qwen' in current SGLang versions.
     # In v0.4.7 this crashed the server on the first request with tool schemas.
     # Phase 3 validates whether the current SGLang image has fixed this.
-    TOOL_CALL_PARSER = "qwen"
+    TOOL_CALL_PARSER = "hermes"
 
 else:
     # test — Qwen2.5-Coder 7B on A10G (~$1/hr, ~2 min cold start)
