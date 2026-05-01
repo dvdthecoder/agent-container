@@ -174,13 +174,12 @@ if SERVE_PROFILE == "sglang":
         _cmd += ["--tensor-parallel-size", str(TP_SIZE)]
     if TOOL_CALL_PARSER:
         _cmd += ["--tool-call-parser", TOOL_CALL_PARSER]
-    # Modal containers don't expose nvcc.  FlashInfer (SGLang's default
-    # attention backend) JIT-compiles CUDA kernels and fails with
-    # "Could not find nvcc".  Switch to the Triton backend which ships
-    # pre-compiled and needs no nvcc at runtime.
-    # Also disable CUDA graphs for the same reason — the graph capture
-    # path also triggers FlashInfer JIT compilation.
-    _cmd += ["--attention-backend", "triton", "--disable-cuda-graph"]
+    # Modal containers don't expose the CUDA toolkit (nvcc/headers).
+    # FlashInfer and Triton both JIT-compile CUDA kernels at startup and
+    # fail with "Could not find nvcc / CUDA installation".
+    # torch_native is pure PyTorch — no compilation, no nvcc required.
+    # Performance is reduced but acceptable for Phase 3 tool-call validation.
+    _cmd += ["--attention-backend", "torch_native", "--disable-cuda-graph"]
 else:
     # vLLM — default for test / prod / minimax profiles.
     _cmd = [
