@@ -18,18 +18,24 @@ OPENCODE_MODEL=qwen2.5-coder  # must match SERVED_MODEL_NAME in modal/serve.py
 
 ## GPU profiles
 
-Four profiles are built into `modal/serve.py`:
+Three profiles are built into `modal/serve.py`, selected by `SERVE_PROFILE`:
 
 | Profile | Engine | Model | GPU | Context | Deploy command |
 |---------|--------|-------|-----|---------|----------------|
 | `test` (default) | vLLM | Qwen2.5-Coder-7B | A10G | 32k | `modal deploy modal/serve.py` |
-| `prod` | vLLM | Qwen3-Coder-80B | 2× A100 80GB | 128k | `SERVE_PROFILE=prod modal deploy modal/serve.py` |
-| `minimax` | vLLM | MiniMax-M2.5 | 8× A100 80GB | 1M | `SERVE_PROFILE=minimax modal deploy modal/serve.py` |
-| `sglang` | SGLang | Qwen2.5-Coder-7B | A10G | 32k | `SERVE_PROFILE=sglang modal deploy modal/serve.py` |
+| `prod` | vLLM | Qwen3-Coder-80B (default) | 2× A100 80GB | 128k | `SERVE_PROFILE=prod modal deploy modal/serve.py` |
+| `prod` + `SERVE_MODEL=minimax-m2.5` | vLLM | MiniMax-M2.5 | 8× A100 80GB | 1M | `SERVE_PROFILE=prod SERVE_MODEL=minimax-m2.5 modal deploy modal/serve.py` |
+| `experiment` | SGLang | Qwen2.5-Coder-7B | A10G | 32k | `SERVE_PROFILE=experiment modal deploy modal/serve.py` |
 
-**Start with `test`** — cheap, fast iteration. Promote to `prod` or `minimax` for
-production-grade output quality. Use `sglang` to run on SGLang instead of vLLM — see the
-comparison table below.
+**Start with `test`** — cheap, fast iteration. Promote to `prod` for production-grade output
+quality. Use `SERVE_MODEL=minimax-m2.5` inside `prod` for maximum quality (SWE-bench grade).
+Use `experiment` to run SGLang instead of vLLM — see the comparison table below.
+
+`prod` model selection is driven by `SERVE_MODEL`. Add new models to the `_PROD_MODELS` dict
+in `modal/serve.py` without touching the profile structure.
+
+`experiment` deploys to a **separate** Modal app (`agent-container-serve-experiment`) so the
+vLLM endpoint is never disturbed — both can run simultaneously.
 
 ### Model names
 
@@ -38,8 +44,9 @@ Set `OPENCODE_MODEL` to match `SERVED_MODEL_NAME` in `modal/serve.py`:
 | Profile | `OPENCODE_MODEL` |
 |---------|-----------------|
 | `test` | `qwen2.5-coder` |
-| `prod` | `qwen3-coder` |
-| `minimax` | `minimax-m2.5` |
+| `prod` (default model) | `qwen3-coder` |
+| `prod` + `SERVE_MODEL=minimax-m2.5` | `minimax-m2.5` |
+| `experiment` | `qwen2.5-coder` |
 
 ---
 
@@ -75,7 +82,7 @@ profiles and handles:
 
 | | vLLM | SGLang |
 |--|------|--------|
-| Status | Default — all production profiles | Validated alternative (`sglang` profile) |
+| Status | Default — `test` and `prod` profiles | Validated alternative (`experiment` profile) |
 | Tool calling | Stable — `hermes` parser, works out of the box | Works with `hermes` parser; `qwen`/`qwen25` hangs |
 | Base image | `debian_slim` — no CUDA toolkit needed | `nvidia/cuda:12.4.1-devel-ubuntu22.04` + `libnuma1` required |
 | JIT compilation | None at startup | Compiles rope/attention kernels via TVM at model-load time |
@@ -83,7 +90,7 @@ profiles and handles:
 | KV cache sharing | Manual prefix caching | RadixAttention — automatic, fine-grained sharing across runs |
 | Throughput (shared prefix) | Baseline | 2–4× higher when runs share system prompt / repo context |
 | Constrained decoding | Basic | Native JSON schema and regex enforcement at decode level |
-| Modal app | `agent-container-serve` | `agent-container-serve-sglang` (separate, runs simultaneously) |
+| Modal app | `agent-container-serve` | `agent-container-serve-experiment` (separate, runs simultaneously) |
 | Cold start (7B, A10G) | ~1–2 min | ~2–3 min (JIT compile adds ~1 min) |
 | Recommended for | All use cases today | Team-scale concurrent runs; benchmarking |
 
@@ -110,8 +117,8 @@ cached. At low volume (one run at a time) vLLM and SGLang perform similarly. At 
 ### SGLang — Phase 3 validation results
 
 Phase 3 re-tested SGLang in isolation against the same model (Qwen2.5-Coder 7B, A10G) to
-determine whether newer versions had fixed the tool-calling bugs. The `sglang` profile deploys
-to a **separate Modal app** (`agent-container-serve-sglang`) so the vLLM endpoint is never
+determine whether newer versions had fixed the tool-calling bugs. The `experiment` profile deploys
+to a **separate Modal app** (`agent-container-serve-experiment`) so the vLLM endpoint is never
 disturbed — both can run simultaneously.
 
 **Results (Phase 3 complete):**
@@ -129,13 +136,13 @@ SGLang also requires extra image setup that vLLM does not:
   `libnuma.so.1`
 - CUDA graph capture must be disabled (`--disable-cuda-graph`) on first boot
 
-**To run the SGLang profile:**
+**To run the experiment profile:**
 
 ```bash
-SERVE_PROFILE=sglang modal deploy modal/serve.py
-# → https://your-org--agent-container-serve-sglang-serve.modal.run
+SERVE_PROFILE=experiment modal deploy modal/serve.py
+# → https://your-org--agent-container-serve-experiment-serve.modal.run
 
-OPENAI_BASE_URL=https://your-org--agent-container-serve-sglang-serve.modal.run \
+OPENAI_BASE_URL=https://your-org--agent-container-serve-experiment-serve.modal.run \
   make example BACKEND=opencode
 ```
 
@@ -149,8 +156,9 @@ You pay only for active inference time.
 | Profile | Cold start |
 |---------|-----------|
 | `test` | ~1–2 min |
-| `prod` | ~3–5 min |
-| `minimax` | ~8–12 min |
+| `prod` (qwen3-coder) | ~3–5 min |
+| `prod` + `SERVE_MODEL=minimax-m2.5` | ~8–12 min |
+| `experiment` | ~2–3 min (JIT compile adds ~1 min) |
 
 Model weights are stored in a Modal Volume (`agent-container-models`) and are not
 re-downloaded on cold start after the first deploy.

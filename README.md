@@ -89,9 +89,11 @@ modal token new   # browser prompt — saves to ~/.modal.toml
 ### 2. Deploy your model
 
 ```bash
-modal deploy modal/serve.py                        # Qwen2.5-Coder 7B  — A10G, cheap, for testing
-SERVE_PROFILE=prod    modal deploy modal/serve.py  # Qwen3-Coder 80B   — 2× A100 80GB, production
-SERVE_PROFILE=minimax modal deploy modal/serve.py  # MiniMax M2.5      — 8× A100 80GB, best quality
+modal deploy modal/serve.py                          # test — Qwen2.5-Coder 7B, A10G (default)
+SERVE_PROFILE=prod    modal deploy modal/serve.py    # prod — Qwen3-Coder 80B, 2× A100 80GB
+SERVE_PROFILE=prod SERVE_MODEL=minimax-m2.5 \
+  modal deploy modal/serve.py                        # prod — MiniMax M2.5, 8× A100 80GB
+SERVE_PROFILE=experiment modal deploy modal/serve.py # experiment — SGLang engine, A10G
 ```
 
 Modal prints the endpoint URL after deploy:
@@ -177,13 +179,17 @@ vars each backend needs, in the exact format it expects:
 
 ## Model profiles
 
-Three GPU profiles in `modal/serve.py`, selected by `SERVE_PROFILE`:
+Three profiles in `modal/serve.py`, selected by `SERVE_PROFILE`:
 
-| Profile | Model | GPU | Context | Best for |
-|---|---|---|---|---|
-| `test` (default) | Qwen2.5-Coder 7B | A10G | 32k | Development, CI |
-| `prod` | Qwen3-Coder 80B | 2× A100 80GB | 128k | Production PRs |
-| `minimax` | MiniMax M2.5 | 8× A100 80GB | 1M | Best quality / SWE-bench |
+| Profile | Engine | Model | GPU | Context | Best for |
+|---|---|---|---|---|---|
+| `test` (default) | vLLM | Qwen2.5-Coder 7B | A10G | 32k | Development, CI |
+| `prod` | vLLM | Qwen3-Coder 80B (default) | 2× A100 80GB | 128k | Production PRs |
+| `prod` + `SERVE_MODEL=minimax-m2.5` | vLLM | MiniMax M2.5 | 8× A100 80GB | 1M | Best quality / SWE-bench |
+| `experiment` | SGLang | Qwen2.5-Coder 7B | A10G | 32k | SGLang evaluation |
+
+`prod` selects the model via `SERVE_MODEL` (default `qwen3-coder`). `experiment` deploys to a
+separate Modal app (`agent-container-serve-experiment`) so the vLLM endpoint is never disturbed.
 
 Scale-to-zero is on by default — you only pay while runs are active. Model weights are cached in a
 Modal Volume so cold starts after the first don't re-download weights.
@@ -238,8 +244,13 @@ make dashboard
 # → http://localhost:8000
 ```
 
-Live view of all running, completed, and failed agent runs. Streams phase changes and agent output
-in real time via Server-Sent Events.
+Live view of all runs — CLI and dashboard-started — newest first. Each run is a collapsible row:
+collapsed shows the phase indicator, repo, backend, and whether the run was started from the CLI
+or the dashboard; expanded shows the full log stream inline.
+
+The left sidebar has a **serve panel** (deploy the model server from the UI, choose profile and
+model) and the new-run form. Both CLI and dashboard runs write to the same SQLite log at
+`~/.agent-container/runs.db`.
 
 ---
 
@@ -435,7 +446,7 @@ the tool-calling bugs. Key findings:
 
 **Conclusion:** SGLang is viable with the `hermes` parser. vLLM remains the default because it
 works out-of-the-box with no image surgery. Both run simultaneously as separate Modal apps —
-`agent-container-serve` (vLLM) and `agent-container-serve-sglang` (SGLang).
+`agent-container-serve` (vLLM) and `agent-container-serve-experiment` (SGLang).
 
 ---
 

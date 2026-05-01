@@ -61,7 +61,7 @@ Scale-to-zero when idle, billed per GPU second, no hardware to manage.
 ### vLLM — primary inference engine
 
 [vLLM](https://github.com/vllm-project/vllm) is the default inference server for all three
-production profiles (`test`, `prod`, `minimax`). It provides a stable OpenAI-compatible
+production profiles (`test` and `prod`). It provides a stable OpenAI-compatible
 `/v1/chat/completions` API with first-class tool calling (`--enable-auto-tool-choice
 --tool-call-parser hermes`), tensor parallelism for multi-GPU models, and KV prefix caching.
 
@@ -91,8 +91,8 @@ The `sglang` profile deploys to a **separate Modal app** (`agent-container-serve
 both inference servers can run simultaneously without interfering:
 
 ```
-agent-container-serve        → vLLM  (default, all production profiles)
-agent-container-serve-sglang → SGLang (SERVE_PROFILE=sglang, hermes parser)
+agent-container-serve            → vLLM  (SERVE_PROFILE=test or prod)
+agent-container-serve-experiment → SGLang (SERVE_PROFILE=experiment, hermes parser)
 ```
 
 ### Agent backends
@@ -139,13 +139,25 @@ Step 5 — Container destroyed
 
 ```
 AgentTaskSpec
-  repo, task, base_branch, image, env, timeout_seconds, backend, create_pr
+  repo, task, base_branch, image, env, timeout_seconds
+  backend, create_pr, run_tests
+  initiated_by ("cli" | "dashboard")
+  run_id (optional — dashboard pre-allocates; CLI auto-generates)
         ↓
 ModalSandbox.run(spec)
+  → RunLogger.create(...)  writes run row to ~/.agent-container/runs.db
+  → modal.Sandbox.create() boots ephemeral container
         ↓
 AgentTaskResult
   success, run_id, branch, pr_url, diff, diff_stat, duration_seconds, error, backend
 ```
+
+### Unified run log
+
+All runs — whether started via CLI, Python API, or the dashboard — write to a single SQLite
+database at `~/.agent-container/runs.db` via `RunLogger`. The `initiated_by` column records
+the source. `RunStore` (read-side) is used by the dashboard's `GET /api/runs` to surface the
+full history in one list.
 
 ## opencode adapter (thin proxy)
 
@@ -187,8 +199,8 @@ agent_container/
 │       └── gemini.py
 ├── dashboard/
 │   ├── app.py           FastAPI app
-│   ├── store.py         WorkspaceStore + RunState
-│   └── router.py        REST + SSE route handlers
+│   ├── store.py         WorkspaceStore — in-memory SSE event buffer
+│   └── router.py        REST + SSE routes; reads run list from SQLite (RunStore)
 └── mcp_server/
     └── server.py        MCP server exposing sandbox tools
 ```
