@@ -140,65 +140,19 @@ else:
         .env({"HF_HUB_ENABLE_HF_TRANSFER": "1"})
     )
 
-# ── Serve function ───────────────────────────────────────────────────────────
+# ── Serve command — built at deploy time, not at container runtime ────────────
+#
+# SERVE_PROFILE is read from the local env when `modal deploy` runs.
+# The container re-imports this module WITHOUT the SERVE_PROFILE env var, so
+# any branch on SERVE_PROFILE inside serve() would always fall through to the
+# default ("test"/vLLM).  Fix: build the command list here at module level so
+# it is fully determined at deploy time and baked into the deployment.
 
-
-@app.function(
-    image=image,
-    gpu=GPU,
-    secrets=[modal.Secret.from_dict({"HF_TOKEN": os.environ["HF_TOKEN"]})],
-    timeout=60 * 60,
-    scaledown_window=SCALEDOWN_WINDOW,
-    volumes={"/model-cache": model_volume},
-)
-@modal.concurrent(max_inputs=32)
-@modal.web_server(port=8000, startup_timeout=STARTUP_TIMEOUT)
-def serve() -> None:
-    """Start the inference server inside the Modal container."""
-    if SERVE_PROFILE == "sglang":
-        _serve_sglang()
-    else:
-        _serve_vllm()
-
-
-def _serve_vllm() -> None:
-    """Launch vLLM OpenAI-compatible server."""
-    cmd = [
-        "python3",
-        "-m",
-        "vllm.entrypoints.openai.api_server",
-        "--model",
-        MODEL_ID,
-        "--download-dir",
-        "/model-cache",
-        "--served-model-name",
-        SERVED_MODEL_NAME,
-        "--host",
-        "0.0.0.0",  # noqa: S104 — container-internal binding
-        "--port",
-        "8000",
-        "--max-model-len",
-        str(CONTEXT_LENGTH),
-        "--trust-remote-code",
-    ]
-    if TP_SIZE > 1:
-        cmd += ["--tensor-parallel-size", str(TP_SIZE)]
-    # Tool calling — required for opencode backend.
-    # Not needed for aider backend which uses diff format.
-    if TOOL_CALL_PARSER:
-        cmd += ["--enable-auto-tool-choice", "--tool-call-parser", TOOL_CALL_PARSER]
-    subprocess.Popen(cmd)  # noqa: S603 — cmd is fully hardcoded; TP_SIZE is an int
-
-
-def _serve_sglang() -> None:
-    """Launch SGLang OpenAI-compatible server (Phase 3 validation).
-
-    SGLang flag differences from vLLM:
-    - No --enable-auto-tool-choice (SGLang enables tool calling via --tool-call-parser alone)
-    - --context-length instead of --max-model-len
-    - --dp-size for data parallelism instead of --tensor-parallel-size
-    """
-    cmd = [
+if SERVE_PROFILE == "sglang":
+    # SGLang differences from vLLM:
+    #   no --enable-auto-tool-choice (SGLang uses --tool-call-parser alone)
+    #   --context-length instead of --max-model-len
+    _cmd: list[str] = [
         "python3",
         "-m",
         "sglang.launch_server",
@@ -217,7 +171,62 @@ def _serve_sglang() -> None:
         "--trust-remote-code",
     ]
     if TP_SIZE > 1:
-        cmd += ["--tensor-parallel-size", str(TP_SIZE)]
+        _cmd += ["--tensor-parallel-size", str(TP_SIZE)]
     if TOOL_CALL_PARSER:
-        cmd += ["--tool-call-parser", TOOL_CALL_PARSER]
-    subprocess.Popen(cmd)  # noqa: S603
+        _cmd += ["--tool-call-parser", TOOL_CALL_PARSER]
+else:
+    # vLLM — default for test / prod / minimax profiles.
+    _cmd = [
+        "python3",
+        "-m",
+        "vllm.entrypoints.openai.api_server",
+        "--model",
+        MODEL_ID,
+        "--download-dir",
+        "/model-cache",
+        "--served-model-name",
+        SERVED_MODEL_NAME,
+        "--host",
+        "0.0.0.0",  # noqa: S104 — container-internal binding
+        "--port",
+        "8000",
+        "--max-model-len",
+        str(CONTEXT_LENGTH),
+        "--trust-remote-code",
+    ]
+    if TP_SIZE > 1:
+        _cmd += ["--tensor-parallel-size", str(TP_SIZE)]
+    # Tool calling — required for opencode; not needed for aider (diff format).
+    if TOOL_CALL_PARSER:
+        _cmd += ["--enable-auto-tool-choice", "--tool-call-parser", TOOL_CALL_PARSER]
+
+# ── Serve function ───────────────────────────────────────────────────────────
+
+
+@app.function(
+    image=image,
+    gpu=GPU,
+    secrets=[
+        modal.Secret.from_dict(
+            {
+                "HF_TOKEN": os.environ["HF_TOKEN"],
+                # Inject SERVE_PROFILE so the container sees it when re-importing
+                # this module at runtime — without it the branch always defaults
+                # to "test" and starts vLLM even on the sglang profile.
+                "SERVE_PROFILE": SERVE_PROFILE,
+            }
+        )
+    ],
+    timeout=60 * 60,
+    scaledown_window=SCALEDOWN_WINDOW,
+    volumes={"/model-cache": model_volume},
+)
+@modal.concurrent(max_inputs=32)
+@modal.web_server(port=8000, startup_timeout=STARTUP_TIMEOUT)
+def serve() -> None:
+    """Start the inference server inside the Modal container.
+
+    The command (_cmd) is built at deploy time so the correct engine
+    (vLLM or SGLang) runs regardless of the container's env vars.
+    """
+    subprocess.Popen(_cmd)  # noqa: S603
