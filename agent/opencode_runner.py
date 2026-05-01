@@ -508,7 +508,15 @@ class AcpClient:
         update = msg.get("params", {}).get("update", {})
         kind = update.get("sessionUpdate", "")
         if kind == "agent_message_chunk":
-            chunk = update.get("content", "")
+            raw = update.get("content", "")
+            # opencode may send content as a plain string or as a structured
+            # dict {"type": "text", "text": "..."} / list of such parts.
+            if isinstance(raw, dict):
+                chunk = raw.get("text", "")
+            elif isinstance(raw, list):
+                chunk = "".join(p.get("text", "") for p in raw if isinstance(p, dict))
+            else:
+                chunk = str(raw) if raw else ""
             if chunk:
                 self._output_lines.append(chunk)
                 sys.stdout.write(chunk)
