@@ -242,8 +242,9 @@ class RunLogger:
         now = datetime.now(UTC).isoformat()
         with self._lock:
             self._conn.execute(
-                "INSERT INTO runs"
-                " (run_id, repo, task, backend, initiated_by, base_branch, timeout_seconds, started_at)"
+                "INSERT INTO runs"  # noqa: S608
+                " (run_id, repo, task, backend,"
+                " initiated_by, base_branch, timeout_seconds, started_at)"
                 " VALUES (?,?,?,?,?,?,?,?)",
                 (self.run_id, repo, task, backend, initiated_by, base_branch, timeout_seconds, now),
             )
