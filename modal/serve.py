@@ -122,8 +122,19 @@ model_volume = modal.Volume.from_name("agent-container-models", create_if_missin
 # SGLang and vLLM are mutually exclusive — installing both would bloat the image
 # and risk version conflicts.  The sglang profile gets its own lean image.
 if SERVE_PROFILE == "sglang":
+    # SGLang JIT-compiles CUDA kernels (rope, attention, piecewise graphs) via
+    # its own jit_kernel / TVM layer.  These run at model-load time — there is
+    # no flag to disable all of them.  debian_slim has no CUDA toolkit so every
+    # compilation attempt fails with "Could not find CUDA installation".
+    #
+    # Fix: use the CUDA 12.4 devel image as base — it ships nvcc, headers, and
+    # sets CUDA_HOME=/usr/local/cuda so SGLang's JIT paths resolve correctly.
+    # add_python="3.11" lets Modal inject its Python bootstrap on top.
     image = (
-        modal.Image.debian_slim(python_version="3.11")
+        modal.Image.from_registry(
+            "nvidia/cuda:12.4.1-devel-ubuntu22.04",
+            add_python="3.11",
+        )
         .pip_install("sglang[all]", "huggingface_hub[hf_transfer]")
         .env({"HF_HUB_ENABLE_HF_TRANSFER": "1"})
     )
@@ -174,12 +185,11 @@ if SERVE_PROFILE == "sglang":
         _cmd += ["--tensor-parallel-size", str(TP_SIZE)]
     if TOOL_CALL_PARSER:
         _cmd += ["--tool-call-parser", TOOL_CALL_PARSER]
-    # Modal containers don't expose the CUDA toolkit (nvcc/headers).
-    # FlashInfer and Triton both JIT-compile CUDA kernels at startup and
-    # fail with "Could not find nvcc / CUDA installation".
-    # torch_native is pure PyTorch — no compilation, no nvcc required.
-    # Performance is reduced but acceptable for Phase 3 tool-call validation.
-    _cmd += ["--attention-backend", "torch_native", "--disable-cuda-graph"]
+    # CUDA graph capture triggers a second round of JIT compilation that can
+    # be slow or flaky on first boot.  Disable it for Phase 3 validation;
+    # the image now has the full CUDA 12.4 devel toolkit so all other JIT
+    # paths (rope, attention kernels) compile successfully.
+    _cmd += ["--disable-cuda-graph"]
 else:
     # vLLM — default for test / prod / minimax profiles.
     _cmd = [
