@@ -26,6 +26,16 @@ Pure Responses API ↔ Chat Completions adapter, zero model-specific code.
 - Tools passed in standard `tools` field — vLLM handles natively
 - `make example BACKEND=opencode` produces a real diff and opens a PR
 
+### Phase 3 — SGLang validation (done)
+SGLang deployed as a separate Modal app (`agent-container-serve-sglang`); tool calling confirmed working with `hermes` parser.
+
+- Add `sglang` profile to `serve.py` — separate app, same model/GPU as `test`
+- Fix Modal env var injection — `SERVE_PROFILE` baked into secret at deploy time
+- Fix SGLang image — switch to `nvidia/cuda:12.4.1-devel-ubuntu22.04` + `libnuma1` so JIT kernel compilation succeeds on A10G
+- Fix warmup polling — `poll_interval` 5s → 30s to avoid flooding Modal with queued requests
+- Fix tool-call parser — `qwen`/`qwen25` hangs on first tool-schema request; `hermes` resolves in 3s
+- `make example BACKEND=opencode` against SGLang endpoint: tool call with 10 tools → ok (3.0s), PR opened
+
 ---
 
 ## In progress
@@ -33,9 +43,7 @@ Pure Responses API ↔ Chat Completions adapter, zero model-specific code.
 ### Immediate
 | Issue | Task |
 |---|---|
-| [#110](https://github.com/dvdthecoder/agent-container/issues/110) | Debug sandbox termination — containers still visible after run exits |
 | — | Test dashboard end-to-end — spin up, run a real task, verify phase stream |
-| [#106](https://github.com/dvdthecoder/agent-container/issues/106) | Phase 3: SGLang validation — deploy sglang profile, run opencode smoke test |
 
 ---
 
