@@ -40,27 +40,27 @@ SGLang deployed as a separate Modal app (`agent-container-serve-sglang`); tool c
 
 ## In progress
 
-### Immediate
-| Issue | Task |
-|---|---|
-| — | Test dashboard end-to-end — spin up, run a real task, verify phase stream |
+| Task |
+|------|
+| Test dashboard end-to-end — spin up, run a real task, verify phase stream |
+| Fix fixture repo — add `.gitignore` for `__pycache__` so pyc files stop appearing in PR diffs |
 
 ---
 
 ## Planned
 
-### Phase 3 — Model expansion + observability
+### Phase 4 — Model expansion + observability
 Broaden the model menu and make runs observable beyond the final PR.
 
 | Issue | Task |
 |---|---|
-| [#113](https://github.com/dvdthecoder/agent-container/issues/113) | Add Qwen3 and Gemma 4 model profiles to `serve.py` |
+| [#113](https://github.com/dvdthecoder/agent-container/issues/113) | Add Qwen3-Coder and Gemma 4 model profiles to `serve.py` (vLLM) |
 | [#114](https://github.com/dvdthecoder/agent-container/issues/114) | Docs: cost and quality comparison — self-hosted LLMs vs Claude API |
 | [#115](https://github.com/dvdthecoder/agent-container/issues/115) | Docs: step-by-step guide for adding a new model profile |
 | [#112](https://github.com/dvdthecoder/agent-container/issues/112) | Install opencode-monitor in sandbox — structured per-tool-call events in logs |
 | [#111](https://github.com/dvdthecoder/agent-container/issues/111) | Stream real-time agent progress in CLI during RUNNING phase |
 
-### Phase 4 — Production hardening
+### Phase 5 — Production hardening
 Close the gap between the current implementation and a fully team-deployed system.
 
 | Issue | Task |
@@ -68,7 +68,7 @@ Close the gap between the current implementation and a fully team-deployed syste
 | [#107](https://github.com/dvdthecoder/agent-container/issues/107) | Warm sandboxes via Modal snapshot API — eliminate cold-start clone+install latency |
 | [#108](https://github.com/dvdthecoder/agent-container/issues/108) | Deeper verification loop — Sentry errors, metrics, visual screenshots for frontend |
 
-### Phase 5 — Team and integrations
+### Phase 6 — Team and integrations
 Broader entry points and collaboration features.
 
 | Issue | Task |
