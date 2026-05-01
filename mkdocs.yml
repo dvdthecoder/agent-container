@@ -57,6 +57,7 @@ markdown_extensions:
 
 nav:
   - Home: index.md
+  - Roadmap: roadmap.md
   - Get Started:
     - Quickstart: quickstart.md
     - Architecture: architecture.md
