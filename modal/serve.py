@@ -135,6 +135,11 @@ if SERVE_PROFILE == "sglang":
             "nvidia/cuda:12.4.1-devel-ubuntu22.04",
             add_python="3.11",
         )
+        # libnuma1 is a runtime dependency of sgl_kernel's SM86 binary
+        # (the A10G variant).  Without it the shared library fails to load
+        # with "libnuma.so.1: cannot open shared object file" and sgl_kernel
+        # falls through to the SM100 build which is wrong for this GPU.
+        .apt_install("libnuma1")
         .pip_install("sglang[all]", "huggingface_hub[hf_transfer]")
         .env({"HF_HUB_ENABLE_HF_TRANSFER": "1"})
     )
