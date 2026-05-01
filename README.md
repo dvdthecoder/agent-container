@@ -296,7 +296,7 @@ make test-e2e           # real Modal sandbox + real model
 |---|---|---|
 | Phase 1 | vLLM + aider: direct Chat Completions, end-to-end PR | ✅ |
 | Phase 2 | Clean opencode proxy: pure Responses API ↔ Chat Completions adapter | ✅ |
-| Phase 3 | SGLang verification: point Phase 2 at SGLang, scope inference-layer failures | planned |
+| Phase 3 | SGLang validation: deploy alongside vLLM, confirm tool calling end-to-end | ✅ |
 
 ---
 
@@ -408,18 +408,34 @@ format adapter — no model-specific logic.
 
 ---
 
-### 9. SGLang v0.4.7 tool-calling crashes (resolved by switching to vLLM)
+### 9. SGLang v0.4.7 tool-calling crashes — and Phase 3 validation
 
-**Problem:** SGLang v0.4.7 had multiple blocking bugs: the `--enable-auto-tool-choice` flag did
-not exist, `--tool-call-parser qwen25` crashed the server process on the first request with tool
-schemas, and streaming with tools hung indefinitely. The original opencode proxy worked around
-all of these with Qwen-native text injection (`<tools>...</tools>`) and text-level parsing of
-`<tool_call>` output.
+**Problem:** The original inference server was SGLang v0.4.7. It had multiple blocking bugs:
+`--enable-auto-tool-choice` did not exist, `--tool-call-parser qwen25` crashed the server
+process on the first request with tool schemas, and streaming with tools hung indefinitely.
+The original opencode proxy worked around all of these with Qwen-native text injection and
+text-level `<tool_call>` parsing — 389 lines of model-specific glue code.
 
-**Fix:** Switched the primary inference server to vLLM. vLLM has correct, stable implementations
-of `--enable-auto-tool-choice` and `--tool-call-parser`. All SGLang-specific workarounds were
-removed from `opencode_runner.py` in Phase 2 — the proxy became a clean format adapter
-(170 lines added, 389 removed).
+**Phase 1 fix:** Switched the primary inference server to vLLM. vLLM has a stable, first-class
+OpenAI-compatible API with `--enable-auto-tool-choice` and `--tool-call-parser`. All SGLang
+workarounds were removed from `opencode_runner.py` in Phase 2 (170 lines added, 389 removed).
+The proxy became a clean format adapter with no model-specific code.
+
+**Phase 3 — SGLang re-validation:** After the proxy was clean, SGLang was re-tested in isolation
+against the same model (Qwen2.5-Coder 7B, A10G) to determine whether newer versions had fixed
+the tool-calling bugs. Key findings:
+
+- `--tool-call-parser qwen` and `qwen25` still hang on the first request with tool schemas
+  (0 chunks received, server becomes unresponsive)
+- `--tool-call-parser hermes` resolves correctly — first tool call with 10 tools returned in
+  3 seconds, full run (WARMING → PR) completed in 29 seconds
+- SGLang requires a CUDA devel base image (`nvidia/cuda:12.4.1-devel-ubuntu22.04`) and
+  `libnuma1` — it JIT-compiles rope/attention kernels at model-load time, which fails in a
+  bare debian_slim container
+
+**Conclusion:** SGLang is viable with the `hermes` parser. vLLM remains the default because it
+works out-of-the-box with no image surgery. Both run simultaneously as separate Modal apps —
+`agent-container-serve` (vLLM) and `agent-container-serve-sglang` (SGLang).
 
 ---
 

@@ -56,9 +56,44 @@ The model runs on Modal GPU infrastructure alongside the sandbox. `modal deploy 
 deploys the model once and gives you a stable internal endpoint. The sandbox container calls
 it over Modal's internal network — no public internet hop, no external API key needed.
 
-The inference server is **vLLM**. It provides a stable, first-class OpenAI-compatible
-`/v1/chat/completions` API with reliable tool calling across all model profiles. Scale-to-zero
-when idle, billed per GPU second, no hardware to manage.
+Scale-to-zero when idle, billed per GPU second, no hardware to manage.
+
+### vLLM — primary inference engine
+
+[vLLM](https://github.com/vllm-project/vllm) is the default inference server for all three
+production profiles (`test`, `prod`, `minimax`). It provides a stable OpenAI-compatible
+`/v1/chat/completions` API with first-class tool calling (`--enable-auto-tool-choice
+--tool-call-parser hermes`), tensor parallelism for multi-GPU models, and KV prefix caching.
+
+vLLM works with a standard Python base image (`debian_slim`) — no CUDA toolkit or driver
+installation required. Modal injects GPU drivers at runtime.
+
+**Why vLLM and not SGLang initially:** The original implementation used SGLang v0.4.7 as
+the inference server. It had multiple blocking bugs at that version: `--enable-auto-tool-choice`
+did not exist, `--tool-call-parser qwen25` crashed the server on the first tool-schema
+request, and streaming with tools hung indefinitely. Phase 1 switched to vLLM and removed
+all SGLang-specific workarounds from the proxy layer (389 lines removed in Phase 2).
+
+### SGLang — validated alternative (Phase 3)
+
+[SGLang](https://github.com/sgl-project/sglang) was re-evaluated in Phase 3 against the same
+model (Qwen2.5-Coder 7B on A10G) to determine whether it had fixed the tool-calling bugs.
+
+**Finding:** SGLang works end-to-end with `--tool-call-parser hermes`. The `qwen`/`qwen25`
+parsers still hang on tool-schema requests. First tool call with 10 tools: 3 seconds. Full
+run to PR: 29 seconds.
+
+SGLang requires more image setup than vLLM — a CUDA devel base image, `libnuma1`, and
+`--disable-cuda-graph` on first boot. See [Model Setup → SGLang](models.md#sglang--phase-3-validation-results)
+for the complete setup.
+
+The `sglang` profile deploys to a **separate Modal app** (`agent-container-serve-sglang`) so
+both inference servers can run simultaneously without interfering:
+
+```
+agent-container-serve        → vLLM  (default, all production profiles)
+agent-container-serve-sglang → SGLang (SERVE_PROFILE=sglang, hermes parser)
+```
 
 ### Agent backends
 

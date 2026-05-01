@@ -72,29 +72,45 @@ profiles and handles:
 
 ### Why vLLM is the default
 
-SGLang v0.4.7 had blocking bugs in its tool-call parser — the `--tool-call-parser qwen25` flag
-crashed the server on the first request carrying tool schemas, and streaming with tools hung
-indefinitely. vLLM is the stable primary choice.
+vLLM provides a stable, first-class OpenAI-compatible API with reliable tool calling across
+all model profiles. It works out-of-the-box with a standard Python base image — no CUDA
+toolkit surgery required.
 
-### SGLang — Phase 3 validation
+SGLang v0.4.7 (the original inference server) had blocking bugs: `--tool-call-parser qwen25`
+crashed on the first tool-schema request and streaming with tools hung indefinitely. Phase 1
+switched to vLLM and removed all SGLang-specific workarounds from the proxy.
 
-The `sglang` profile exists specifically to validate whether SGLang has fixed those bugs in a
-newer image. It deploys to a **separate Modal app** (`agent-container-serve-sglang`) so the
-vLLM endpoint is never disturbed — both can run simultaneously.
+### SGLang — Phase 3 validation results
+
+Phase 3 re-tested SGLang in isolation against the same model (Qwen2.5-Coder 7B, A10G) to
+determine whether newer versions had fixed the tool-calling bugs. The `sglang` profile deploys
+to a **separate Modal app** (`agent-container-serve-sglang`) so the vLLM endpoint is never
+disturbed — both can run simultaneously.
+
+**Results (Phase 3 complete):**
+
+| Parser | Result |
+|--------|--------|
+| `qwen` / `qwen25` | Hangs — 0 chunks received on first tool-schema request |
+| `hermes` | Works — 10 tools, responds in 3 seconds, full run in 29 seconds |
+
+SGLang also requires extra image setup that vLLM does not:
+- Base image must be `nvidia/cuda:12.4.1-devel-ubuntu22.04` (not `debian_slim`) — SGLang
+  JIT-compiles rope/attention kernels at model-load time via its own TVM layer, requiring
+  `nvcc` and CUDA headers
+- `libnuma1` must be installed — the SM86 (A10G) `sgl_kernel` binary links against
+  `libnuma.so.1`
+- CUDA graph capture must be disabled (`--disable-cuda-graph`) on first boot
+
+**To run the SGLang profile:**
 
 ```bash
-# Deploy SGLang alongside the existing vLLM endpoint
 SERVE_PROFILE=sglang modal deploy modal/serve.py
 # → https://your-org--agent-container-serve-sglang-serve.modal.run
 
-# Point at the SGLang endpoint and run the opencode smoke test
 OPENAI_BASE_URL=https://your-org--agent-container-serve-sglang-serve.modal.run \
   make example BACKEND=opencode
 ```
-
-If `make example BACKEND=opencode` produces a non-empty diff and opens a PR, Phase 3 is done
-and SGLang becomes a supported production profile. If tool calling still crashes, the failure
-scopes entirely to the SGLang inference layer — the opencode proxy is proven clean by Phase 2.
 
 ---
 
