@@ -80,15 +80,32 @@ profiles and handles:
 | Base image | `debian_slim` — no CUDA toolkit needed | `nvidia/cuda:12.4.1-devel-ubuntu22.04` + `libnuma1` required |
 | JIT compilation | None at startup | Compiles rope/attention kernels via TVM at model-load time |
 | CUDA graphs | Enabled by default | Must disable (`--disable-cuda-graph`) on Modal |
+| KV cache sharing | Manual prefix caching | RadixAttention — automatic, fine-grained sharing across runs |
+| Throughput (shared prefix) | Baseline | 2–4× higher when runs share system prompt / repo context |
+| Constrained decoding | Basic | Native JSON schema and regex enforcement at decode level |
 | Modal app | `agent-container-serve` | `agent-container-serve-sglang` (separate, runs simultaneously) |
 | Cold start (7B, A10G) | ~1–2 min | ~2–3 min (JIT compile adds ~1 min) |
-| Recommended for | All use cases | Benchmarking, validation, or if you prefer SGLang's runtime |
+| Recommended for | All use cases today | Team-scale concurrent runs; benchmarking |
 
 **Why vLLM is the default:** It works out-of-the-box with a standard Python base image and
 has reliable tool calling across all model profiles. SGLang v0.4.7 (the original inference
 server) had blocking bugs — `--tool-call-parser qwen25` crashed on the first tool-schema
 request and streaming with tools hung indefinitely. Phase 1 switched to vLLM and removed all
 SGLang-specific workarounds from the proxy (389 lines removed in Phase 2).
+
+**When SGLang becomes worth it:** SGLang's primary advantage is **RadixAttention** — it builds
+a radix tree of KV cache blocks and automatically reuses them across requests that share a
+common prefix. For agent workloads this matters at scale: if 10 runs all start with the same
+system prompt and the same repo context, SGLang serves runs 2–10 with the shared prefix already
+cached. At low volume (one run at a time) vLLM and SGLang perform similarly. At team scale
+(5+ engineers, concurrent runs against the same repo) SGLang's throughput advantage compounds.
+
+| Advantage | Matters now (low volume) | Matters at team scale |
+|-----------|--------------------------|----------------------|
+| RadixAttention (KV cache sharing) | Minimal — runs are sequential | Yes — concurrent runs share repo context |
+| Higher throughput | No | Yes — 2–4× on shared-prefix workloads |
+| Constrained decoding | Not needed | Useful if tool call reliability degrades |
+| Piecewise CUDA graphs | Disabled on Modal | Yes — if CUDA toolkit available in image |
 
 ### SGLang — Phase 3 validation results
 
