@@ -78,10 +78,7 @@ _PROD_DEFAULT = "qwen3-coder"
 if SERVE_PROFILE == "prod":
     _model_key = os.environ.get("SERVE_MODEL", _PROD_DEFAULT)
     if _model_key not in _PROD_MODELS:
-        raise ValueError(
-            f"Unknown SERVE_MODEL={_model_key!r}. "
-            f"Available: {list(_PROD_MODELS)}"
-        )
+        raise ValueError(f"Unknown SERVE_MODEL={_model_key!r}. Available: {list(_PROD_MODELS)}")
     _m = _PROD_MODELS[_model_key]
     MODEL_ID: str = _m["model_id"]
     SERVED_MODEL_NAME: str = _m["served_name"]
@@ -121,9 +118,7 @@ else:
 # experiment deploys to its own app so vLLM endpoints are never disturbed.
 # test and prod share agent-container-serve.
 _APP_NAME = (
-    "agent-container-serve-experiment"
-    if SERVE_PROFILE == "experiment"
-    else "agent-container-serve"
+    "agent-container-serve-experiment" if SERVE_PROFILE == "experiment" else "agent-container-serve"
 )
 app = modal.App(_APP_NAME)
 
@@ -163,13 +158,21 @@ else:
 
 if SERVE_PROFILE == "experiment":
     _cmd: list[str] = [
-        "python3", "-m", "sglang.launch_server",
-        "--model", MODEL_ID,
-        "--download-dir", "/model-cache",
-        "--served-model-name", SERVED_MODEL_NAME,
-        "--host", "0.0.0.0",  # noqa: S104
-        "--port", "8000",
-        "--context-length", str(CONTEXT_LENGTH),
+        "python3",
+        "-m",
+        "sglang.launch_server",
+        "--model",
+        MODEL_ID,
+        "--download-dir",
+        "/model-cache",
+        "--served-model-name",
+        SERVED_MODEL_NAME,
+        "--host",
+        "0.0.0.0",  # noqa: S104
+        "--port",
+        "8000",
+        "--context-length",
+        str(CONTEXT_LENGTH),
         "--trust-remote-code",
     ]
     if TP_SIZE > 1:
@@ -180,13 +183,21 @@ if SERVE_PROFILE == "experiment":
     _cmd += ["--disable-cuda-graph"]
 else:
     _cmd = [
-        "python3", "-m", "vllm.entrypoints.openai.api_server",
-        "--model", MODEL_ID,
-        "--download-dir", "/model-cache",
-        "--served-model-name", SERVED_MODEL_NAME,
-        "--host", "0.0.0.0",  # noqa: S104
-        "--port", "8000",
-        "--max-model-len", str(CONTEXT_LENGTH),
+        "python3",
+        "-m",
+        "vllm.entrypoints.openai.api_server",
+        "--model",
+        MODEL_ID,
+        "--download-dir",
+        "/model-cache",
+        "--served-model-name",
+        SERVED_MODEL_NAME,
+        "--host",
+        "0.0.0.0",  # noqa: S104
+        "--port",
+        "8000",
+        "--max-model-len",
+        str(CONTEXT_LENGTH),
         "--trust-remote-code",
     ]
     if TP_SIZE > 1:
@@ -201,12 +212,14 @@ else:
     image=image,
     gpu=GPU,
     secrets=[
-        modal.Secret.from_dict({
-            "HF_TOKEN": os.environ["HF_TOKEN"],
-            # Bake SERVE_PROFILE into the container so module-level branches
-            # resolve correctly when the container re-imports this file.
-            "SERVE_PROFILE": SERVE_PROFILE,
-        })
+        modal.Secret.from_dict(
+            {
+                "HF_TOKEN": os.environ["HF_TOKEN"],
+                # Bake SERVE_PROFILE into the container so module-level branches
+                # resolve correctly when the container re-imports this file.
+                "SERVE_PROFILE": SERVE_PROFILE,
+            }
+        )
     ],
     timeout=60 * 60,
     scaledown_window=SCALEDOWN_WINDOW,

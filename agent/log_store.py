@@ -138,10 +138,7 @@ class RunLogger:
 
     def _migrate(self) -> None:
         """Add columns introduced after initial schema (idempotent)."""
-        existing = {
-            row[1]
-            for row in self._conn.execute("PRAGMA table_info(runs)").fetchall()
-        }
+        existing = {row[1] for row in self._conn.execute("PRAGMA table_info(runs)").fetchall()}
         migrations = [
             ("initiated_by", "TEXT NOT NULL DEFAULT 'cli'"),
             ("base_branch", "TEXT NOT NULL DEFAULT 'main'"),

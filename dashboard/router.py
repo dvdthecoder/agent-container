@@ -76,10 +76,8 @@ def _run_row_to_dict(row: RunRow, active_phase: str | None = None) -> dict[str, 
         "duration_s": row.duration_s,
         "sandbox_id": row.sandbox_id,
         # live phase from WorkspaceStore while run is active
-        "phase": active_phase or (
-            "DONE" if row.outcome == "success"
-            else ("FAILED" if row.outcome else "RUNNING")
-        ),
+        "phase": active_phase
+        or ("DONE" if row.outcome == "success" else ("FAILED" if row.outcome else "RUNNING")),
     }
 
 
@@ -207,7 +205,9 @@ def serve_status() -> dict[str, Any]:
     try:
         result = subprocess.run(
             ["modal", "app", "list", "--json"],
-            capture_output=True, text=True, timeout=15,
+            capture_output=True,
+            text=True,
+            timeout=15,
         )
         if result.returncode != 0:
             return {"status": "unknown", "error": result.stderr.strip()}
@@ -226,6 +226,7 @@ def serve_deploy(body: DeployRequest) -> dict[str, str]:
         env["SERVE_MODEL"] = body.model
 
     import os
+
     full_env = {**os.environ, **env}
 
     def _deploy() -> None:
