@@ -28,7 +28,8 @@ Four profiles are built into `modal/serve.py`:
 | `sglang` | SGLang | Qwen2.5-Coder-7B | A10G | 32k | `SERVE_PROFILE=sglang modal deploy modal/serve.py` |
 
 **Start with `test`** — cheap, fast iteration. Promote to `prod` or `minimax` for
-production-grade output quality. Use `sglang` only for Phase 3 validation (see below).
+production-grade output quality. Use `sglang` to run on SGLang instead of vLLM — see the
+comparison table below.
 
 ### Model names
 
@@ -70,15 +71,24 @@ profiles and handles:
 - Tensor parallelism for multi-GPU profiles (`--tensor-parallel-size`)
 - KV prefix caching — agent runs against the same repo share cached context
 
-### Why vLLM is the default
+### vLLM vs SGLang
 
-vLLM provides a stable, first-class OpenAI-compatible API with reliable tool calling across
-all model profiles. It works out-of-the-box with a standard Python base image — no CUDA
-toolkit surgery required.
+| | vLLM | SGLang |
+|--|------|--------|
+| Status | Default — all production profiles | Validated alternative (`sglang` profile) |
+| Tool calling | Stable — `hermes` parser, works out of the box | Works with `hermes` parser; `qwen`/`qwen25` hangs |
+| Base image | `debian_slim` — no CUDA toolkit needed | `nvidia/cuda:12.4.1-devel-ubuntu22.04` + `libnuma1` required |
+| JIT compilation | None at startup | Compiles rope/attention kernels via TVM at model-load time |
+| CUDA graphs | Enabled by default | Must disable (`--disable-cuda-graph`) on Modal |
+| Modal app | `agent-container-serve` | `agent-container-serve-sglang` (separate, runs simultaneously) |
+| Cold start (7B, A10G) | ~1–2 min | ~2–3 min (JIT compile adds ~1 min) |
+| Recommended for | All use cases | Benchmarking, validation, or if you prefer SGLang's runtime |
 
-SGLang v0.4.7 (the original inference server) had blocking bugs: `--tool-call-parser qwen25`
-crashed on the first tool-schema request and streaming with tools hung indefinitely. Phase 1
-switched to vLLM and removed all SGLang-specific workarounds from the proxy.
+**Why vLLM is the default:** It works out-of-the-box with a standard Python base image and
+has reliable tool calling across all model profiles. SGLang v0.4.7 (the original inference
+server) had blocking bugs — `--tool-call-parser qwen25` crashed on the first tool-schema
+request and streaming with tools hung indefinitely. Phase 1 switched to vLLM and removed all
+SGLang-specific workarounds from the proxy (389 lines removed in Phase 2).
 
 ### SGLang — Phase 3 validation results
 
