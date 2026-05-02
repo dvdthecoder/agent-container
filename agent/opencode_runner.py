@@ -640,16 +640,18 @@ def main() -> int:
 
     stop_reason = result.get("result", {}).get("stopReason", "")
     print(f"[runner] session/prompt result: stopReason={stop_reason!r} keys={list(result.get('result', {}).keys())}", file=sys.stderr)
-    if stop_reason:
-        if stop_reason != "end_turn":
-            print(
-                f"[runner] unexpected stop: {stop_reason or result.get('error', '')}",
-                file=sys.stderr,
-            )
-            client.terminate()
-            return 1
+    if stop_reason and stop_reason != "end_turn":
+        print(
+            f"[runner] unexpected stop: {stop_reason or result.get('error', '')}",
+            file=sys.stderr,
+        )
         client.terminate()
-        return 0
+        return 1
+
+    # session/prompt returns end_turn as soon as the model responds, but tool
+    # execution is async — the session_completed notification fires only after
+    # all tools have run and the agent loop is truly done.  Always fall through
+    # to the polling loop so we don't terminate before edits hit disk.
 
     deadline = time.monotonic() + float(TIMEOUT_SECONDS)
     last_log = time.monotonic()
