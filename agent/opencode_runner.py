@@ -398,6 +398,14 @@ class _ProxyHandler(http.server.BaseHTTPRequestHandler):
             f" tools={tool_names}",
             file=sys.stderr,
         )
+        for i in sorted(tool_calls_buf):
+            buf = tool_calls_buf[i]
+            # Truncate args to 300 chars to keep logs readable
+            args_preview = buf["arguments"][:300].replace("\n", " ")
+            print(
+                f"[proxy]   tool[{i}] {buf['name']}  args={args_preview}",
+                file=sys.stderr,
+            )
 
         self._write_sse(
             json.dumps(
@@ -640,18 +648,24 @@ def main() -> int:
 
     stop_reason = result.get("result", {}).get("stopReason", "")
     print(f"[runner] session/prompt result: stopReason={stop_reason!r} keys={list(result.get('result', {}).keys())}", file=sys.stderr)
-    if stop_reason and stop_reason != "end_turn":
-        print(
-            f"[runner] unexpected stop: {stop_reason or result.get('error', '')}",
-            file=sys.stderr,
-        )
+    if stop_reason:
+        if stop_reason != "end_turn":
+            print(
+                f"[runner] unexpected stop: {stop_reason or result.get('error', '')}",
+                file=sys.stderr,
+            )
+            client.terminate()
+            return 1
+        # session/prompt returned end_turn synchronously — session is complete.
+        # Give a short grace period in case any async notification is still in flight,
+        # then exit.
+        grace = time.monotonic() + 3
+        while time.monotonic() < grace:
+            if client._stop_reason:
+                break
+            time.sleep(0.1)
         client.terminate()
-        return 1
-
-    # session/prompt returns end_turn as soon as the model responds, but tool
-    # execution is async — the session_completed notification fires only after
-    # all tools have run and the agent loop is truly done.  Always fall through
-    # to the polling loop so we don't terminate before edits hit disk.
+        return 0
 
     deadline = time.monotonic() + float(TIMEOUT_SECONDS)
     last_log = time.monotonic()
