@@ -3,7 +3,8 @@
 Profiles
 --------
 test        — fixed config, zero decisions needed.
-              Qwen2.5-Coder 7B · A10G · vLLM  (~$1/hr, ~2 min cold start)
+              Qwen2.5-Coder 32B · A100 80GB · vLLM  (~$4/hr, ~3 min cold start)
+              Reliable tool use; use this profile for opencode runs.
 
 prod        — flexible model, engine always vLLM.
               Default: Qwen3-Coder 80B · 2× A100 80GB
@@ -103,14 +104,16 @@ elif SERVE_PROFILE == "experiment":
     TOOL_CALL_PARSER = "hermes"
 
 else:
-    # test — zero config, fixed model + engine. Cheap and fast.
-    MODEL_ID = "Qwen/Qwen2.5-Coder-7B-Instruct"
-    SERVED_MODEL_NAME = "qwen2.5-coder"
-    GPU = "A10G"
+    # test — zero config, fixed model + engine.
+    # 32B chosen over 7B for reliable tool use with opencode; 7B frequently
+    # responds with plain text instead of calling file-editing tools.
+    MODEL_ID = "Qwen/Qwen2.5-Coder-32B-Instruct"
+    SERVED_MODEL_NAME = "qwen2.5-coder-32b"
+    GPU = modal.gpu.A100(count=1, size="80GB")
     CONTEXT_LENGTH = 32_768
     TP_SIZE = 1
     SCALEDOWN_WINDOW = 300
-    STARTUP_TIMEOUT = 300
+    STARTUP_TIMEOUT = 600
     TOOL_CALL_PARSER = "hermes"
 
 # ── Modal app ────────────────────────────────────────────────────────────────
