@@ -139,14 +139,14 @@ SERVE_PROFILE=prod modal deploy modal/serve.py
 Deploys to a separate Modal app so the vLLM endpoint is untouched:
 
 ```bash
-SERVE_PROFILE=sglang modal deploy modal/serve.py
-# → https://your-org--agent-container-serve-sglang-serve.modal.run
+SERVE_PROFILE=experiment modal deploy modal/serve.py
+# → https://your-org--agent-container-serve-experiment-serve.modal.run
 ```
 
 Point at the SGLang endpoint and run the opencode smoke test:
 
 ```bash
-OPENAI_BASE_URL=https://your-org--agent-container-serve-sglang-serve.modal.run \
+OPENAI_BASE_URL=https://your-org--agent-container-serve-experiment-serve.modal.run \
   make example BACKEND=opencode
 ```
 

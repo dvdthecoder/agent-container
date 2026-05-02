@@ -61,12 +61,18 @@ aider for complex tasks.
 
 opencode v1.14+ calls the OpenAI Responses API (`POST /v1/responses`). A thin in-process
 adapter translates this to Chat Completions and back — pure JSON reshaping, no model-specific
-code. See [Architecture](architecture.md#opencode-adapter-thin-proxy).
+code. See [Architecture](architecture.md#opencode-adapter-thin-proxy) for the full proxy design
+including SSE event sequence, adaptive `tool_choice`, and `parallel_tool_calls`.
+
+The sandbox installs a pinned version (`opencode-ai@1.14.31`) so proxy-compatibility changes in
+opencode do not silently break runs. Update the pin deliberately after verifying the proxy still
+works end-to-end.
 
 ```bash
 OPENAI_BASE_URL=https://your-org--agent-container-serve-serve.modal.run  # no /v1 suffix
 OPENAI_API_KEY=modal
-OPENCODE_MODEL=qwen2.5-coder
+OPENCODE_MODEL=qwen2.5-coder-32b
+OPENCODE_TOOL_CHOICE=auto   # optional: override first-turn tool_choice (default: required)
 ```
 
 **Best for:** complex multi-step tasks where the agent needs to reason, run tests, and iterate.

@@ -24,7 +24,14 @@ Pure Responses API ↔ Chat Completions adapter, zero model-specific code.
 - Rewrite `opencode_runner.py` — 389 lines removed, 170 added
 - Remove all SGLang-specific hacks (Qwen-native text injection, `<tool_call>` parsing)
 - Tools passed in standard `tools` field — vLLM handles natively
-- `make example BACKEND=opencode` produces a real diff and opens a PR
+- Emit full Responses API SSE event sequence per tool call (`response.output_item.added`,
+  `response.function_call_arguments.done`, `response.output_item.done`) — required for opencode's
+  agentic loop to detect and execute tool calls
+- `parallel_tool_calls: false` — forces one tool call per turn so `read` result is visible
+  before `edit` generates `oldString`
+- Adaptive `tool_choice`: `required` until first `edit`/`write` call, then `auto` — prevents
+  infinite bash loop after the file is written
+- `make example BACKEND=opencode` produces a real diff and opens a PR (verified: fixture PR #12)
 
 ### Phase 3 — SGLang validation (done)
 SGLang deployed as a separate Modal app (`agent-container-serve-sglang`); tool calling confirmed working with `hermes` parser.
@@ -42,7 +49,6 @@ SGLang deployed as a separate Modal app (`agent-container-serve-sglang`); tool c
 
 | Task |
 |------|
-| Test dashboard end-to-end — spin up, run a real task, verify phase stream |
 | Fix fixture repo — add `.gitignore` for `__pycache__` so pyc files stop appearing in PR diffs |
 
 ---

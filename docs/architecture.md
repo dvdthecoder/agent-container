@@ -167,12 +167,44 @@ server implements this API — they all speak Chat Completions. The adapter brid
 ```
 opencode → POST /v1/responses
                 ↓  reshape: input[] → messages[], tools format, role names
+                ↓  tool_choice: "required" (first turn) / "auto" (after edit)
+                ↓  parallel_tool_calls: false
            POST /v1/chat/completions  →  vLLM
                 ↑  reshape: tool_calls → function_call items
-opencode ← Responses API response
+                ↑  SSE: emit full event sequence per tool call
+opencode ← Responses API streaming response
 ```
 
-The adapter contains no model-specific code. It is a format translation layer only.
+The adapter contains no model-specific code. It is a pure format translation layer with three
+behaviours worth understanding:
+
+**Full SSE event sequence per tool call.** For each tool call the model makes, the proxy emits the
+complete Responses API streaming event sequence before `response.completed`:
+
+```
+response.output_item.added          ← announces the function_call item
+response.function_call_arguments.delta  ← argument chunks
+response.function_call_arguments.done   ← arguments complete
+response.output_item.done           ← function_call item complete
+response.completed                  ← full response done
+```
+
+opencode's agentic loop requires these intermediate events to detect and execute tool calls.
+Without them the loop ends after one model turn and no file edits occur.
+
+**Adaptive `tool_choice`.** The proxy sets `tool_choice: "required"` on the first model turn (no
+`edit`/`write`/`patch` call yet in the input history). This forces the model to start coding
+rather than replying with conversational text. Once an edit call appears in context, `tool_choice`
+switches to `"auto"` so the model can return a final text response and end the session. Without
+this switch the model loops forever calling `bash`.
+
+Override the first-turn value: `OPENCODE_TOOL_CHOICE=auto` (useful if the model is reliable
+enough without forcing).
+
+**`parallel_tool_calls: false`.** Forces one tool call per response. Without this, the model calls
+`read` and `edit` simultaneously in the same response — generating the `oldString` for `edit`
+from prior knowledge rather than the actual file content. The result is a silent mismatch and an
+empty diff.
 
 ## File structure
 

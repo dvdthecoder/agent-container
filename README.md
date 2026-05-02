@@ -414,8 +414,23 @@ inference server (vLLM, SGLang) implements this endpoint. Every opencode request
 intercepts `/v1/responses` and translates to Chat Completions: converts input items to messages,
 maps `tool_result` to `role:tool`, maps `function_call` to assistant messages with `tool_calls`,
 passes tools in the standard `tools` field, and translates the response back. opencode is
-configured to point at the proxy via `~/.config/opencode/config.json`. The proxy is a pure
-format adapter — no model-specific logic.
+configured to point at the proxy via `~/.config/opencode/config.json`.
+
+Three additional behaviours in the proxy were required to get a working diff end-to-end:
+
+1. **Full SSE event sequence.** The proxy emits `response.output_item.added`,
+   `response.function_call_arguments.done`, and `response.output_item.done` before
+   `response.completed` for every tool call. Without these intermediate events, opencode's
+   agentic loop does not detect the tool call and the session ends with no file changes.
+
+2. **`parallel_tool_calls: false`.** Without this, the model calls `read` and `edit` in the same
+   response — generating `oldString` from prior knowledge rather than the actual file content.
+   The edit silently fails (string not found) and the diff is empty.
+
+3. **Adaptive `tool_choice`.** `tool_choice: "required"` on the first turn forces the model to
+   call a tool rather than reply with text. After an `edit`/`write` call appears in the history,
+   the proxy switches to `"auto"` so the model can return a final text response and end the
+   session. Without the switch, the model loops forever calling `bash`.
 
 ---
 

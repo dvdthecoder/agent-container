@@ -32,6 +32,19 @@ jobs:
       - name: Ruff format check
         run: ruff format --check .
 
+  check-container-imports:
+    name: No dev-only imports in container code
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Check modal/ and agent/ do not import dev-only packages
+        run: python scripts/check_container_imports.py
+
   security-static:
     name: Static security scan
     runs-on: ubuntu-latest
