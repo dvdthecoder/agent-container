@@ -1214,7 +1214,7 @@
 </code></pre></div>
 <h2 id="2-deploy-your-model">2. Deploy your model<a class="headerlink" href="#2-deploy-your-model" title="Permanent link">&para;</a></h2>
 <p>Everything runs on Modal — including the model. Deploy it once and it scales to zero when idle.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>modal<span class="w"> </span>deploy<span class="w"> </span>modal/serve.py<span class="w">                        </span><span class="c1"># Qwen2.5-Coder 7B  — A10G        (start here)</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>modal<span class="w"> </span>deploy<span class="w"> </span>modal/serve.py<span class="w">                        </span><span class="c1"># Qwen2.5-Coder 32B  — A100 80GB   (start here)</span>
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nv">SERVE_PROFILE</span><span class="o">=</span>prod<span class="w">    </span>modal<span class="w"> </span>deploy<span class="w"> </span>modal/serve.py<span class="w">  </span><span class="c1"># Qwen3-Coder 80B   — 2×A100 80GB (production)</span>
 <a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="nv">SERVE_PROFILE</span><span class="o">=</span>minimax<span class="w"> </span>modal<span class="w"> </span>deploy<span class="w"> </span>modal/serve.py<span class="w">  </span><span class="c1"># MiniMax M2.5      — 8×A100 80GB (best quality)</span>
 </code></pre></div>

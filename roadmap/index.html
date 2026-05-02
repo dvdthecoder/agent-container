@@ -1262,7 +1262,14 @@
 <li>Rewrite <code>opencode_runner.py</code> — 389 lines removed, 170 added</li>
 <li>Remove all SGLang-specific hacks (Qwen-native text injection, <code>&lt;tool_call&gt;</code> parsing)</li>
 <li>Tools passed in standard <code>tools</code> field — vLLM handles natively</li>
-<li><code>make example BACKEND=opencode</code> produces a real diff and opens a PR</li>
+<li>Emit full Responses API SSE event sequence per tool call (<code>response.output_item.added</code>,
+  <code>response.function_call_arguments.done</code>, <code>response.output_item.done</code>) — required for opencode's
+  agentic loop to detect and execute tool calls</li>
+<li><code>parallel_tool_calls: false</code> — forces one tool call per turn so <code>read</code> result is visible
+  before <code>edit</code> generates <code>oldString</code></li>
+<li>Adaptive <code>tool_choice</code>: <code>required</code> until first <code>edit</code>/<code>write</code> call, then <code>auto</code> — prevents
+  infinite bash loop after the file is written</li>
+<li><code>make example BACKEND=opencode</code> produces a real diff and opens a PR (verified: fixture PR #12)</li>
 </ul>
 <h3 id="phase-3-sglang-validation-done">Phase 3 — SGLang validation (done)<a class="headerlink" href="#phase-3-sglang-validation-done" title="Permanent link">&para;</a></h3>
 <p>SGLang deployed as a separate Modal app (<code>agent-container-serve-sglang</code>); tool calling confirmed working with <code>hermes</code> parser.</p>
@@ -1283,9 +1290,6 @@
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>Test dashboard end-to-end — spin up, run a real task, verify phase stream</td>
-</tr>
 <tr>
 <td>Fix fixture repo — add <code>.gitignore</code> for <code>__pycache__</code> so pyc files stop appearing in PR diffs</td>
 </tr>

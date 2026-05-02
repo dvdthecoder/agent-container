@@ -1353,7 +1353,7 @@ request, and streaming with tools hung indefinitely. Phase 1 switched to vLLM an
 all SGLang-specific workarounds from the proxy layer (389 lines removed in Phase 2).</p>
 <h3 id="sglang-validated-alternative-phase-3">SGLang — validated alternative (Phase 3)<a class="headerlink" href="#sglang-validated-alternative-phase-3" title="Permanent link">&para;</a></h3>
 <p><a href="https://github.com/sgl-project/sglang">SGLang</a> was re-evaluated in Phase 3 against the same
-model (Qwen2.5-Coder 7B on A10G) to determine whether it had fixed the tool-calling bugs.</p>
+model (Qwen2.5-Coder 32B on A100 80GB) to determine whether it had fixed the tool-calling bugs.</p>
 <p><strong>Finding:</strong> SGLang works end-to-end with <code>--tool-call-parser hermes</code>. The <code>qwen</code>/<code>qwen25</code>
 parsers still hang on tool-schema requests. First tool call with 10 tools: 3 seconds. Full
 run to PR: 29 seconds.</p>
@@ -1421,38 +1421,63 @@ full history in one list.</p>
 server implements this API — they all speak Chat Completions. The adapter bridges the gap:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>opencode → POST /v1/responses
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>                ↓  reshape: input[] → messages[], tools format, role names
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>           POST /v1/chat/completions  →  vLLM
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>                ↑  reshape: tool_calls → function_call items
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>opencode ← Responses API response
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>                ↓  tool_choice: &quot;required&quot; (first turn) / &quot;auto&quot; (after edit)
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>                ↓  parallel_tool_calls: false
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>           POST /v1/chat/completions  →  vLLM
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>                ↑  reshape: tool_calls → function_call items
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>                ↑  SSE: emit full event sequence per tool call
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>opencode ← Responses API streaming response
 </code></pre></div>
-<p>The adapter contains no model-specific code. It is a format translation layer only.</p>
+<p>The adapter contains no model-specific code. It is a pure format translation layer with three
+behaviours worth understanding:</p>
+<p><strong>Full SSE event sequence per tool call.</strong> For each tool call the model makes, the proxy emits the
+complete Responses API streaming event sequence before <code>response.completed</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>response.output_item.added          ← announces the function_call item
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>response.function_call_arguments.delta  ← argument chunks
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>response.function_call_arguments.done   ← arguments complete
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>response.output_item.done           ← function_call item complete
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>response.completed                  ← full response done
+</code></pre></div>
+<p>opencode's agentic loop requires these intermediate events to detect and execute tool calls.
+Without them the loop ends after one model turn and no file edits occur.</p>
+<p><strong>Adaptive <code>tool_choice</code>.</strong> The proxy sets <code>tool_choice: "required"</code> on the first model turn (no
+<code>edit</code>/<code>write</code>/<code>patch</code> call yet in the input history). This forces the model to start coding
+rather than replying with conversational text. Once an edit call appears in context, <code>tool_choice</code>
+switches to <code>"auto"</code> so the model can return a final text response and end the session. Without
+this switch the model loops forever calling <code>bash</code>.</p>
+<p>Override the first-turn value: <code>OPENCODE_TOOL_CHOICE=auto</code> (useful if the model is reliable
+enough without forcing).</p>
+<p><strong><code>parallel_tool_calls: false</code>.</strong> Forces one tool call per response. Without this, the model calls
+<code>read</code> and <code>edit</code> simultaneously in the same response — generating the <code>oldString</code> for <code>edit</code>
+from prior knowledge rather than the actual file content. The result is a silent mismatch and an
+empty diff.</p>
 <h2 id="file-structure">File structure<a class="headerlink" href="#file-structure" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>agent_container/
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>├── sandbox/
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>│   ├── config.py        SandboxConfig — Modal auth + defaults
-<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>│   ├── spec.py          AgentTaskSpec — task description
-<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>│   ├── result.py        AgentTaskResult + SuiteResult
-<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>│   └── sandbox.py       ModalSandbox — boot/run/teardown
-<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>├── modal/
-<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>│   └── serve.py         Deploy open model on Modal GPU (vLLM)
-<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>├── agent/
-<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>│   ├── cli.py           agent-run CLI entrypoint
-<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>│   ├── runner.py        Invoke agent, stream output, enforce timeout
-<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>│   ├── tester.py        Auto-detect and run test suite
-<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>│   ├── git_ops.py       clone, branch, diff, push, PR
-<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a>│   ├── log_store.py     SQLite run logger (RunLogger + RunStore)
-<a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a>│   ├── opencode_runner.py  Responses API adapter (opencode backend only)
-<a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a>│   └── backends/        AgentBackend protocol + adapters
-<a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a>│       ├── aider.py     aider — direct Chat Completions
-<a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a>│       ├── opencode.py  opencode — via Responses API adapter
-<a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a>│       ├── claude_code.py
-<a id="__codelineno-5-20" name="__codelineno-5-20" href="#__codelineno-5-20"></a>│       └── gemini.py
-<a id="__codelineno-5-21" name="__codelineno-5-21" href="#__codelineno-5-21"></a>├── dashboard/
-<a id="__codelineno-5-22" name="__codelineno-5-22" href="#__codelineno-5-22"></a>│   ├── app.py           FastAPI app
-<a id="__codelineno-5-23" name="__codelineno-5-23" href="#__codelineno-5-23"></a>│   ├── store.py         WorkspaceStore — in-memory SSE event buffer
-<a id="__codelineno-5-24" name="__codelineno-5-24" href="#__codelineno-5-24"></a>│   └── router.py        REST + SSE routes; reads run list from SQLite (RunStore)
-<a id="__codelineno-5-25" name="__codelineno-5-25" href="#__codelineno-5-25"></a>└── mcp_server/
-<a id="__codelineno-5-26" name="__codelineno-5-26" href="#__codelineno-5-26"></a>    └── server.py        MCP server exposing sandbox tools
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>agent_container/
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>├── sandbox/
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>│   ├── config.py        SandboxConfig — Modal auth + defaults
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>│   ├── spec.py          AgentTaskSpec — task description
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>│   ├── result.py        AgentTaskResult + SuiteResult
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>│   └── sandbox.py       ModalSandbox — boot/run/teardown
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>├── modal/
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>│   └── serve.py         Deploy open model on Modal GPU (vLLM)
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>├── agent/
+<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>│   ├── cli.py           agent-run CLI entrypoint
+<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>│   ├── runner.py        Invoke agent, stream output, enforce timeout
+<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>│   ├── tester.py        Auto-detect and run test suite
+<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a>│   ├── git_ops.py       clone, branch, diff, push, PR
+<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a>│   ├── log_store.py     SQLite run logger (RunLogger + RunStore)
+<a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a>│   ├── opencode_runner.py  Responses API adapter (opencode backend only)
+<a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a>│   └── backends/        AgentBackend protocol + adapters
+<a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a>│       ├── aider.py     aider — direct Chat Completions
+<a id="__codelineno-6-18" name="__codelineno-6-18" href="#__codelineno-6-18"></a>│       ├── opencode.py  opencode — via Responses API adapter
+<a id="__codelineno-6-19" name="__codelineno-6-19" href="#__codelineno-6-19"></a>│       ├── claude_code.py
+<a id="__codelineno-6-20" name="__codelineno-6-20" href="#__codelineno-6-20"></a>│       └── gemini.py
+<a id="__codelineno-6-21" name="__codelineno-6-21" href="#__codelineno-6-21"></a>├── dashboard/
+<a id="__codelineno-6-22" name="__codelineno-6-22" href="#__codelineno-6-22"></a>│   ├── app.py           FastAPI app
+<a id="__codelineno-6-23" name="__codelineno-6-23" href="#__codelineno-6-23"></a>│   ├── store.py         WorkspaceStore — in-memory SSE event buffer
+<a id="__codelineno-6-24" name="__codelineno-6-24" href="#__codelineno-6-24"></a>│   └── router.py        REST + SSE routes; reads run list from SQLite (RunStore)
+<a id="__codelineno-6-25" name="__codelineno-6-25" href="#__codelineno-6-25"></a>└── mcp_server/
+<a id="__codelineno-6-26" name="__codelineno-6-26" href="#__codelineno-6-26"></a>    └── server.py        MCP server exposing sandbox tools
 </code></pre></div>
 
 

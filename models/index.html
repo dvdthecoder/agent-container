@@ -1209,8 +1209,8 @@ weights are cached so cold starts after the first are fast.</p>
 <tr>
 <td><code>test</code> (default)</td>
 <td>vLLM</td>
-<td>Qwen2.5-Coder-7B</td>
-<td>A10G</td>
+<td>Qwen2.5-Coder-32B</td>
+<td>A100 80GB</td>
 <td>32k</td>
 <td><code>modal deploy modal/serve.py</code></td>
 </tr>
@@ -1233,7 +1233,7 @@ weights are cached so cold starts after the first are fast.</p>
 <tr>
 <td><code>experiment</code></td>
 <td>SGLang</td>
-<td>Qwen2.5-Coder-7B</td>
+<td>Qwen2.5-Coder-32B</td>
 <td>A10G</td>
 <td>32k</td>
 <td><code>SERVE_PROFILE=experiment modal deploy modal/serve.py</code></td>
@@ -1354,7 +1354,7 @@ profiles and handles:</p>
 <td><code>agent-container-serve-experiment</code> (separate, runs simultaneously)</td>
 </tr>
 <tr>
-<td>Cold start (7B, A10G)</td>
+<td>Cold start (32B, A100)</td>
 <td>~1–2 min</td>
 <td>~2–3 min (JIT compile adds ~1 min)</td>
 </tr>
@@ -1408,7 +1408,7 @@ cached. At low volume (one run at a time) vLLM and SGLang perform similarly. At 
 </tbody>
 </table>
 <h3 id="sglang-phase-3-validation-results">SGLang — Phase 3 validation results<a class="headerlink" href="#sglang-phase-3-validation-results" title="Permanent link">&para;</a></h3>
-<p>Phase 3 re-tested SGLang in isolation against the same model (Qwen2.5-Coder 7B, A10G) to
+<p>Phase 3 re-tested SGLang in isolation against the same model (Qwen2.5-Coder 32B, A10G) to
 determine whether newer versions had fixed the tool-calling bugs. The <code>experiment</code> profile deploys
 to a <strong>separate Modal app</strong> (<code>agent-container-serve-experiment</code>) so the vLLM endpoint is never
 disturbed — both can run simultaneously.</p>

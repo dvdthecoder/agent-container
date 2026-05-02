@@ -1083,10 +1083,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#deploy-for-development-vllm-a10g-1hr" class="md-nav__link">
+  <a href="#deploy-for-development-vllm-a100-80gb-4hr" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Deploy for development (vLLM, A10G, ~$1/hr)
+        Deploy for development (vLLM, A100 80GB, ~$4/hr)
       
     </span>
   </a>
@@ -1341,10 +1341,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#deploy-for-development-vllm-a10g-1hr" class="md-nav__link">
+  <a href="#deploy-for-development-vllm-a100-80gb-4hr" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Deploy for development (vLLM, A10G, ~$1/hr)
+        Deploy for development (vLLM, A100 80GB, ~$4/hr)
       
     </span>
   </a>
@@ -1531,7 +1531,7 @@ Skipped in CI if <code>MODAL_TOKEN_ID</code> secret is not set.</p>
 <p>Published to GitHub Pages automatically on every push to <code>main</code>.</p>
 <hr />
 <h2 id="model-deployment">Model deployment<a class="headerlink" href="#model-deployment" title="Permanent link">&para;</a></h2>
-<h3 id="deploy-for-development-vllm-a10g-1hr">Deploy for development (vLLM, A10G, ~$1/hr)<a class="headerlink" href="#deploy-for-development-vllm-a10g-1hr" title="Permanent link">&para;</a></h3>
+<h3 id="deploy-for-development-vllm-a100-80gb-4hr">Deploy for development (vLLM, A100 80GB, ~$4/hr)<a class="headerlink" href="#deploy-for-development-vllm-a100-80gb-4hr" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>modal<span class="w"> </span>deploy<span class="w"> </span>modal/serve.py
 </code></pre></div>
 <h3 id="deploy-for-production-vllm-2-a100-80gb">Deploy for production (vLLM, 2× A100 80GB)<a class="headerlink" href="#deploy-for-production-vllm-2-a100-80gb" title="Permanent link">&para;</a></h3>
@@ -1539,11 +1539,11 @@ Skipped in CI if <code>MODAL_TOKEN_ID</code> secret is not set.</p>
 </code></pre></div>
 <h3 id="phase-3-sglang-validation">Phase 3 — SGLang validation<a class="headerlink" href="#phase-3-sglang-validation" title="Permanent link">&para;</a></h3>
 <p>Deploys to a separate Modal app so the vLLM endpoint is untouched:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="nv">SERVE_PROFILE</span><span class="o">=</span>sglang<span class="w"> </span>modal<span class="w"> </span>deploy<span class="w"> </span>modal/serve.py
-<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="c1"># → https://your-org--agent-container-serve-sglang-serve.modal.run</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="nv">SERVE_PROFILE</span><span class="o">=</span>experiment<span class="w"> </span>modal<span class="w"> </span>deploy<span class="w"> </span>modal/serve.py
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="c1"># → https://your-org--agent-container-serve-experiment-serve.modal.run</span>
 </code></pre></div>
 <p>Point at the SGLang endpoint and run the opencode smoke test:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="nv">OPENAI_BASE_URL</span><span class="o">=</span>https://your-org--agent-container-serve-sglang-serve.modal.run<span class="w"> </span><span class="se">\</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="nv">OPENAI_BASE_URL</span><span class="o">=</span>https://your-org--agent-container-serve-experiment-serve.modal.run<span class="w"> </span><span class="se">\</span>
 <a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="w">  </span>make<span class="w"> </span>example<span class="w"> </span><span class="nv">BACKEND</span><span class="o">=</span>opencode
 </code></pre></div>
 <p>Exit criteria: non-empty diff + PR opened. If it fails, the failure is in SGLang's tool-call
