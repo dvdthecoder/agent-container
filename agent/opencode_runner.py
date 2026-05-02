@@ -391,9 +391,11 @@ class _ProxyHandler(http.server.BaseHTTPRequestHandler):
 
         n_tool_calls = len(tool_calls_buf)
         n_text_chars = len(text)
+        tool_names = [tool_calls_buf[i]["name"] for i in sorted(tool_calls_buf)]
         print(
             f"[proxy] ← stream done: tool_calls={n_tool_calls}"
-            f" text={n_text_chars}chars tool_choice={TOOL_CHOICE}",
+            f" text={n_text_chars}chars tool_choice={TOOL_CHOICE}"
+            f" tools={tool_names}",
             file=sys.stderr,
         )
 
@@ -637,6 +639,7 @@ def main() -> int:
     )
 
     stop_reason = result.get("result", {}).get("stopReason", "")
+    print(f"[runner] session/prompt result: stopReason={stop_reason!r} keys={list(result.get('result', {}).keys())}", file=sys.stderr)
     if stop_reason:
         if stop_reason != "end_turn":
             print(
