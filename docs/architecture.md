@@ -77,7 +77,7 @@ all SGLang-specific workarounds from the proxy layer (389 lines removed in Phase
 ### SGLang — validated alternative (Phase 3)
 
 [SGLang](https://github.com/sgl-project/sglang) was re-evaluated in Phase 3 against the same
-model (Qwen2.5-Coder 7B on A10G) to determine whether it had fixed the tool-calling bugs.
+model (Qwen2.5-Coder 32B on A100 80GB) to determine whether it had fixed the tool-calling bugs.
 
 **Finding:** SGLang works end-to-end with `--tool-call-parser hermes`. The `qwen`/`qwen25`
 parsers still hang on tool-schema requests. First tool call with 10 tools: 3 seconds. Full

@@ -136,7 +136,7 @@ calling reliably and to reason across multiple turns.
 
 ### When to use aider
 
-- **Default choice.** Works with the `test` profile (Qwen2.5-Coder 7B on A10G) — smallest,
+- **Default choice.** Works with the `test` profile (Qwen2.5-Coder 32B on A100 80GB) — smallest,
   cheapest GPU.
 - The task is well-specified: "add a `sum_to_n` function to `mathlib.py`", "fix the off-by-one
   in `paginate()`". The model knows exactly what to write.
@@ -164,7 +164,7 @@ calling reliably and to reason across multiple turns.
 | Model calls per task | 1–2 | 5–20+ |
 | Requires tool calling | No | Yes |
 | Can run tests and iterate | No | Yes |
-| Works on `test` profile (7B) | Yes | Possible but weaker |
+| Works on `test` profile (32B) | Yes | Possible but weaker |
 | Recommended GPU profile | `test` or higher | `prod` or `minimax` |
 | Cold start sensitivity | Low (fewer calls) | Higher (more round-trips) |
 | Best task type | Targeted, well-specified edits | Debugging, multi-file, self-verifying |

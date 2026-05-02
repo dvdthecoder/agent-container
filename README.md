@@ -89,7 +89,7 @@ modal token new   # browser prompt — saves to ~/.modal.toml
 ### 2. Deploy your model
 
 ```bash
-modal deploy modal/serve.py                          # test — Qwen2.5-Coder 7B, A10G (default)
+modal deploy modal/serve.py                          # test — Qwen2.5-Coder 32B, A100 80GB (default)
 SERVE_PROFILE=prod    modal deploy modal/serve.py    # prod — Qwen3-Coder 80B, 2× A100 80GB
 SERVE_PROFILE=prod SERVE_MODEL=minimax-m2.5 \
   modal deploy modal/serve.py                        # prod — MiniMax M2.5, 8× A100 80GB
@@ -183,10 +183,10 @@ Three profiles in `modal/serve.py`, selected by `SERVE_PROFILE`:
 
 | Profile | Engine | Model | GPU | Context | Best for |
 |---|---|---|---|---|---|
-| `test` (default) | vLLM | Qwen2.5-Coder 7B | A10G | 32k | Development, CI |
+| `test` (default) | vLLM | Qwen2.5-Coder 32B | A100 80GB | 32k | Development, CI |
 | `prod` | vLLM | Qwen3-Coder 80B (default) | 2× A100 80GB | 128k | Production PRs |
 | `prod` + `SERVE_MODEL=minimax-m2.5` | vLLM | MiniMax M2.5 | 8× A100 80GB | 1M | Best quality / SWE-bench |
-| `experiment` | SGLang | Qwen2.5-Coder 7B | A10G | 32k | SGLang evaluation |
+| `experiment` | SGLang | Qwen2.5-Coder 32B | A100 80GB | 32k | SGLang evaluation |
 
 `prod` selects the model via `SERVE_MODEL` (default `qwen3-coder`). `experiment` deploys to a
 separate Modal app (`agent-container-serve-experiment`) so the vLLM endpoint is never disturbed.
@@ -433,7 +433,7 @@ workarounds were removed from `opencode_runner.py` in Phase 2 (170 lines added, 
 The proxy became a clean format adapter with no model-specific code.
 
 **Phase 3 — SGLang re-validation:** After the proxy was clean, SGLang was re-tested in isolation
-against the same model (Qwen2.5-Coder 7B, A10G) to determine whether newer versions had fixed
+against the same model (Qwen2.5-Coder 32B, A100 80GB) to determine whether newer versions had fixed
 the tool-calling bugs. Key findings:
 
 - `--tool-call-parser qwen` and `qwen25` still hang on the first request with tool schemas

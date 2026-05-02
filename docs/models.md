@@ -22,10 +22,10 @@ Three profiles are built into `modal/serve.py`, selected by `SERVE_PROFILE`:
 
 | Profile | Engine | Model | GPU | Context | Deploy command |
 |---------|--------|-------|-----|---------|----------------|
-| `test` (default) | vLLM | Qwen2.5-Coder-7B | A10G | 32k | `modal deploy modal/serve.py` |
+| `test` (default) | vLLM | Qwen2.5-Coder-32B | A100 80GB | 32k | `modal deploy modal/serve.py` |
 | `prod` | vLLM | Qwen3-Coder-80B (default) | 2× A100 80GB | 128k | `SERVE_PROFILE=prod modal deploy modal/serve.py` |
 | `prod` + `SERVE_MODEL=minimax-m2.5` | vLLM | MiniMax-M2.5 | 8× A100 80GB | 1M | `SERVE_PROFILE=prod SERVE_MODEL=minimax-m2.5 modal deploy modal/serve.py` |
-| `experiment` | SGLang | Qwen2.5-Coder-7B | A10G | 32k | `SERVE_PROFILE=experiment modal deploy modal/serve.py` |
+| `experiment` | SGLang | Qwen2.5-Coder-32B | A10G | 32k | `SERVE_PROFILE=experiment modal deploy modal/serve.py` |
 
 **Start with `test`** — cheap, fast iteration. Promote to `prod` for production-grade output
 quality. Use `SERVE_MODEL=minimax-m2.5` inside `prod` for maximum quality (SWE-bench grade).
@@ -91,7 +91,7 @@ profiles and handles:
 | Throughput (shared prefix) | Baseline | 2–4× higher when runs share system prompt / repo context |
 | Constrained decoding | Basic | Native JSON schema and regex enforcement at decode level |
 | Modal app | `agent-container-serve` | `agent-container-serve-experiment` (separate, runs simultaneously) |
-| Cold start (7B, A10G) | ~1–2 min | ~2–3 min (JIT compile adds ~1 min) |
+| Cold start (32B, A100) | ~1–2 min | ~2–3 min (JIT compile adds ~1 min) |
 | Recommended for | All use cases today | Team-scale concurrent runs; benchmarking |
 
 **Why vLLM is the default:** It works out-of-the-box with a standard Python base image and
@@ -116,7 +116,7 @@ cached. At low volume (one run at a time) vLLM and SGLang perform similarly. At 
 
 ### SGLang — Phase 3 validation results
 
-Phase 3 re-tested SGLang in isolation against the same model (Qwen2.5-Coder 7B, A10G) to
+Phase 3 re-tested SGLang in isolation against the same model (Qwen2.5-Coder 32B, A10G) to
 determine whether newer versions had fixed the tool-calling bugs. The `experiment` profile deploys
 to a **separate Modal app** (`agent-container-serve-experiment`) so the vLLM endpoint is never
 disturbed — both can run simultaneously.

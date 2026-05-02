@@ -122,7 +122,7 @@ Published to GitHub Pages automatically on every push to `main`.
 
 ## Model deployment
 
-### Deploy for development (vLLM, A10G, ~$1/hr)
+### Deploy for development (vLLM, A100 80GB, ~$4/hr)
 
 ```bash
 modal deploy modal/serve.py

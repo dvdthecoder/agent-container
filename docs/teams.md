@@ -41,7 +41,7 @@ SERVE_PROFILE=prod modal deploy modal/serve.py
 # → https://your-org--agent-container-serve-serve.modal.run
 ```
 
-Use `prod` (Qwen3-Coder 80B) for a real codebase — the 7B test model will struggle with
+Use `prod` (Qwen3-Coder 80B) for a real codebase — the 32B test model will struggle with
 large files, complex reasoning, or multi-file changes.
 
 ### 2. Share the endpoint URL
@@ -206,7 +206,7 @@ The sandbox cost is small relative to the model cost.
 
 ### Reducing cost
 
-- Use `SERVE_PROFILE=test` (7B model) for simple, well-specified tasks — 8× cheaper
+- Use `SERVE_PROFILE=test` (32B test model) for simple, well-specified tasks — 8× cheaper
 - Use `--backend aider` for targeted edits — fewer model calls than opencode
 - Use `--no-pr` during iteration to skip git push/PR overhead
 - Set `--timeout` appropriately — a stuck run burns GPU time

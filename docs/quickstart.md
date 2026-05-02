@@ -21,7 +21,7 @@ modal token new   # browser prompt — saves token to ~/.modal.toml
 Everything runs on Modal — including the model. Deploy it once and it scales to zero when idle.
 
 ```bash
-modal deploy modal/serve.py                        # Qwen2.5-Coder 7B  — A10G        (start here)
+modal deploy modal/serve.py                        # Qwen2.5-Coder 32B  — A100 80GB   (start here)
 SERVE_PROFILE=prod    modal deploy modal/serve.py  # Qwen3-Coder 80B   — 2×A100 80GB (production)
 SERVE_PROFILE=minimax modal deploy modal/serve.py  # MiniMax M2.5      — 8×A100 80GB (best quality)
 ```

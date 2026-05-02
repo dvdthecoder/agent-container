@@ -79,7 +79,7 @@ the terminal.
 
 | Option | Profile + model |
 |---|---|
-| test — Qwen2.5-Coder 7B (A10G) | `SERVE_PROFILE=test` |
+| test — Qwen2.5-Coder 32B (A100 80GB) | `SERVE_PROFILE=test` |
 | prod — Qwen3-Coder 80B (2×A100) | `SERVE_PROFILE=prod` |
 | prod — MiniMax M2.5 (8×A100) | `SERVE_PROFILE=prod SERVE_MODEL=minimax-m2.5` |
 | experiment — SGLang (A10G) | `SERVE_PROFILE=experiment` |
