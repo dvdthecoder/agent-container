@@ -25,7 +25,7 @@ TASK_ID  := $(shell python3 -c "import uuid; print(uuid.uuid4().hex[:6])")
 example:
 	agent-run run \
 		--repo https://github.com/dvdthecoder/agent-container-fixture \
-		--task "update hello_world to return the string 'Hello, World! run-$(TASK_ID)'" \
+		--task "in greet.py, update the hello_world function to return the string 'Hello, World! run-$(TASK_ID)'" \
 		--backend $(BACKEND) \
 		--timeout 600
 
