@@ -427,35 +427,51 @@ class _ProxyHandler(http.server.BaseHTTPRequestHandler):
             }
             # Emit intermediate events so opencode's agentic loop can detect
             # and execute the tool call before the response.completed event.
-            self._write_sse(json.dumps({
-                "type": "response.output_item.added",
-                "output_index": output_index,
-                "item": {
-                    "type": "function_call",
-                    "id": call_id,
-                    "call_id": call_id,
-                    "name": buf["name"],
-                    "arguments": "",
-                    "status": "in_progress",
-                },
-            }))
-            self._write_sse(json.dumps({
-                "type": "response.function_call_arguments.delta",
-                "output_index": output_index,
-                "call_id": call_id,
-                "delta": buf["arguments"],
-            }))
-            self._write_sse(json.dumps({
-                "type": "response.function_call_arguments.done",
-                "output_index": output_index,
-                "call_id": call_id,
-                "arguments": buf["arguments"],
-            }))
-            self._write_sse(json.dumps({
-                "type": "response.output_item.done",
-                "output_index": output_index,
-                "item": fn_item,
-            }))
+            self._write_sse(
+                json.dumps(
+                    {
+                        "type": "response.output_item.added",
+                        "output_index": output_index,
+                        "item": {
+                            "type": "function_call",
+                            "id": call_id,
+                            "call_id": call_id,
+                            "name": buf["name"],
+                            "arguments": "",
+                            "status": "in_progress",
+                        },
+                    }
+                )
+            )
+            self._write_sse(
+                json.dumps(
+                    {
+                        "type": "response.function_call_arguments.delta",
+                        "output_index": output_index,
+                        "call_id": call_id,
+                        "delta": buf["arguments"],
+                    }
+                )
+            )
+            self._write_sse(
+                json.dumps(
+                    {
+                        "type": "response.function_call_arguments.done",
+                        "output_index": output_index,
+                        "call_id": call_id,
+                        "arguments": buf["arguments"],
+                    }
+                )
+            )
+            self._write_sse(
+                json.dumps(
+                    {
+                        "type": "response.output_item.done",
+                        "output_index": output_index,
+                        "item": fn_item,
+                    }
+                )
+            )
             output.append(fn_item)
             output_index += 1
 

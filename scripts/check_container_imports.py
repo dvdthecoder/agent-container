@@ -31,9 +31,7 @@ _DEV_PACKAGES: dict[str, set[str]] = {
 
 # Flat map: import-name → package-name for fast lookup
 _IMPORT_TO_PACKAGE: dict[str, str] = {
-    imp: pkg
-    for pkg, imps in _DEV_PACKAGES.items()
-    for imp in imps
+    imp: pkg for pkg, imps in _DEV_PACKAGES.items() for imp in imps
 }
 
 # Directories to scan (relative to repo root)
@@ -76,8 +74,10 @@ def main() -> int:
     for scan_dir in _SCAN_DIRS:
         base = _REPO_ROOT / scan_dir
         if not base.is_dir():
-            print(f"[check_container_imports] warning: {scan_dir}/ not found — skipping",
-                  file=sys.stderr)
+            print(
+                f"[check_container_imports] warning: {scan_dir}/ not found — skipping",
+                file=sys.stderr,
+            )
             continue
         for py_file in sorted(base.rglob("*.py")):
             imported_names = _extract_top_level_imports(py_file)
@@ -85,9 +85,7 @@ def main() -> int:
                 pkg = _IMPORT_TO_PACKAGE.get(name)
                 if pkg:
                     rel = py_file.relative_to(_REPO_ROOT)
-                    violations.append(
-                        f"  {rel}: imports '{name}' (dev-only package '{pkg}')"
-                    )
+                    violations.append(f"  {rel}: imports '{name}' (dev-only package '{pkg}')")
 
     if violations:
         print("ERROR: container code imports dev-only packages.\n")
