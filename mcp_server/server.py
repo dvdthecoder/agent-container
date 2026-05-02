@@ -100,7 +100,7 @@ async def sandbox_run(
             spec_kwargs["image"] = image
 
         spec = AgentTaskSpec(**spec_kwargs)
-        config = SandboxConfig()
+        config = SandboxConfig.from_env()
         result = ModalSandbox(config).run(spec, on_event=_on_event)
         # Omit full diff from MCP response — it can be very large.
         # Use our generated run_id (not Modal's sandbox object_id).

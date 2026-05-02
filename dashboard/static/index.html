@@ -19,6 +19,18 @@
       --yellow:  #d29922;
       --purple:  #bc8cff;
       --mono:    "JetBrains Mono", "Fira Code", "Cascadia Code", monospace;
+
+      /* column widths shared between header and row cells */
+      --col-expand:  20px;
+      --col-dot:     16px;
+      --col-runid:   140px;
+      --col-repo:    1fr;
+      --col-started: 100px;
+      --col-ended:   100px;
+      --col-backend: 76px;
+      --col-source:  76px;
+      --col-status:  68px;
+      --col-pr:      60px;
     }
 
     body {
@@ -133,14 +145,80 @@
     #serve-status-badge.active  { background: rgba(63,185,80,.2);  color: var(--green); }
     #serve-status-badge.unknown { background: rgba(139,148,158,.15); color: var(--muted); }
 
-    /* ---- main run list ---- */
+    /* ---- main area ---- */
     #main {
       overflow-y: auto;
+      display: flex;
+      flex-direction: column;
     }
 
+    /* ---- filter toolbar ---- */
+    #filter-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      flex-shrink: 0;
+      flex-wrap: wrap;
+    }
+    #filter-bar label {
+      font-size: 11px;
+      color: var(--muted);
+      margin: 0;
+      white-space: nowrap;
+    }
+    #filter-bar select {
+      width: auto;
+      font-size: 12px;
+      padding: 4px 6px;
+      background: var(--bg);
+    }
+    #run-count {
+      margin-left: auto;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    /* ---- column header row ---- */
+    #list-header {
+      display: grid;
+      grid-template-columns:
+        var(--col-expand)
+        var(--col-dot)
+        var(--col-runid)
+        var(--col-repo)
+        var(--col-started)
+        var(--col-ended)
+        var(--col-backend)
+        var(--col-source)
+        var(--col-status)
+        var(--col-pr);
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      border-bottom: 2px solid var(--border);
+      background: var(--surface);
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      flex-shrink: 0;
+    }
+    .col-hdr {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      white-space: nowrap;
+    }
+
+    /* ---- run list ---- */
     #run-list {
       display: flex;
       flex-direction: column;
+      flex: 1;
     }
 
     #empty-state {
@@ -153,12 +231,24 @@
     .run-row {
       border-bottom: 1px solid var(--border);
     }
+    .run-row.hidden { display: none; }
 
     .run-summary {
-      display: flex;
+      display: grid;
+      grid-template-columns:
+        var(--col-expand)
+        var(--col-dot)
+        var(--col-runid)
+        var(--col-repo)
+        var(--col-started)
+        var(--col-ended)
+        var(--col-backend)
+        var(--col-source)
+        var(--col-status)
+        var(--col-pr);
       align-items: center;
-      gap: 10px;
-      padding: 10px 20px;
+      gap: 8px;
+      padding: 8px 16px;
       cursor: pointer;
       user-select: none;
       transition: background .1s;
@@ -172,6 +262,7 @@
       width: 12px;
       flex-shrink: 0;
       transition: transform .15s;
+      justify-self: center;
     }
     .run-row.expanded .expand-icon { transform: rotate(90deg); }
 
@@ -179,7 +270,7 @@
       width: 8px;
       height: 8px;
       border-radius: 50%;
-      flex-shrink: 0;
+      justify-self: center;
     }
     .phase-dot.BOOTING  { background: var(--yellow); animation: pulse 1s infinite; }
     .phase-dot.CLONING  { background: var(--yellow); animation: pulse 1s infinite; }
@@ -188,6 +279,7 @@
     .phase-dot.PR       { background: var(--purple);  animation: pulse 1s infinite; }
     .phase-dot.DONE     { background: var(--green); }
     .phase-dot.FAILED   { background: var(--red); }
+    .phase-dot.UNKNOWN  { background: var(--muted); }
 
     @keyframes pulse {
       0%, 100% { opacity: 1; }
@@ -198,35 +290,66 @@
       font-family: var(--mono);
       font-size: 11px;
       color: var(--muted);
-      flex-shrink: 0;
-      width: 160px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .run-repo-text {
       font-size: 12px;
       color: var(--text);
-      flex: 1;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
 
-    .run-phase-text {
+    .run-status-text {
       font-size: 11px;
       color: var(--muted);
-      flex-shrink: 0;
-      width: 64px;
-      text-align: right;
+      white-space: nowrap;
     }
+    .run-status-text.DONE    { color: var(--green); }
+    .run-status-text.FAILED  { color: var(--red); }
+    .run-status-text.UNKNOWN { color: var(--muted); font-style: italic; }
+
+    .run-started-text {
+      font-size: 11px;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .run-ended-text {
+      font-size: 11px;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .badge-pr {
+      background: rgba(63,185,80,.15);
+      color: var(--green);
+      border: 1px solid rgba(63,185,80,.3);
+      text-decoration: none;
+      display: none;  /* shown only when pr_url is set */
+      text-align: center;
+    }
+    .badge-pr:hover { opacity: .8; }
 
     .badge {
       font-size: 10px;
       font-weight: 600;
       padding: 1px 6px;
       border-radius: 3px;
-      flex-shrink: 0;
       text-transform: uppercase;
       letter-spacing: .04em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: block;
+      text-align: center;
     }
     .badge-backend {
       background: var(--surface);
@@ -276,6 +399,18 @@
     .log-done-ok   { color: var(--green); font-weight: 700; }
     .log-done-fail { color: var(--red);   font-weight: 700; }
     .log-ts { color: var(--muted); user-select: none; margin-right: 8px; }
+
+    .log-no-events {
+      color: var(--muted);
+      font-size: 11px;
+      margin-bottom: 10px;
+      font-style: italic;
+    }
+    .log-summary-row { display: flex; gap: 8px; }
+    .log-summary-key { color: var(--muted); min-width: 80px; }
+    .log-summary-val { color: var(--text); word-break: break-all; }
+    .log-summary-val.ok   { color: var(--green); }
+    .log-summary-val.fail { color: var(--red); }
 
     .pr-link {
       display: inline-block;
@@ -362,6 +497,52 @@
 
   <!-- ---- main run list ---- -->
   <div id="main">
+
+    <!-- filter toolbar -->
+    <div id="filter-bar">
+      <label for="flt-status">Status</label>
+      <select id="flt-status" onchange="applyFilters()">
+        <option value="">All</option>
+        <option value="DONE">Done</option>
+        <option value="FAILED">Failed</option>
+        <option value="RUNNING">Running</option>
+        <option value="UNKNOWN">Unknown</option>
+      </select>
+
+      <label for="flt-backend">Backend</label>
+      <select id="flt-backend" onchange="applyFilters()">
+        <option value="">All</option>
+        <option value="aider">aider</option>
+        <option value="opencode">opencode</option>
+        <option value="claude">claude</option>
+        <option value="gemini">gemini</option>
+        <option value="stub">stub</option>
+      </select>
+
+      <label for="flt-source">Source</label>
+      <select id="flt-source" onchange="applyFilters()">
+        <option value="">All</option>
+        <option value="cli">cli</option>
+        <option value="dashboard">dashboard</option>
+      </select>
+
+      <span id="run-count"></span>
+    </div>
+
+    <!-- column headers -->
+    <div id="list-header">
+      <div class="col-hdr"></div>
+      <div class="col-hdr"></div>
+      <div class="col-hdr">Run ID</div>
+      <div class="col-hdr">Repository</div>
+      <div class="col-hdr">Started</div>
+      <div class="col-hdr">Ended</div>
+      <div class="col-hdr">Backend</div>
+      <div class="col-hdr">Source</div>
+      <div class="col-hdr">Status</div>
+      <div class="col-hdr">PR</div>
+    </div>
+
     <div id="run-list">
       <div id="empty-state">No runs yet — start one from the sidebar.</div>
     </div>
@@ -435,12 +616,14 @@ async function startRun() {
       run_tests:       document.getElementById('inp-tests').checked,
       timeout_seconds: 300,
     });
+    // New run goes to the top (prepend=true)
     addRow({
       run_id, repo, task, backend,
       initiated_by: 'dashboard',
       base_branch,
       phase: 'BOOTING',
-    });
+      started_at: new Date().toISOString(),
+    }, true);
     toggleRow(run_id, true);
     subscribeSSE(run_id);
   } catch (e) {
@@ -451,8 +634,25 @@ async function startRun() {
 }
 
 // ------------------------------------------------------------------ run row
-function addRow(meta, prepend = true) {
-  const { run_id, repo, task, backend, initiated_by, base_branch, phase } = meta;
+function fmtStarted(iso) {
+  if (!iso) return '';
+  try {
+    const d = new Date(iso);
+    return d.toLocaleString('en-US', {
+      month: 'short', day: 'numeric',
+      hour: '2-digit', minute: '2-digit', hour12: false,
+    });
+  } catch { return iso; }
+}
+
+function prNumber(url) {
+  if (!url) return null;
+  const m = url.match(/\/(pull|merge_requests)\/(\d+)/);
+  return m ? '#' + m[2] : null;
+}
+
+function addRow(meta, prepend = false) {
+  const { run_id, repo, task, backend, initiated_by, base_branch, phase, started_at, finished_at, pr_url } = meta;
 
   if (runs[run_id]) {
     // already exists — update meta only
@@ -464,18 +664,33 @@ function addRow(meta, prepend = true) {
   const empty = document.getElementById('empty-state');
   if (empty) empty.remove();
 
+  const srcClass = escHtml(initiated_by || 'cli');
+  const phaseClass = escHtml(phase);
+  const statusCls = ['DONE','FAILED','UNKNOWN'].includes(phase) ? phase : '';
+  const prNum = prNumber(pr_url);
+
   const row = document.createElement('div');
   row.className = 'run-row';
   row.id = `row-${run_id}`;
+  row.dataset.phase   = phase;
+  row.dataset.backend = backend || '';
+  row.dataset.source  = initiated_by || 'cli';
+
   row.innerHTML = `
     <div class="run-summary" onclick="toggleRow('${run_id}')">
       <span class="expand-icon">▶</span>
-      <div class="phase-dot ${escHtml(phase)}" id="dot-${run_id}"></div>
+      <div class="phase-dot ${phaseClass}" id="dot-${run_id}"></div>
       <span class="run-id-text">${escHtml(run_id)}</span>
       <span class="run-repo-text">${escHtml(repo)}</span>
+      <span class="run-started-text">${escHtml(fmtStarted(started_at))}</span>
+      <span class="run-ended-text">${escHtml(fmtStarted(finished_at))}</span>
       <span class="badge badge-backend">${escHtml(backend)}</span>
-      <span class="badge badge-source ${escHtml(initiated_by || 'cli')}">${escHtml(initiated_by || 'cli')}</span>
-      <span class="run-phase-text" id="phase-label-${run_id}">${escHtml(phase)}</span>
+      <span class="badge badge-source ${srcClass}">${srcClass}</span>
+      <span class="run-status-text ${statusCls}" id="phase-label-${run_id}">${escHtml(phase)}</span>
+      <a id="pr-badge-${run_id}" class="badge badge-pr"
+         href="${escHtml(pr_url || '#')}" target="_blank"
+         style="${prNum ? 'display:block' : 'display:none'}"
+         onclick="event.stopPropagation()">${escHtml(prNum || '')}</a>
     </div>
     <div class="run-detail">
       <div class="run-detail-meta">
@@ -492,8 +707,48 @@ function addRow(meta, prepend = true) {
   else         list.append(row);
 
   runs[run_id] = { meta, logLines: [], sse: null, expanded: false };
+  updateRunCount();
 }
 
+// ------------------------------------------------------------------ filters
+function applyFilters() {
+  const fltStatus  = document.getElementById('flt-status').value;
+  const fltBackend = document.getElementById('flt-backend').value;
+  const fltSource  = document.getElementById('flt-source').value;
+
+  let visible = 0;
+  for (const run_id of Object.keys(runs)) {
+    const row = document.getElementById(`row-${run_id}`);
+    if (!row) continue;
+    const phase   = row.dataset.phase   || '';
+    const backend = row.dataset.backend || '';
+    const source  = row.dataset.source  || '';
+
+    // status filter: active phases (BOOTING, CLONING, RUNNING, TESTING, PR) all
+    // map to "RUNNING" for filter purposes
+    const effectivePhase = isTerminal(phase) || phase === 'UNKNOWN' ? phase : 'RUNNING';
+
+    const show = (
+      (!fltStatus  || fltStatus  === effectivePhase) &&
+      (!fltBackend || fltBackend === backend) &&
+      (!fltSource  || fltSource  === source)
+    );
+
+    row.classList.toggle('hidden', !show);
+    if (show) visible++;
+  }
+
+  updateRunCount(visible);
+}
+
+function updateRunCount(visible) {
+  const total = Object.keys(runs).length;
+  const shown = visible !== undefined ? visible : total;
+  const el = document.getElementById('run-count');
+  if (el) el.textContent = shown === total ? `${total} run${total !== 1 ? 's' : ''}` : `${shown} / ${total}`;
+}
+
+// ------------------------------------------------------------------ toggle / phase
 function toggleRow(run_id, forceOpen) {
   const row = document.getElementById(`row-${run_id}`);
   if (!row) return;
@@ -509,15 +764,23 @@ function toggleRow(run_id, forceOpen) {
       fetch(`/api/runs/${run_id}/events`)
         .then(res => res.json())
         .then(events => {
-          // Only prepend if no live lines have arrived yet (avoid duplicates)
-          if (r.logLines.length === 0) {
+          // Only render if no live lines have arrived yet (avoid duplicates)
+          if (r.logLines.length > 0) return;
+          if (events.length > 0) {
             for (const ev of events) {
               const ts = new Date(ev.ts).toLocaleTimeString('en-US', { hour12: false });
               appendLog(run_id, ts, ev.text || '', 'log-line');
             }
+          } else {
+            // No stored events (CLI run or dashboard run with no streaming).
+            // Fetch the run detail record and show a summary.
+            fetch(`/api/runs/${run_id}`)
+              .then(r2 => r2.json())
+              .then(detail => renderRunSummary(run_id, detail))
+              .catch(() => renderRunSummary(run_id, null));
           }
         })
-        .catch(() => {});
+        .catch(() => renderRunSummary(run_id, null));
     }
     const log = document.getElementById(`log-${run_id}`);
     if (log) log.scrollTop = log.scrollHeight;
@@ -528,11 +791,17 @@ function updatePhase(run_id, phase) {
   const r = runs[run_id];
   if (r) r.meta.phase = phase;
 
+  const row = document.getElementById(`row-${run_id}`);
+  if (row) row.dataset.phase = phase;
+
   const dot = document.getElementById(`dot-${run_id}`);
   if (dot) dot.className = `phase-dot ${phase}`;
 
   const label = document.getElementById(`phase-label-${run_id}`);
-  if (label) label.textContent = phase;
+  if (label) {
+    label.textContent = phase;
+    label.className = `run-status-text ${['DONE','FAILED','UNKNOWN'].includes(phase) ? phase : ''}`;
+  }
 }
 
 // ------------------------------------------------------------------ SSE
@@ -570,6 +839,15 @@ function handleEvent(run_id, ev) {
     updatePhase(run_id, phase);
 
     if (ev.pr_url) {
+      // update summary-row PR badge
+      const badge = document.getElementById(`pr-badge-${run_id}`);
+      if (badge) {
+        const num = prNumber(ev.pr_url);
+        badge.href = ev.pr_url;
+        badge.textContent = num || 'PR';
+        badge.style.display = 'block';
+      }
+      // keep expanded-detail link too
       const link = document.getElementById(`pr-link-${run_id}`);
       if (link) { link.href = ev.pr_url; link.style.display = 'inline-block'; }
     }
@@ -601,6 +879,40 @@ function appendLog(run_id, ts, text, cls) {
   }
 }
 
+function renderRunSummary(run_id, detail) {
+  const log = document.getElementById(`log-${run_id}`);
+  if (!log) return;
+
+  const noEvt = document.createElement('div');
+  noEvt.className = 'log-no-events';
+  noEvt.textContent = detail
+    ? (detail.initiated_by === 'cli'
+        ? 'CLI run — console output was not captured. Stored metadata:'
+        : 'No log output stored for this run.')
+    : 'Could not load run details.';
+  log.appendChild(noEvt);
+
+  if (!detail) return;
+
+  function row(key, val, cls) {
+    if (val == null || val === '') return;
+    const d = document.createElement('div');
+    d.className = 'log-summary-row';
+    d.innerHTML = `<span class="log-summary-key">${escHtml(key)}</span>`
+                + `<span class="log-summary-val${cls ? ' ' + cls : ''}">${escHtml(String(val))}</span>`;
+    log.appendChild(d);
+  }
+
+  const outcome = detail.outcome || detail.phase || '—';
+  row('outcome',    outcome, outcome === 'success' ? 'ok' : (outcome ? 'fail' : ''));
+  if (detail.branch)     row('branch',    detail.branch);
+  if (detail.pr_url)     row('pr',        detail.pr_url);
+  if (detail.duration_s != null) row('duration', detail.duration_s + 's');
+  if (detail.sandbox_id) row('sandbox',   detail.sandbox_id);
+  if (detail.error)      row('error',     detail.error, 'fail');
+  if (detail.diff_stat)  row('diff',      detail.diff_stat);
+}
+
 // ------------------------------------------------------------------ utils
 function escHtml(s) {
   return String(s ?? '')
@@ -618,7 +930,7 @@ function isTerminal(phase) {
 (async () => {
   try {
     const list = await fetch('/api/runs').then(r => r.json());
-    // list is newest-first; prepend each so newest stays on top
+    // Server returns newest-first; append each in order so newest stays on top.
     for (const run of list) {
       addRow({
         run_id:       run.run_id,
@@ -627,20 +939,25 @@ function isTerminal(phase) {
         backend:      run.backend || 'opencode',
         initiated_by: run.initiated_by || 'cli',
         base_branch:  run.base_branch || 'main',
-        phase:        run.phase || 'DONE',
-      });
-      updatePhase(run.run_id, run.phase || 'DONE');
+        phase:        run.phase || 'UNKNOWN',
+        started_at:   run.started_at   || null,
+        finished_at:  run.finished_at  || null,
+        pr_url:       run.pr_url       || null,
+      }, false);  // append — server list is already newest-first
+      updatePhase(run.run_id, run.phase || 'UNKNOWN');
 
-      // re-attach SSE for runs that are still active
-      if (!isTerminal(run.phase) && run.initiated_by === 'dashboard') {
+      // re-attach SSE for active dashboard runs
+      if (!isTerminal(run.phase) && run.phase !== 'UNKNOWN' && run.initiated_by === 'dashboard') {
         subscribeSSE(run.run_id);
       }
 
+      // PR link in expanded detail (addRow already sets the summary badge)
       if (run.pr_url) {
         const link = document.getElementById(`pr-link-${run.run_id}`);
         if (link) { link.href = run.pr_url; link.style.display = 'inline-block'; }
       }
     }
+    applyFilters();  // update count after boot
   } catch { /* dashboard works offline */ }
 })();
 </script>

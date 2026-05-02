@@ -76,9 +76,11 @@ def _run_row_to_dict(row: RunRow, active_phase: str | None = None) -> dict[str, 
         "pr_url": row.pr_url,
         "duration_s": row.duration_s,
         "sandbox_id": row.sandbox_id,
-        # live phase from WorkspaceStore while run is active
+        # live phase from WorkspaceStore while run is active.
+        # outcome=None with no active_phase means the run was interrupted (CLI
+        # killed, container crash) — show UNKNOWN rather than RUNNING.
         "phase": active_phase
-        or ("DONE" if row.outcome == "success" else ("FAILED" if row.outcome else "RUNNING")),
+        or ("DONE" if row.outcome == "success" else ("FAILED" if row.outcome else "UNKNOWN")),
     }
 
 
@@ -127,7 +129,7 @@ def start_run(body: StartRunRequest) -> dict[str, str]:
             initiated_by="dashboard",
             run_id=run_id,
         )
-        config = SandboxConfig()
+        config = SandboxConfig.from_env()
         ModalSandbox(config).run(spec, on_event=on_event)
 
     future = _executor.submit(_run)

@@ -51,6 +51,10 @@ MODEL_ID = (
     f"openai/{RAW_MODEL}" if RAW_MODEL and "/" not in RAW_MODEL else RAW_MODEL or "openai/unknown"
 )
 TIMEOUT_SECONDS = int(os.environ.get("OPENCODE_TIMEOUT", "300"))
+# "required" forces the model to call a tool each turn, preventing small models
+# from replying with plain text and producing an empty diff.  Set
+# OPENCODE_TOOL_CHOICE=auto to revert to the default for specific deployments.
+TOOL_CHOICE = os.environ.get("OPENCODE_TOOL_CHOICE", "required")
 
 _PROXY_PORT = 8080
 
@@ -197,9 +201,13 @@ class _ProxyHandler(http.server.BaseHTTPRequestHandler):
 
         # Pass tools in the standard Chat Completions tools field.
         # vLLM handles these correctly with --enable-auto-tool-choice.
+        # Default tool_choice is "required" so the model must call a tool rather
+        # than replying with plain text — without this, small models like Qwen 7B
+        # sometimes respond conversationally and make no file edits.
+        # Override via OPENCODE_TOOL_CHOICE=auto for specific deployments.
         if req.get("tools"):
             chat_req["tools"] = _convert_tools(req["tools"])
-            chat_req["tool_choice"] = "auto"
+            chat_req["tool_choice"] = TOOL_CHOICE
 
         for key in ("temperature", "max_tokens"):
             if key in req:
