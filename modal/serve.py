@@ -59,7 +59,7 @@ _PROD_MODELS: dict[str, dict] = {
     "qwen3-coder": {
         "model_id": "Qwen/Qwen3-Coder-80B-Instruct",
         "served_name": "qwen3-coder",
-        "gpu": modal.gpu.A100(count=2, size="80GB"),
+        "gpu": "A100-80GB:2",
         "context_length": 131_072,
         "tp_size": 2,
     },
@@ -67,7 +67,7 @@ _PROD_MODELS: dict[str, dict] = {
         # MiniMax M2.5 — MoE, 456B total / ~45B active, Lightning Attention (1M ctx)
         "model_id": "MiniMaxAI/MiniMax-M2.5",
         "served_name": "minimax-m2.5",
-        "gpu": modal.gpu.A100(count=8, size="80GB"),
+        "gpu": "A100-80GB:8",
         "context_length": 1_000_000,
         "tp_size": 8,
     },
@@ -109,7 +109,7 @@ else:
     # responds with plain text instead of calling file-editing tools.
     MODEL_ID = "Qwen/Qwen2.5-Coder-32B-Instruct"
     SERVED_MODEL_NAME = "qwen2.5-coder-32b"
-    GPU = modal.gpu.A100(count=1, size="80GB")
+    GPU = "A100-80GB"
     CONTEXT_LENGTH = 32_768
     TP_SIZE = 1
     SCALEDOWN_WINDOW = 300
