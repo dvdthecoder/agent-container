@@ -207,10 +207,15 @@ class _ProxyHandler(http.server.BaseHTTPRequestHandler):
 
         # Pass tools in the standard Chat Completions tools field.
         # vLLM handles these correctly with --enable-auto-tool-choice.
-        # Default tool_choice is "required" so the model must call a tool rather
-        # than replying with plain text — without this, small models like Qwen 7B
-        # sometimes respond conversationally and make no file edits.
-        # Override via OPENCODE_TOOL_CHOICE=auto for specific deployments.
+        #
+        # tool_choice strategy:
+        #   "required" on the FIRST model turn (no tool results in context yet) —
+        #   forces the model to start coding immediately rather than replying with
+        #   conversational text and producing an empty diff.
+        #   "auto" on all subsequent turns (tool results present) — lets the model
+        #   return a final text response to end the session instead of looping
+        #   forever calling bash.
+        #   Override the first-turn value via OPENCODE_TOOL_CHOICE=auto if needed.
         #
         # parallel_tool_calls=False forces one tool call per turn so the model
         # sees the result of `read` before generating the `edit` oldString.
@@ -218,7 +223,15 @@ class _ProxyHandler(http.server.BaseHTTPRequestHandler):
         # knowledge (often wrong) for oldString rather than the actual file content.
         if req.get("tools"):
             chat_req["tools"] = _convert_tools(req["tools"])
-            chat_req["tool_choice"] = TOOL_CHOICE
+            # Detect follow-up turns: any tool_result item in the input means we
+            # already have at least one round of tool calls in context.
+            raw_input_list = raw_input if isinstance(raw_input, list) else []
+            has_tool_results = any(
+                isinstance(item, dict) and item.get("type") in ("tool_result", "function_call_output")
+                for item in raw_input_list
+            )
+            effective_tool_choice = "auto" if has_tool_results else TOOL_CHOICE
+            chat_req["tool_choice"] = effective_tool_choice
             chat_req["parallel_tool_calls"] = False
 
         for key in ("temperature", "max_tokens"):
@@ -692,7 +705,7 @@ def main() -> int:
     result = req(
         "session/prompt",
         {"sessionId": sid, "prompt": [{"type": "text", "text": TASK}]},
-        timeout=30.0,
+        timeout=float(TIMEOUT_SECONDS),
     )
 
     stop_reason = result.get("result", {}).get("stopReason", "")
