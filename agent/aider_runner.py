@@ -56,6 +56,8 @@ cmd = [
     "--map-tokens",
     "1024",  # small map — gives model file context without expensive full scan
     "--no-pretty",  # plain-text output — avoids terminal escape codes in sandbox streams
+    "--edit-format",
+    "diff",  # unified diff format — more robust than whole-file when model adds preamble text
     "--model",
     model_arg,
     "--openai-api-key",

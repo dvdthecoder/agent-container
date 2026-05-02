@@ -262,10 +262,17 @@ def test_agent_nonzero_exit_returns_failed_result(mock_create):
 
     clone_proc = _make_proc(returncode=0)
     agent_proc = _make_proc(stdout="something went wrong", returncode=1)
-    diff_proc = _make_proc()
-    stat_proc = _make_proc()
-
-    sb.exec.side_effect = [clone_proc, _make_proc(), agent_proc, diff_proc, stat_proc]
+    # collect_diff makes up to 4 exec calls: diff + fallback, stat + fallback
+    # (fallbacks fire when the three-dot range returns empty on a shallow clone)
+    sb.exec.side_effect = [
+        clone_proc,
+        _make_proc(),  # .git/info/exclude
+        agent_proc,
+        _make_proc(),  # git diff origin/main...HEAD  (empty → triggers fallback)
+        _make_proc(),  # git diff origin/main          (fallback)
+        _make_proc(),  # git diff --stat origin/main...HEAD (empty → triggers fallback)
+        _make_proc(),  # git diff --stat origin/main   (fallback)
+    ]
 
     result = ModalSandbox(_config()).run(_spec())
 

@@ -64,17 +64,32 @@ def collect_diff(
 ) -> tuple[str, str]:
     """Return ``(full_diff, diff_stat)`` for all changes since clone.
 
-    Compares against ``origin/<base_branch>`` so aider commits are included —
-    ``git diff HEAD`` would return empty if aider already committed its edits.
+    Compares ``origin/<base_branch>..HEAD`` (committed changes) plus the
+    working tree so both committed edits (aider auto-commits) and uncommitted
+    edits are captured.
     """
     ref = f"origin/{base_branch}"
-    diff_proc = sb.exec("git", "diff", ref, workdir=workdir)
+
+    # Committed changes: HEAD vs origin/<base_branch>
+    diff_proc = sb.exec("git", "diff", f"{ref}...HEAD", workdir=workdir)
     diff = diff_proc.stdout.read()
     diff_proc.wait()
 
-    stat_proc = sb.exec("git", "diff", "--stat", ref, workdir=workdir)
+    # If nothing committed, fall back to working-tree diff (agent wrote but
+    # did not commit — e.g. aider with --no-auto-commits).
+    if not diff:
+        diff_proc2 = sb.exec("git", "diff", ref, workdir=workdir)
+        diff = diff_proc2.stdout.read()
+        diff_proc2.wait()
+
+    stat_proc = sb.exec("git", "diff", "--stat", f"{ref}...HEAD", workdir=workdir)
     stat = stat_proc.stdout.read()
     stat_proc.wait()
+
+    if not stat:
+        stat_proc2 = sb.exec("git", "diff", "--stat", ref, workdir=workdir)
+        stat = stat_proc2.stdout.read()
+        stat_proc2.wait()
 
     return diff, stat.strip()
 
