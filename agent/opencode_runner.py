@@ -185,12 +185,6 @@ class _ProxyHandler(http.server.BaseHTTPRequestHandler):
             file=sys.stderr,
         )
 
-        # Dump first 1200 chars of request for debugging
-        print(
-            f"[proxy] full req (truncated): {json.dumps(req)[:1200]}",
-            file=sys.stderr,
-        )
-
         raw_input = req.get("input", "")
         if isinstance(raw_input, str):
             messages = [{"role": "user", "content": raw_input}]
