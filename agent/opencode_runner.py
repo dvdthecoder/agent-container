@@ -709,7 +709,11 @@ def main() -> int:
     )
 
     stop_reason = result.get("result", {}).get("stopReason", "")
-    print(f"[runner] session/prompt result: stopReason={stop_reason!r} keys={list(result.get('result', {}).keys())}", file=sys.stderr)
+    result_keys = list(result.get("result", {}).keys())
+    print(
+        f"[runner] session/prompt result: stopReason={stop_reason!r} keys={result_keys}",
+        file=sys.stderr,
+    )
     if stop_reason:
         if stop_reason != "end_turn":
             print(

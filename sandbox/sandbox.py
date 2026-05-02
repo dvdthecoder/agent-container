@@ -56,7 +56,8 @@ _BASE_IMAGE = (
     .run_commands(
         "curl -fsSL https://deb.nodesource.com/setup_lts.x | bash -",
         "apt-get install -y nodejs",
-        "npm install -g opencode-ai@1.14.31",  # pinned — update deliberately after proxy compatibility check
+        # pinned — update deliberately after verifying proxy compatibility
+        "npm install -g opencode-ai@1.14.31",
     )
     .add_local_file("agent/aider_runner.py", "/aider_runner.py", copy=True)
     .add_local_file("agent/opencode_runner.py", "/opencode_runner.py", copy=True)
