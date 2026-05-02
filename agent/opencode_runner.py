@@ -223,14 +223,20 @@ class _ProxyHandler(http.server.BaseHTTPRequestHandler):
         # knowledge (often wrong) for oldString rather than the actual file content.
         if req.get("tools"):
             chat_req["tools"] = _convert_tools(req["tools"])
-            # Detect follow-up turns: any tool_result item in the input means we
-            # already have at least one round of tool calls in context.
+            # Switch to tool_choice=auto only AFTER an edit/write call has
+            # already appeared in the conversation history.  This ensures:
+            #   - Before edit: "required" forces the model to call read then edit
+            #     (not just reply with text describing the change).
+            #   - After edit: "auto" lets the model return a final text response
+            #     to end the session instead of looping forever on bash calls.
             raw_input_list = raw_input if isinstance(raw_input, list) else []
-            has_tool_results = any(
-                isinstance(item, dict) and item.get("type") in ("tool_result", "function_call_output")
+            has_edit_call = any(
+                isinstance(item, dict)
+                and item.get("type") == "function_call"
+                and item.get("name") in ("edit", "write", "patch")
                 for item in raw_input_list
             )
-            effective_tool_choice = "auto" if has_tool_results else TOOL_CHOICE
+            effective_tool_choice = "auto" if has_edit_call else TOOL_CHOICE
             chat_req["tool_choice"] = effective_tool_choice
             chat_req["parallel_tool_calls"] = False
 
