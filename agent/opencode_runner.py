@@ -389,6 +389,14 @@ class _ProxyHandler(http.server.BaseHTTPRequestHandler):
                 }
             )
 
+        n_tool_calls = len(tool_calls_buf)
+        n_text_chars = len(text)
+        print(
+            f"[proxy] ← stream done: tool_calls={n_tool_calls}"
+            f" text={n_text_chars}chars tool_choice={TOOL_CHOICE}",
+            file=sys.stderr,
+        )
+
         self._write_sse(
             json.dumps(
                 {
