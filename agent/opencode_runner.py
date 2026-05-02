@@ -185,6 +185,12 @@ class _ProxyHandler(http.server.BaseHTTPRequestHandler):
             file=sys.stderr,
         )
 
+        # Dump first 1200 chars of request for debugging
+        print(
+            f"[proxy] full req (truncated): {json.dumps(req)[:1200]}",
+            file=sys.stderr,
+        )
+
         raw_input = req.get("input", "")
         if isinstance(raw_input, str):
             messages = [{"role": "user", "content": raw_input}]
@@ -205,9 +211,15 @@ class _ProxyHandler(http.server.BaseHTTPRequestHandler):
         # than replying with plain text — without this, small models like Qwen 7B
         # sometimes respond conversationally and make no file edits.
         # Override via OPENCODE_TOOL_CHOICE=auto for specific deployments.
+        #
+        # parallel_tool_calls=False forces one tool call per turn so the model
+        # sees the result of `read` before generating the `edit` oldString.
+        # Without this the model calls read+edit simultaneously and uses prior
+        # knowledge (often wrong) for oldString rather than the actual file content.
         if req.get("tools"):
             chat_req["tools"] = _convert_tools(req["tools"])
             chat_req["tool_choice"] = TOOL_CHOICE
+            chat_req["parallel_tool_calls"] = False
 
         for key in ("temperature", "max_tokens"):
             if key in req:
@@ -357,38 +369,7 @@ class _ProxyHandler(http.server.BaseHTTPRequestHandler):
                 if fn.get("arguments"):
                     buf["arguments"] += fn["arguments"]
 
-        output = []
         text = "".join(full_text)
-        if text:
-            output.append(
-                {
-                    "type": "message",
-                    "role": "assistant",
-                    "content": [{"type": "output_text", "text": text}],
-                }
-            )
-        for idx in sorted(tool_calls_buf):
-            buf = tool_calls_buf[idx]
-            call_id = buf["id"]
-            output.append(
-                {
-                    "type": "function_call",
-                    "id": call_id,
-                    "call_id": call_id,
-                    "name": buf["name"],
-                    "arguments": buf["arguments"],
-                }
-            )
-
-        if not output:
-            output.append(
-                {
-                    "type": "message",
-                    "role": "assistant",
-                    "content": [{"type": "output_text", "text": ""}],
-                }
-            )
-
         n_tool_calls = len(tool_calls_buf)
         n_text_chars = len(text)
         tool_names = [tool_calls_buf[i]["name"] for i in sorted(tool_calls_buf)]
@@ -407,6 +388,73 @@ class _ProxyHandler(http.server.BaseHTTPRequestHandler):
                 file=sys.stderr,
             )
 
+        # Build the full output array for response.completed
+        output = []
+        output_index = 0
+
+        if text:
+            text_item = {
+                "type": "message",
+                "role": "assistant",
+                "content": [{"type": "output_text", "text": text}],
+            }
+            output.append(text_item)
+            output_index += 1
+
+        for idx in sorted(tool_calls_buf):
+            buf = tool_calls_buf[idx]
+            call_id = buf["id"]
+            fn_item = {
+                "type": "function_call",
+                "id": call_id,
+                "call_id": call_id,
+                "name": buf["name"],
+                "arguments": buf["arguments"],
+                "status": "completed",
+            }
+            # Emit intermediate events so opencode's agentic loop can detect
+            # and execute the tool call before the response.completed event.
+            self._write_sse(json.dumps({
+                "type": "response.output_item.added",
+                "output_index": output_index,
+                "item": {
+                    "type": "function_call",
+                    "id": call_id,
+                    "call_id": call_id,
+                    "name": buf["name"],
+                    "arguments": "",
+                    "status": "in_progress",
+                },
+            }))
+            self._write_sse(json.dumps({
+                "type": "response.function_call_arguments.delta",
+                "output_index": output_index,
+                "call_id": call_id,
+                "delta": buf["arguments"],
+            }))
+            self._write_sse(json.dumps({
+                "type": "response.function_call_arguments.done",
+                "output_index": output_index,
+                "call_id": call_id,
+                "arguments": buf["arguments"],
+            }))
+            self._write_sse(json.dumps({
+                "type": "response.output_item.done",
+                "output_index": output_index,
+                "item": fn_item,
+            }))
+            output.append(fn_item)
+            output_index += 1
+
+        if not output:
+            output.append(
+                {
+                    "type": "message",
+                    "role": "assistant",
+                    "content": [{"type": "output_text", "text": ""}],
+                }
+            )
+
         self._write_sse(
             json.dumps(
                 {
@@ -414,6 +462,7 @@ class _ProxyHandler(http.server.BaseHTTPRequestHandler):
                     "response": {
                         "id": "resp_proxy",
                         "object": "response",
+                        "status": "completed",
                         "model": RAW_MODEL,
                         "output": output,
                     },
@@ -656,14 +705,19 @@ def main() -> int:
             )
             client.terminate()
             return 1
-        # session/prompt returned end_turn synchronously — session is complete.
-        # Give a short grace period in case any async notification is still in flight,
-        # then exit.
-        grace = time.monotonic() + 3
+        # session/prompt returned end_turn — for the OpenAI/vLLM provider this
+        # fires after the FIRST model response.  The agent loop continues
+        # asynchronously (executes tools, calls model again) and eventually
+        # emits session_completed.  Give it up to 90 s to finish.
+        print("[runner] waiting for session_completed (up to 90s) ...", file=sys.stderr)
+        grace = time.monotonic() + 90
         while time.monotonic() < grace:
             if client._stop_reason:
+                print(f"[runner] got stop_reason={client._stop_reason!r}", file=sys.stderr)
                 break
-            time.sleep(0.1)
+            time.sleep(0.5)
+        if not client._stop_reason:
+            print("[runner] grace period elapsed, terminating", file=sys.stderr)
         client.terminate()
         return 0
 
