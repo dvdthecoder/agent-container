@@ -49,7 +49,8 @@ Your terminal / dashboard / Claude Code session
   agent-run CLI  (or Python API, or MCP tool)
         ↓
   Modal Sandbox  ← ephemeral container, destroyed after each run
-  WARMING → BOOTING → CLONING → RUNNING → TESTING → PR
+  WARMING (timeout_coldstart) → BOOTING → CLONING
+  → RUNNING (timeout_agent) → TESTING (timeout_tests) → PR
         ↓
   Coding agent   ← aider / opencode / Claude Code CLI / Gemini CLI
         ↓
@@ -58,7 +59,8 @@ Your terminal / dashboard / Claude Code session
   GitHub / GitLab PR
 ```
 
-See [Architecture](architecture.md) for the full picture.
+Each pipeline phase has its own timeout budget — WARMING failures are diagnosed separately from
+agent hangs. See [Architecture](architecture.md) for the full picture.
 
 ---
 

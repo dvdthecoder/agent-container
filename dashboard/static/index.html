@@ -424,6 +424,113 @@
       margin-left: auto;
     }
     .pr-link:hover { opacity: .85; }
+
+    /* ---- tab bar ---- */
+    #tab-bar {
+      display: flex;
+      gap: 0;
+      border-bottom: 2px solid var(--border);
+      background: var(--surface);
+      flex-shrink: 0;
+      padding: 0 12px;
+    }
+    .tab-btn {
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 10px 14px;
+      cursor: pointer;
+      transition: color .1s;
+    }
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    /* ---- tab panels ---- */
+    .tab-panel { display: none; flex-direction: column; flex: 1; overflow: hidden; }
+    .tab-panel.active { display: flex; }
+
+    /* ---- tokens tab ---- */
+    #tokens-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      flex-shrink: 0;
+      flex-wrap: wrap;
+    }
+    #tokens-toolbar label { font-size: 11px; color: var(--muted); margin: 0; white-space: nowrap; }
+    #tokens-toolbar select, #tokens-toolbar input {
+      width: auto; font-size: 12px; padding: 4px 6px; background: var(--bg);
+    }
+    #tokens-toolbar input[type="number"] { width: 80px; }
+    #tokens-toolbar input[type="date"]   { width: 130px; }
+    #tokens-summary {
+      margin-left: auto;
+      font-size: 11px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    /* tokens table */
+    #tokens-scroll { overflow-y: auto; flex: 1; }
+    #tokens-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    #tokens-table th {
+      position: sticky;
+      top: 0;
+      background: var(--surface);
+      z-index: 4;
+      padding: 6px 12px;
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      text-align: right;
+      border-bottom: 2px solid var(--border);
+      white-space: nowrap;
+      cursor: pointer;
+      user-select: none;
+    }
+    #tokens-table th:first-child,
+    #tokens-table th:nth-child(2),
+    #tokens-table th:nth-child(3),
+    #tokens-table th:nth-child(4) { text-align: left; }
+    #tokens-table th:hover { color: var(--accent); }
+    #tokens-table th.sort-asc::after  { content: " ↑"; }
+    #tokens-table th.sort-desc::after { content: " ↓"; }
+    #tokens-table td {
+      padding: 7px 12px;
+      border-bottom: 1px solid var(--border);
+      text-align: right;
+      vertical-align: middle;
+    }
+    #tokens-table td:first-child,
+    #tokens-table td:nth-child(2),
+    #tokens-table td:nth-child(3),
+    #tokens-table td:nth-child(4) { text-align: left; }
+    #tokens-table tr:hover td { background: rgba(88,166,255,.04); }
+    .tok-runid  { font-family: var(--mono); font-size: 11px; color: var(--muted); white-space: nowrap; }
+    .tok-repo   { color: var(--text); max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .tok-backend { white-space: nowrap; }
+    .tok-outcome.success { color: var(--green); }
+    .tok-outcome.error, .tok-outcome.failed { color: var(--red); }
+    .tok-num    { font-family: var(--mono); color: var(--text); }
+    .tok-cost   { font-family: var(--mono); color: var(--yellow); }
+    #tokens-empty {
+      padding: 48px 32px;
+      color: var(--muted);
+      font-size: 13px;
+    }
   </style>
 </head>
 <body>
@@ -495,58 +602,117 @@
 
   </div>
 
-  <!-- ---- main run list ---- -->
+  <!-- ---- main area ---- -->
   <div id="main">
 
-    <!-- filter toolbar -->
-    <div id="filter-bar">
-      <label for="flt-status">Status</label>
-      <select id="flt-status" onchange="applyFilters()">
-        <option value="">All</option>
-        <option value="DONE">Done</option>
-        <option value="FAILED">Failed</option>
-        <option value="RUNNING">Running</option>
-        <option value="UNKNOWN">Unknown</option>
-      </select>
-
-      <label for="flt-backend">Backend</label>
-      <select id="flt-backend" onchange="applyFilters()">
-        <option value="">All</option>
-        <option value="aider">aider</option>
-        <option value="opencode">opencode</option>
-        <option value="claude">claude</option>
-        <option value="gemini">gemini</option>
-        <option value="stub">stub</option>
-      </select>
-
-      <label for="flt-source">Source</label>
-      <select id="flt-source" onchange="applyFilters()">
-        <option value="">All</option>
-        <option value="cli">cli</option>
-        <option value="dashboard">dashboard</option>
-      </select>
-
-      <span id="run-count"></span>
+    <!-- tab bar -->
+    <div id="tab-bar">
+      <button class="tab-btn active" onclick="switchTab('runs')">Runs</button>
+      <button class="tab-btn" onclick="switchTab('tokens')">Tokens</button>
     </div>
 
-    <!-- column headers -->
-    <div id="list-header">
-      <div class="col-hdr"></div>
-      <div class="col-hdr"></div>
-      <div class="col-hdr">Run ID</div>
-      <div class="col-hdr">Repository</div>
-      <div class="col-hdr">Started</div>
-      <div class="col-hdr">Ended</div>
-      <div class="col-hdr">Backend</div>
-      <div class="col-hdr">Source</div>
-      <div class="col-hdr">Status</div>
-      <div class="col-hdr">PR</div>
-    </div>
+    <!-- ===== RUNS TAB ===== -->
+    <div id="tab-runs" class="tab-panel active">
 
-    <div id="run-list">
-      <div id="empty-state">No runs yet — start one from the sidebar.</div>
-    </div>
-  </div>
+      <!-- filter toolbar -->
+      <div id="filter-bar">
+        <label for="flt-status">Status</label>
+        <select id="flt-status" onchange="applyFilters()">
+          <option value="">All</option>
+          <option value="DONE">Done</option>
+          <option value="FAILED">Failed</option>
+          <option value="RUNNING">Running</option>
+          <option value="UNKNOWN">Unknown</option>
+        </select>
+
+        <label for="flt-backend">Backend</label>
+        <select id="flt-backend" onchange="applyFilters()">
+          <option value="">All</option>
+          <option value="aider">aider</option>
+          <option value="opencode">opencode</option>
+          <option value="claude">claude</option>
+          <option value="gemini">gemini</option>
+          <option value="stub">stub</option>
+        </select>
+
+        <label for="flt-source">Source</label>
+        <select id="flt-source" onchange="applyFilters()">
+          <option value="">All</option>
+          <option value="cli">cli</option>
+          <option value="dashboard">dashboard</option>
+        </select>
+
+        <span id="run-count"></span>
+      </div>
+
+      <!-- column headers -->
+      <div id="list-header">
+        <div class="col-hdr"></div>
+        <div class="col-hdr"></div>
+        <div class="col-hdr">Run ID</div>
+        <div class="col-hdr">Repository</div>
+        <div class="col-hdr">Started</div>
+        <div class="col-hdr">Ended</div>
+        <div class="col-hdr">Backend</div>
+        <div class="col-hdr">Source</div>
+        <div class="col-hdr">Status</div>
+        <div class="col-hdr">PR</div>
+      </div>
+
+      <div id="run-list" style="overflow-y:auto;flex:1;">
+        <div id="empty-state">No runs yet — start one from the sidebar.</div>
+      </div>
+
+    </div><!-- /tab-runs -->
+
+    <!-- ===== TOKENS TAB ===== -->
+    <div id="tab-tokens" class="tab-panel">
+
+      <div id="tokens-toolbar">
+        <label for="tok-backend">Backend</label>
+        <select id="tok-backend" onchange="loadTokens()">
+          <option value="">All</option>
+          <option value="aider">aider</option>
+          <option value="opencode">opencode</option>
+          <option value="claude">claude</option>
+          <option value="gemini">gemini</option>
+        </select>
+
+        <label for="tok-from">From</label>
+        <input id="tok-from" type="date" onchange="loadTokens()" />
+
+        <label for="tok-to">To</label>
+        <input id="tok-to" type="date" onchange="loadTokens()" />
+
+        <label for="tok-rate" title="Cost per 1M tokens (USD). Used only for the estimate column.">$/1M tokens</label>
+        <input id="tok-rate" type="number" value="1.00" min="0" step="0.01" onchange="rerenderTokenCosts()" />
+
+        <span id="tokens-summary"></span>
+      </div>
+
+      <div id="tokens-scroll">
+        <div id="tokens-empty" style="display:none">No runs with token data yet. Token data is recorded for opencode runs once they complete.</div>
+        <table id="tokens-table" style="display:none">
+          <thead>
+            <tr>
+              <th onclick="sortTokens('run_id')">Run ID</th>
+              <th onclick="sortTokens('repo')">Repository</th>
+              <th onclick="sortTokens('backend')">Backend</th>
+              <th onclick="sortTokens('outcome')">Outcome</th>
+              <th onclick="sortTokens('prompt_tokens')">Prompt</th>
+              <th onclick="sortTokens('completion_tokens')">Completion</th>
+              <th onclick="sortTokens('total_tokens')">Total</th>
+              <th onclick="sortTokens('cost')">Est. cost</th>
+              <th onclick="sortTokens('duration_s')">Duration</th>
+            </tr>
+          </thead>
+          <tbody id="tokens-tbody"></tbody>
+        </table>
+      </div>
+
+    </div><!-- /tab-tokens -->
+
+  </div><!-- /main -->
 </div>
 
 <script>
@@ -911,6 +1077,131 @@ function renderRunSummary(run_id, detail) {
   if (detail.sandbox_id) row('sandbox',   detail.sandbox_id);
   if (detail.error)      row('error',     detail.error, 'fail');
   if (detail.diff_stat)  row('diff',      detail.diff_stat);
+}
+
+// ------------------------------------------------------------------ tabs
+function switchTab(name) {
+  document.querySelectorAll('.tab-btn').forEach((b, i) => {
+    const tabName = ['runs', 'tokens'][i];
+    b.classList.toggle('active', tabName === name);
+  });
+  document.querySelectorAll('.tab-panel').forEach(p => {
+    p.classList.toggle('active', p.id === `tab-${name}`);
+  });
+  if (name === 'tokens') loadTokens();
+}
+
+// ------------------------------------------------------------------ tokens tab
+let _tokensData = [];          // current loaded rows (after backend/date filter)
+let _tokensSortCol  = 'total_tokens';
+let _tokensSortDir  = -1;      // -1 = desc, 1 = asc
+
+async function loadTokens() {
+  const backend  = document.getElementById('tok-backend').value;
+  const dateFrom = document.getElementById('tok-from').value;
+  const dateTo   = document.getElementById('tok-to').value;
+
+  const params = new URLSearchParams();
+  if (backend)  params.set('backend',   backend);
+  if (dateFrom) params.set('date_from', dateFrom);
+  if (dateTo)   params.set('date_to',   dateTo);
+
+  try {
+    _tokensData = await fetch('/api/tokens?' + params).then(r => r.json());
+  } catch {
+    _tokensData = [];
+  }
+
+  renderTokensTable();
+}
+
+function sortTokens(col) {
+  if (_tokensSortCol === col) {
+    _tokensSortDir *= -1;
+  } else {
+    _tokensSortCol = col;
+    _tokensSortDir = col === 'run_id' || col === 'repo' || col === 'backend' || col === 'outcome' ? 1 : -1;
+  }
+  renderTokensTable();
+}
+
+function renderTokensTable() {
+  const rate = parseFloat(document.getElementById('tok-rate').value) || 0;
+  const table = document.getElementById('tokens-table');
+  const empty = document.getElementById('tokens-empty');
+  const summary = document.getElementById('tokens-summary');
+
+  if (!_tokensData.length) {
+    table.style.display = 'none';
+    empty.style.display = 'block';
+    summary.textContent = '';
+    return;
+  }
+
+  table.style.display = 'table';
+  empty.style.display = 'none';
+
+  // Update sort indicators on headers
+  table.querySelectorAll('th').forEach(th => {
+    th.classList.remove('sort-asc', 'sort-desc');
+  });
+  const colMap = ['run_id','repo','backend','outcome','prompt_tokens','completion_tokens','total_tokens','cost','duration_s'];
+  const thIdx = colMap.indexOf(_tokensSortCol);
+  if (thIdx >= 0) {
+    const th = table.querySelectorAll('th')[thIdx];
+    if (th) th.classList.add(_tokensSortDir === 1 ? 'sort-asc' : 'sort-desc');
+  }
+
+  // Sort
+  const sorted = [..._tokensData].sort((a, b) => {
+    let av = _tokensSortCol === 'cost'
+      ? (a.total_tokens / 1e6 * rate)
+      : (a[_tokensSortCol] ?? '');
+    let bv = _tokensSortCol === 'cost'
+      ? (b.total_tokens / 1e6 * rate)
+      : (b[_tokensSortCol] ?? '');
+    if (typeof av === 'string') return _tokensSortDir * av.localeCompare(bv);
+    return _tokensSortDir * ((av < bv ? -1 : av > bv ? 1 : 0));
+  });
+
+  // Totals for summary row
+  const totalPrompt     = _tokensData.reduce((s, r) => s + r.prompt_tokens, 0);
+  const totalCompletion = _tokensData.reduce((s, r) => s + r.completion_tokens, 0);
+  const totalAll        = _tokensData.reduce((s, r) => s + r.total_tokens, 0);
+  const totalCost       = totalAll / 1e6 * rate;
+  summary.textContent = `${_tokensData.length} run${_tokensData.length !== 1 ? 's' : ''} · ${fmtNum(totalAll)} total tokens · est. $${totalCost.toFixed(4)}`;
+
+  const tbody = document.getElementById('tokens-tbody');
+  tbody.innerHTML = '';
+  for (const row of sorted) {
+    const cost = row.total_tokens / 1e6 * rate;
+    const repoShort = row.repo.replace(/^https?:\/\/(www\.)?github\.com\//, '').replace(/\.git$/, '');
+    const dur = row.duration_s != null ? row.duration_s.toFixed(0) + 's' : '—';
+    const outcome = row.outcome || '—';
+    const outCls = outcome === 'success' ? 'success' : (outcome === 'error' || outcome === 'failed' ? 'failed' : '');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="tok-runid">${escHtml(row.run_id)}</td>
+      <td><span class="tok-repo" title="${escHtml(row.repo)}">${escHtml(repoShort)}</span></td>
+      <td class="tok-backend"><span class="badge badge-backend">${escHtml(row.backend)}</span></td>
+      <td class="tok-outcome ${outCls}">${escHtml(outcome)}</td>
+      <td class="tok-num">${fmtNum(row.prompt_tokens)}</td>
+      <td class="tok-num">${fmtNum(row.completion_tokens)}</td>
+      <td class="tok-num">${fmtNum(row.total_tokens)}</td>
+      <td class="tok-cost">$${cost.toFixed(4)}</td>
+      <td class="tok-num">${escHtml(dur)}</td>
+    `;
+    tbody.appendChild(tr);
+  }
+}
+
+function rerenderTokenCosts() {
+  if (_tokensData.length) renderTokensTable();
+}
+
+function fmtNum(n) {
+  if (n == null) return '—';
+  return Number(n).toLocaleString('en-US');
 }
 
 // ------------------------------------------------------------------ utils

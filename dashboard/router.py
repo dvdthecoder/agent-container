@@ -8,6 +8,7 @@ GET  /runs/{id}         — get a single run (SQLite metadata + live phase if ac
 DELETE /runs/{id}        — cancel a queued/running run (best-effort)
 GET  /runs/{id}/stream  — SSE stream of lifecycle events (dashboard runs only)
 GET  /runs/{id}/events  — past log events from SQLite (for replay on page load)
+GET  /tokens            — token usage per run, sorted by total_tokens desc
 GET  /serve/status      — model server status (deployed / idle / unknown)
 POST /serve/deploy      — trigger a modal deploy for the given profile
 """
@@ -219,6 +220,54 @@ async def stream_run(run_id: str) -> StreamingResponse:
             "X-Accel-Buffering": "no",
         },
     )
+
+
+# ------------------------------------------------------------------ /tokens route
+
+
+@router.get("/tokens")
+def list_tokens(backend: str = "", date_from: str = "", date_to: str = "") -> list[dict[str, Any]]:
+    """Return per-run token usage sorted by total_tokens descending.
+
+    Optional query params:
+      backend   — filter by backend name (e.g. "opencode")
+      date_from — ISO date string lower bound on started_at (inclusive)
+      date_to   — ISO date string upper bound on started_at (inclusive)
+    """
+    try:
+        rows = run_store.list_runs(limit=500)
+    except FileNotFoundError:
+        return []
+
+    result = []
+    for row in rows:
+        # Skip runs with no token data.
+        if row.total_tokens is None:
+            continue
+        if backend and row.backend != backend:
+            continue
+        if date_from and row.started_at < date_from:
+            continue
+        if date_to and row.started_at > date_to + "T23:59:59":
+            continue
+        result.append(
+            {
+                "run_id": row.run_id,
+                "repo": row.repo,
+                "task": row.task,
+                "backend": row.backend,
+                "started_at": row.started_at,
+                "outcome": row.outcome,
+                "prompt_tokens": row.prompt_tokens or 0,
+                "completion_tokens": row.completion_tokens or 0,
+                "total_tokens": row.total_tokens or 0,
+                "duration_s": row.duration_s,
+            }
+        )
+
+    # Sort by total_tokens descending — heaviest runs first.
+    result.sort(key=lambda r: r["total_tokens"], reverse=True)
+    return result
 
 
 # ------------------------------------------------------------------ /serve routes

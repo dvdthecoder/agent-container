@@ -36,20 +36,36 @@ class TestAgentTaskSpecValidation:
         with pytest.raises(ValueError, match="full URL"):
             AgentTaskSpec(repo="org/repo", task="fix it")
 
-    def test_raises_when_timeout_is_zero(self):
-        with pytest.raises(ValueError, match="timeout_seconds"):
+    def test_raises_when_timeout_agent_is_zero(self):
+        with pytest.raises(ValueError, match="timeout_agent"):
             AgentTaskSpec(
                 repo="https://github.com/org/repo",
                 task="fix it",
-                timeout_seconds=0,
+                timeout_agent=0,
             )
 
-    def test_raises_when_timeout_negative(self):
-        with pytest.raises(ValueError, match="timeout_seconds"):
+    def test_raises_when_timeout_agent_negative(self):
+        with pytest.raises(ValueError, match="timeout_agent"):
             AgentTaskSpec(
                 repo="https://github.com/org/repo",
                 task="fix it",
-                timeout_seconds=-1,
+                timeout_agent=-1,
+            )
+
+    def test_raises_when_timeout_coldstart_is_zero(self):
+        with pytest.raises(ValueError, match="timeout_coldstart"):
+            AgentTaskSpec(
+                repo="https://github.com/org/repo",
+                task="fix it",
+                timeout_coldstart=0,
+            )
+
+    def test_raises_when_timeout_tests_negative(self):
+        with pytest.raises(ValueError, match="timeout_tests"):
+            AgentTaskSpec(
+                repo="https://github.com/org/repo",
+                task="fix it",
+                timeout_tests=-5,
             )
 
 
@@ -60,7 +76,9 @@ class TestAgentTaskSpecDefaults:
         assert spec.base_branch == "main"
         assert spec.image is None
         assert spec.env == {}
-        assert spec.timeout_seconds == 600
+        assert spec.timeout_coldstart == 300
+        assert spec.timeout_agent == 600
+        assert spec.timeout_tests == 120
         assert spec.create_pr is True
         assert spec.backend == "opencode"
 
@@ -75,6 +93,26 @@ class TestAgentTaskSpecDefaults:
         spec = AgentTaskSpec(repo="https://github.com/org/repo", task_file=str(task_file))
 
         assert isinstance(spec.task_file, Path)
+
+
+class TestAgentTaskSpecTimeouts:
+    def test_timeout_seconds_sets_timeout_agent(self):
+        spec = AgentTaskSpec(
+            repo="https://github.com/org/repo",
+            task="fix it",
+            timeout_seconds=900,
+        )
+        assert spec.timeout_agent == 900
+
+    def test_total_timeout_sums_phases(self):
+        spec = AgentTaskSpec(
+            repo="https://github.com/org/repo",
+            task="fix it",
+            timeout_coldstart=120,
+            timeout_agent=300,
+            timeout_tests=60,
+        )
+        assert spec.total_timeout == 480
 
 
 class TestAgentTaskSpecResolvers:

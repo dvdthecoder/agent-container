@@ -15,21 +15,23 @@ make dashboard
 
 ```
 ┌─────────────────────┬────────────────────────────────────────────────┐
-│  Left sidebar       │  Run list (main area)                          │
-│                     │                                                │
-│  ┌───────────────┐  │  ▶ ● run-20260501-123456  org/repo  aider  cli │
-│  │ Model server  │  │  ▶ ● run-20260501-120000  org/repo  opencode  dashboard │
-│  │ profile ▾     │  │  ▼ ● run-20260501-110000  org/repo  aider  cli │
-│  │ [Deploy]      │  │    ┌─ expanded ─────────────────────────────┐  │
-│  └───────────────┘  │    │ branch: main  task: fix pagination...  │  │
-│                     │    │ 12:01:04 ▶ BOOTING                     │  │
-│  ┌───────────────┐  │    │ 12:01:08 ▶ CLONING                     │  │
+│  Left sidebar       │  [ Runs ] [ Tokens ]  ← tab bar                │
+│                     ├────────────────────────────────────────────────┤
+│  ┌───────────────┐  │  RUNS TAB                                      │
+│  │ Model server  │  │  ▶ ● run-20260501-123456  org/repo  aider  cli │
+│  │ profile ▾     │  │  ▶ ● run-20260501-120000  org/repo  opencode   │
+│  │ [Deploy]      │  │  ▼ ● run-20260501-110000  org/repo  aider      │
+│  └───────────────┘  │    ┌─ expanded ─────────────────────────────┐  │
+│                     │    │ branch: main  task: fix pagination...  │  │
+│  ┌───────────────┐  │    │ 12:01:04 ▶ BOOTING                     │  │
 │  │ New run       │  │    │ 12:01:15 ▶ RUNNING                     │  │
 │  │ repo ______   │  │    │ 12:02:30 ✓ DONE  +12 −3                │  │
 │  │ task ______   │  │    └────────────────────────────────────────┘  │
-│  │ backend ▾     │  │                                                │
-│  │ [Start run]   │  │                                                │
-│  └───────────────┘  │                                                │
+│  │ backend ▾     │  ├────────────────────────────────────────────────┤
+│  │ [Start run]   │  │  TOKENS TAB                                    │
+│  └───────────────┘  │  backend ▾  from ____  to ____  $/1M [1.00]   │
+│                     │  Run ID  Repo  Backend  Prompt  Completion  …  │
+│                     │  run-20… org/… opencode  12,345   1,234  …     │
 └─────────────────────┴────────────────────────────────────────────────┘
 ```
 
@@ -37,7 +39,11 @@ make dashboard
 - **Model server panel** — profile/model selector and Deploy button (see [Serve panel](#serve-panel))
 - **New run form** — repo URL, task, backend, base branch, options
 
-**Main area** is a full-width scrollable list of run rows. Each row is collapsible:
+**Main area** has a tab bar at the top:
+
+### Runs tab
+
+Full-width scrollable list of run rows. Each row is collapsible:
 
 | State | What you see |
 |---|---|
@@ -46,6 +52,31 @@ make dashboard
 
 Click anywhere on a row summary to expand or collapse it. New runs auto-expand and stream
 logs as they arrive. Rows remain in the list after completion — collapse them to keep the view clean.
+
+### Tokens tab
+
+Per-run token consumption for all completed runs that have token data (opencode via the Responses
+API proxy; other backends emit no usage data unless they log the `[runner] token_usage:` line).
+
+| Column | Description |
+|---|---|
+| Run ID | Links the row to the run |
+| Repository | Short form (org/repo) |
+| Backend | Badge (aider / opencode / …) |
+| Outcome | success / error / failed |
+| Prompt tokens | Input tokens charged |
+| Completion tokens | Output tokens charged |
+| Total tokens | Sum |
+| Est. cost | `total_tokens / 1M × rate` — rate is configurable in the toolbar |
+| Duration | Wall-clock seconds for the run |
+
+**Toolbar controls:**
+- **Backend filter** — narrow to one backend for apples-to-apples comparisons
+- **From / To date pickers** — restrict to a date range
+- **$/1M tokens** — cost rate input; updating it recalculates the Est. cost column live without reloading data
+- **Summary bar** — shows `N runs · X total tokens · est. $Y` for the current filtered set
+
+Click any column header to sort. Clicking the same header again reverses the sort direction.
 
 ## `initiated_by` badge
 
@@ -101,6 +132,38 @@ The dashboard is a Backend-for-Frontend: all Modal and SQLite concerns stay serv
 | `GET` | `/api/runs/{id}` | Single run metadata (SQLite + live phase if active) |
 | `DELETE` | `/api/runs/{id}` | Cancel a run (best-effort) |
 | `GET` | `/api/runs/{id}/stream` | SSE stream of lifecycle events (dashboard runs only) |
+| `GET` | `/api/runs/{id}/events` | Past log events from SQLite (replay on page load) |
+
+### Tokens
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/api/tokens` | Runs with token data, sorted by `total_tokens` desc |
+
+**Query parameters for `GET /api/tokens`:**
+
+| Param | Example | Description |
+|---|---|---|
+| `backend` | `opencode` | Filter by backend name |
+| `date_from` | `2026-05-01` | Lower bound on `started_at` (inclusive) |
+| `date_to` | `2026-05-03` | Upper bound on `started_at` (inclusive) |
+
+**Response row shape:**
+
+```json
+{
+  "run_id":            "run-20260503-120000-abc123",
+  "repo":              "https://github.com/org/repo",
+  "task":              "Fix the login bug",
+  "backend":           "opencode",
+  "started_at":        "2026-05-03T12:00:00+00:00",
+  "outcome":           "success",
+  "prompt_tokens":     12345,
+  "completion_tokens": 678,
+  "total_tokens":      13023,
+  "duration_s":        142.3
+}
+```
 
 **`POST /api/runs` body:**
 

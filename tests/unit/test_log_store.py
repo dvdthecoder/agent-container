@@ -231,3 +231,58 @@ def test_store_raises_when_db_missing(tmp_path):
     store = RunStore(db_path=tmp_path / "nonexistent.db")
     with pytest.raises(FileNotFoundError):
         store.list_runs()
+
+
+# ------------------------------------------------------------------ token usage
+
+
+def test_set_token_usage_persisted(logger, store):
+    logger.set_token_usage(prompt_tokens=1234, completion_tokens=567, total_tokens=1801)
+    logger.finish("success")
+    run = store.get_run(logger.run_id)
+    assert run is not None
+    assert run.prompt_tokens == 1234
+    assert run.completion_tokens == 567
+    assert run.total_tokens == 1801
+
+
+def test_token_fields_default_to_none(logger, store):
+    logger.finish("success")
+    run = store.get_run(logger.run_id)
+    assert run is not None
+    assert run.prompt_tokens is None
+    assert run.completion_tokens is None
+    assert run.total_tokens is None
+
+
+def test_migration_adds_token_columns(tmp_path):
+    """A DB created without token columns should gain them after migration."""
+    import sqlite3
+
+    db = tmp_path / "old.db"
+    # Create a schema without the new columns, simulating an existing DB.
+    conn = sqlite3.connect(str(db))
+    conn.execute(
+        "CREATE TABLE runs ("
+        "run_id TEXT PRIMARY KEY, repo TEXT NOT NULL, task TEXT NOT NULL,"
+        " backend TEXT NOT NULL, initiated_by TEXT NOT NULL DEFAULT 'cli',"
+        " base_branch TEXT NOT NULL DEFAULT 'main',"
+        " timeout_seconds INTEGER NOT NULL DEFAULT 600,"
+        " started_at TEXT NOT NULL, finished_at TEXT, outcome TEXT,"
+        " branch TEXT, pr_url TEXT, duration_s REAL, sandbox_id TEXT)"
+    )
+    conn.commit()
+    conn.close()
+
+    # Opening a RunLogger on the old DB triggers migration.
+    lg = RunLogger.create(
+        repo="https://github.com/org/repo", task="fix it", backend="opencode", db_path=db
+    )
+    lg.set_token_usage(100, 50, 150)
+    lg.close()
+
+    store = RunStore(db_path=db)
+    run = store.get_run(lg.run_id)
+    assert run is not None
+    assert run.prompt_tokens == 100
+    assert run.total_tokens == 150

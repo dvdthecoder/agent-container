@@ -210,15 +210,25 @@ def test_push_failure_returns_failed_result(mock_create):
 
 
 @patch("sandbox.sandbox.modal.Sandbox.create")
-def test_run_passes_timeout_to_sandbox(mock_create):
+def test_run_passes_total_timeout_to_sandbox(mock_create):
     sb = MagicMock()
     mock_create.return_value = sb
     sb.exec.return_value = _make_proc()
 
-    ModalSandbox(_config()).run(_spec(timeout_seconds=120))
+    from sandbox.spec import AgentTaskSpec
+
+    spec = AgentTaskSpec(
+        repo="https://github.com/org/repo",
+        task="fix it",
+        timeout_coldstart=60,
+        timeout_agent=120,
+        timeout_tests=30,
+    )
+    ModalSandbox(_config()).run(spec)
 
     _, kwargs = mock_create.call_args
-    assert kwargs["timeout"] == 120
+    # Modal sandbox timeout = sum of all phases
+    assert kwargs["timeout"] == 60 + 120 + 30
 
 
 @patch("sandbox.sandbox.modal.Sandbox.create")
