@@ -21,8 +21,10 @@ by the OpenAI SDK without any path mangling.
 from __future__ import annotations
 
 import os
+import re
 import subprocess
 import sys
+import threading
 
 TASK = " ".join(sys.argv[1:]) if len(sys.argv) > 1 else ""
 API_KEY = os.environ.get("OPENAI_API_KEY", "modal")
@@ -68,7 +70,60 @@ cmd = [
     # container and is read correctly by the OpenAI SDK.
 ]
 
+# ---------------------------------------------------------------------------
+# Token tracking
+# ---------------------------------------------------------------------------
+# aider prints one line per model call to stderr:
+#   Tokens: 2,841 sent, 381 received. Cost: $0.00 message, $0.00 session.
+# We accumulate across all turns and emit a summary line that sandbox.py
+# already knows how to parse: [runner] token_usage: prompt=X completion=Y total=Z
+_TOKEN_RE = re.compile(r"Tokens:\s+([\d,]+)\s+sent,\s+([\d,]+)\s+received")
+
+_prompt_tokens = 0
+_completion_tokens = 0
+
+
+def _stream(source, dest, is_stderr: bool) -> None:
+    """Forward *source* lines to *dest*, parsing token lines when on stderr."""
+    global _prompt_tokens, _completion_tokens  # noqa: PLW0603
+    for raw in source:
+        line = raw.decode("utf-8", errors="replace") if isinstance(raw, bytes) else raw
+        dest.write(line)
+        dest.flush()
+        if is_stderr:
+            m = _TOKEN_RE.search(line)
+            if m:
+                _prompt_tokens += int(m.group(1).replace(",", ""))
+                _completion_tokens += int(m.group(2).replace(",", ""))
+
+
+# ---------------------------------------------------------------------------
+# Run aider, stream output, emit token summary
+# ---------------------------------------------------------------------------
+
 # Run from WORKDIR so aider picks up the git repo there.
 # OPENAI_BASE_URL is pre-normalised (includes /v1) by SandboxConfig.env_for_backend
 # before the container starts — no further manipulation needed here.
-sys.exit(subprocess.run(cmd, cwd=WORKDIR).returncode)  # noqa: S603
+proc = subprocess.Popen(  # noqa: S603
+    cmd,
+    cwd=WORKDIR,
+    stdout=subprocess.PIPE,
+    stderr=subprocess.PIPE,
+)
+
+t_out = threading.Thread(target=_stream, args=(proc.stdout, sys.stdout, False), daemon=True)
+t_err = threading.Thread(target=_stream, args=(proc.stderr, sys.stderr, True), daemon=True)
+t_out.start()
+t_err.start()
+t_out.join()
+t_err.join()
+proc.wait()
+
+total = _prompt_tokens + _completion_tokens
+print(
+    f"[runner] token_usage: prompt={_prompt_tokens} completion={_completion_tokens} total={total}",
+    file=sys.stderr,
+    flush=True,
+)
+
+sys.exit(proc.returncode)
