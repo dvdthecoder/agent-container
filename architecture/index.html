@@ -1399,23 +1399,31 @@ is ~100 lines of pure JSON reshaping with no model-specific code.</p>
 </code></pre></div>
 <h2 id="data-flow">Data flow<a class="headerlink" href="#data-flow" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>AgentTaskSpec
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>  repo, task, base_branch, image, env, timeout_seconds
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>  backend, create_pr, run_tests
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>  initiated_by (&quot;cli&quot; | &quot;dashboard&quot;)
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>  run_id (optional — dashboard pre-allocates; CLI auto-generates)
-<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>        ↓
-<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>ModalSandbox.run(spec)
-<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>  → RunLogger.create(...)  writes run row to ~/.agent-container/runs.db
-<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>  → modal.Sandbox.create() boots ephemeral container
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>  repo, task, base_branch, image, env
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>  timeout_coldstart  — warmup probe budget (default 300s)
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>  timeout_agent      — agent execution budget, sets OPENCODE_TIMEOUT (default 600s)
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>  timeout_tests      — test suite budget (default 120s)
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>  total_timeout      — computed: sum of all three (Modal sandbox lifetime)
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>  backend, create_pr, run_tests
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>  initiated_by (&quot;cli&quot; | &quot;dashboard&quot;)
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>  run_id (optional — dashboard pre-allocates; CLI auto-generates)
 <a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>        ↓
-<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>AgentTaskResult
-<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>  success, run_id, branch, pr_url, diff, diff_stat, duration_seconds, error, backend
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>ModalSandbox.run(spec)
+<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>  → RunLogger.create(...)    writes run row to ~/.agent-container/runs.db
+<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>  → _wait_for_inference(...) WARMING: polls /v1/models for up to timeout_coldstart
+<a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>  → modal.Sandbox.create()   BOOTING: container lifetime = total_timeout
+<a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a>        ↓
+<a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a>AgentTaskResult
+<a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a>  success, run_id, branch, pr_url, diff, diff_stat, duration_seconds, error, backend
 </code></pre></div>
 <h3 id="unified-run-log">Unified run log<a class="headerlink" href="#unified-run-log" title="Permanent link">&para;</a></h3>
 <p>All runs — whether started via CLI, Python API, or the dashboard — write to a single SQLite
 database at <code>~/.agent-container/runs.db</code> via <code>RunLogger</code>. The <code>initiated_by</code> column records
 the source. <code>RunStore</code> (read-side) is used by the dashboard's <code>GET /api/runs</code> to surface the
 full history in one list.</p>
+<p>Token usage (<code>prompt_tokens</code>, <code>completion_tokens</code>, <code>total_tokens</code>) is written to the same
+<code>runs</code> row when the opencode proxy emits its <code>[runner] token_usage:</code> summary line. The
+<code>GET /api/tokens</code> endpoint surfaces these columns for the dashboard Tokens tab.</p>
 <h2 id="opencode-adapter-thin-proxy">opencode adapter (thin proxy)<a class="headerlink" href="#opencode-adapter-thin-proxy" title="Permanent link">&para;</a></h2>
 <p>opencode v1.14+ uses the OpenAI Responses API (<code>POST /v1/responses</code>). No self-hosted inference
 server implements this API — they all speak Chat Completions. The adapter bridges the gap:</p>

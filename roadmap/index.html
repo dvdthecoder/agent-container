@@ -492,6 +492,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#phase-25-hardening-observability-done" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 2.5 — Hardening + observability (done)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#phase-3-sglang-validation-done" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -508,17 +519,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#in-progress" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        In progress
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#planned" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -531,10 +531,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#phase-4-model-expansion-observability" class="md-nav__link">
+  <a href="#phase-4-model-expansion-richer-observability" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Phase 4 — Model expansion + observability
+        Phase 4 — Model expansion + richer observability
       
     </span>
   </a>
@@ -1133,6 +1133,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#phase-25-hardening-observability-done" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 2.5 — Hardening + observability (done)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#phase-3-sglang-validation-done" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1149,17 +1160,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#in-progress" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        In progress
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#planned" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1172,10 +1172,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#phase-4-model-expansion-observability" class="md-nav__link">
+  <a href="#phase-4-model-expansion-richer-observability" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Phase 4 — Model expansion + observability
+        Phase 4 — Model expansion + richer observability
       
     </span>
   </a>
@@ -1271,6 +1271,16 @@
   infinite bash loop after the file is written</li>
 <li><code>make example BACKEND=opencode</code> produces a real diff and opens a PR (verified: fixture PR #12)</li>
 </ul>
+<h3 id="phase-25-hardening-observability-done">Phase 2.5 — Hardening + observability (done)<a class="headerlink" href="#phase-25-hardening-observability-done" title="Permanent link">&para;</a></h3>
+<p>Proxy correctness, per-phase timeouts, CI guards, test coverage, token tracking.</p>
+<ul>
+<li><a href="https://github.com/dvdthecoder/agent-container/issues/64">#64</a> Per-phase timeouts: <code>timeout_coldstart</code> / <code>timeout_agent</code> / <code>timeout_tests</code> replace the single <code>timeout_seconds</code> — each phase has its own budget; Modal sandbox lifetime = sum of all three</li>
+<li><a href="https://github.com/dvdthecoder/agent-container/issues/65">#65</a> Warmup probe uses <code>timeout_coldstart</code> budget — cold-start burns are isolated from agent execution time</li>
+<li><a href="https://github.com/dvdthecoder/agent-container/issues/67">#67</a> 24 unit tests for Responses API proxy — <code>_convert_tools</code>, <code>_convert_input_items</code>, <code>_translate_chat_response</code>, <code>_stream_chat_to_responses</code>, full SSE event sequence</li>
+<li>CI guard: <code>scripts/check_container_imports.py</code> blocks dev-only packages (<code>pytest</code>, <code>ruff</code>, etc.) from being imported in <code>modal/</code> or <code>agent/</code> at commit time</li>
+<li>opencode pinned to <code>1.14.31</code> — deliberate upgrade path with proxy compatibility check</li>
+<li><a href="https://github.com/dvdthecoder/agent-container/issues/130">#130</a> Token usage tab: proxy accumulates <code>usage</code> from every Chat Completions turn; persisted to SQLite; dashboard <strong>Tokens</strong> tab shows per-run prompt/completion/total tokens with live cost estimate and backend/date filters; 271 unit tests total</li>
+</ul>
 <h3 id="phase-3-sglang-validation-done">Phase 3 — SGLang validation (done)<a class="headerlink" href="#phase-3-sglang-validation-done" title="Permanent link">&para;</a></h3>
 <p>SGLang deployed as a separate Modal app (<code>agent-container-serve-sglang</code>); tool calling confirmed working with <code>hermes</code> parser.</p>
 <ul>
@@ -1282,23 +1292,9 @@
 <li><code>make example BACKEND=opencode</code> against SGLang endpoint: tool call with 10 tools → ok (3.0s), PR opened</li>
 </ul>
 <hr />
-<h2 id="in-progress">In progress<a class="headerlink" href="#in-progress" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>Task</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Fix fixture repo — add <code>.gitignore</code> for <code>__pycache__</code> so pyc files stop appearing in PR diffs</td>
-</tr>
-</tbody>
-</table>
-<hr />
 <h2 id="planned">Planned<a class="headerlink" href="#planned" title="Permanent link">&para;</a></h2>
-<h3 id="phase-4-model-expansion-observability">Phase 4 — Model expansion + observability<a class="headerlink" href="#phase-4-model-expansion-observability" title="Permanent link">&para;</a></h3>
-<p>Broaden the model menu and make runs observable beyond the final PR.</p>
+<h3 id="phase-4-model-expansion-richer-observability">Phase 4 — Model expansion + richer observability<a class="headerlink" href="#phase-4-model-expansion-richer-observability" title="Permanent link">&para;</a></h3>
+<p>Broaden the model menu and deepen run observability.</p>
 <table>
 <thead>
 <tr>

@@ -1493,7 +1493,7 @@ Requires Modal tokens and a deployed model endpoint.</p>
 <tbody>
 <tr>
 <td>Unit</td>
-<td>Config, spec, result, sandbox, git ops (all mocked)</td>
+<td>Config, spec, result, sandbox, git ops, proxy, CLI (all mocked)</td>
 <td>None</td>
 <td>Every commit</td>
 </tr>
@@ -1512,7 +1512,10 @@ Requires Modal tokens and a deployed model endpoint.</p>
 </tbody>
 </table>
 <p><strong>Unit tests mock everything external.</strong> The Modal SDK and subprocess are patched. Add unit
-tests first when adding a feature.</p>
+tests first when adding a feature. 271 tests run in &lt; 2 seconds.</p>
+<p>The proxy test suite (<code>tests/unit/test_responses_proxy.py</code>) covers the Responses API →
+Chat Completions conversion layer, including the SSE event sequence, tool conversion,
+message reshaping, and token accumulation that underpins every opencode run.</p>
 <p><strong>Integration tests use <code>--backend stub</code>.</strong> The stub backend echoes the task and exits 0 — no
 model tokens spent, no code changed. Exercises the full sandbox lifecycle at near-zero cost.
 Skipped in CI if <code>MODAL_TOKEN_ID</code> secret is not set.</p>

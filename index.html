@@ -1122,15 +1122,17 @@ merge it.</p>
 <a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>  agent-run CLI  (or Python API, or MCP tool)
 <a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>        ↓
 <a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>  Modal Sandbox  ← ephemeral container, destroyed after each run
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>  WARMING → BOOTING → CLONING → RUNNING → TESTING → PR
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>        ↓
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>  Coding agent   ← aider / opencode / Claude Code CLI / Gemini CLI
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>        ↓
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>  Model endpoint ← vLLM on Modal GPU (or Anthropic / Google AI)
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>        ↓
-<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>  GitHub / GitLab PR
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>  WARMING (timeout_coldstart) → BOOTING → CLONING
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>  → RUNNING (timeout_agent) → TESTING (timeout_tests) → PR
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>        ↓
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>  Coding agent   ← aider / opencode / Claude Code CLI / Gemini CLI
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>        ↓
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>  Model endpoint ← vLLM on Modal GPU (or Anthropic / Google AI)
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>        ↓
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>  GitHub / GitLab PR
 </code></pre></div>
-<p>See <a href="architecture/">Architecture</a> for the full picture.</p>
+<p>Each pipeline phase has its own timeout budget — WARMING failures are diagnosed separately from
+agent hangs. See <a href="architecture/">Architecture</a> for the full picture.</p>
 <hr />
 <h2 id="when-to-use-it">When to use it<a class="headerlink" href="#when-to-use-it" title="Permanent link">&para;</a></h2>
 <table>

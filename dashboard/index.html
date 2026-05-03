@@ -760,6 +760,34 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Layout">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#runs-tab" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Runs tab
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tokens-tab" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tokens tab
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -812,6 +840,17 @@
     <span class="md-ellipsis">
       
         Runs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tokens" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tokens
       
     </span>
   </a>
@@ -1117,6 +1156,34 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Layout">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#runs-tab" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Runs tab
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tokens-tab" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tokens tab
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1169,6 +1236,17 @@
     <span class="md-ellipsis">
       
         Runs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tokens" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tokens
       
     </span>
   </a>
@@ -1243,27 +1321,31 @@ running, completed, and failed — in one unified list.</p>
 </code></pre></div>
 <h2 id="layout">Layout<a class="headerlink" href="#layout" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>┌─────────────────────┬────────────────────────────────────────────────┐
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>│  Left sidebar       │  Run list (main area)                          │
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>│                     │                                                │
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>│  ┌───────────────┐  │  ▶ ● run-20260501-123456  org/repo  aider  cli │
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>│  │ Model server  │  │  ▶ ● run-20260501-120000  org/repo  opencode  dashboard │
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>│  │ profile ▾     │  │  ▼ ● run-20260501-110000  org/repo  aider  cli │
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>│  │ [Deploy]      │  │    ┌─ expanded ─────────────────────────────┐  │
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>│  └───────────────┘  │    │ branch: main  task: fix pagination...  │  │
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>│                     │    │ 12:01:04 ▶ BOOTING                     │  │
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>│  ┌───────────────┐  │    │ 12:01:08 ▶ CLONING                     │  │
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>│  Left sidebar       │  [ Runs ] [ Tokens ]  ← tab bar                │
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>│                     ├────────────────────────────────────────────────┤
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>│  ┌───────────────┐  │  RUNS TAB                                      │
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>│  │ Model server  │  │  ▶ ● run-20260501-123456  org/repo  aider  cli │
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>│  │ profile ▾     │  │  ▶ ● run-20260501-120000  org/repo  opencode   │
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>│  │ [Deploy]      │  │  ▼ ● run-20260501-110000  org/repo  aider      │
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>│  └───────────────┘  │    ┌─ expanded ─────────────────────────────┐  │
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>│                     │    │ branch: main  task: fix pagination...  │  │
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>│  ┌───────────────┐  │    │ 12:01:04 ▶ BOOTING                     │  │
 <a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>│  │ New run       │  │    │ 12:01:15 ▶ RUNNING                     │  │
 <a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>│  │ repo ______   │  │    │ 12:02:30 ✓ DONE  +12 −3                │  │
 <a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>│  │ task ______   │  │    └────────────────────────────────────────┘  │
-<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>│  │ backend ▾     │  │                                                │
-<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>│  │ [Start run]   │  │                                                │
-<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>│  └───────────────┘  │                                                │
-<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>└─────────────────────┴────────────────────────────────────────────────┘
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>│  │ backend ▾     │  ├────────────────────────────────────────────────┤
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>│  │ [Start run]   │  │  TOKENS TAB                                    │
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>│  └───────────────┘  │  backend ▾  from ____  to ____  $/1M [1.00]   │
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>│                     │  Run ID  Repo  Backend  Prompt  Completion  …  │
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>│                     │  run-20… org/… opencode  12,345   1,234  …     │
+<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>└─────────────────────┴────────────────────────────────────────────────┘
 </code></pre></div>
 <p><strong>Left sidebar</strong> holds two panels:
 - <strong>Model server panel</strong> — profile/model selector and Deploy button (see <a href="#serve-panel">Serve panel</a>)
 - <strong>New run form</strong> — repo URL, task, backend, base branch, options</p>
-<p><strong>Main area</strong> is a full-width scrollable list of run rows. Each row is collapsible:</p>
+<p><strong>Main area</strong> has a tab bar at the top:</p>
+<h3 id="runs-tab">Runs tab<a class="headerlink" href="#runs-tab" title="Permanent link">&para;</a></h3>
+<p>Full-width scrollable list of run rows. Each row is collapsible:</p>
 <table>
 <thead>
 <tr>
@@ -1284,6 +1366,61 @@ running, completed, and failed — in one unified list.</p>
 </table>
 <p>Click anywhere on a row summary to expand or collapse it. New runs auto-expand and stream
 logs as they arrive. Rows remain in the list after completion — collapse them to keep the view clean.</p>
+<h3 id="tokens-tab">Tokens tab<a class="headerlink" href="#tokens-tab" title="Permanent link">&para;</a></h3>
+<p>Per-run token consumption for all completed runs that have token data (opencode via the Responses
+API proxy; other backends emit no usage data unless they log the <code>[runner] token_usage:</code> line).</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Run ID</td>
+<td>Links the row to the run</td>
+</tr>
+<tr>
+<td>Repository</td>
+<td>Short form (org/repo)</td>
+</tr>
+<tr>
+<td>Backend</td>
+<td>Badge (aider / opencode / …)</td>
+</tr>
+<tr>
+<td>Outcome</td>
+<td>success / error / failed</td>
+</tr>
+<tr>
+<td>Prompt tokens</td>
+<td>Input tokens charged</td>
+</tr>
+<tr>
+<td>Completion tokens</td>
+<td>Output tokens charged</td>
+</tr>
+<tr>
+<td>Total tokens</td>
+<td>Sum</td>
+</tr>
+<tr>
+<td>Est. cost</td>
+<td><code>total_tokens / 1M × rate</code> — rate is configurable in the toolbar</td>
+</tr>
+<tr>
+<td>Duration</td>
+<td>Wall-clock seconds for the run</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Toolbar controls:</strong>
+- <strong>Backend filter</strong> — narrow to one backend for apples-to-apples comparisons
+- <strong>From / To date pickers</strong> — restrict to a date range
+- <strong>$/1M tokens</strong> — cost rate input; updating it recalculates the Est. cost column live without reloading data
+- <strong>Summary bar</strong> — shows <code>N runs · X total tokens · est. $Y</code> for the current filtered set</p>
+<p>Click any column header to sort. Clicking the same header again reverses the sort direction.</p>
 <h2 id="initiated_by-badge"><code>initiated_by</code> badge<a class="headerlink" href="#initiated_by-badge" title="Permanent link">&para;</a></h2>
 <p>Every run row shows where the run was started:</p>
 <ul>
@@ -1405,18 +1542,81 @@ app state. Clicking <strong>Deploy</strong> calls <code>POST /api/serve/deploy</
 <td><code>/api/runs/{id}/stream</code></td>
 <td>SSE stream of lifecycle events (dashboard runs only)</td>
 </tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/api/runs/{id}/events</code></td>
+<td>Past log events from SQLite (replay on page load)</td>
+</tr>
 </tbody>
 </table>
-<p><strong><code>POST /api/runs</code> body:</strong></p>
+<h3 id="tokens">Tokens<a class="headerlink" href="#tokens" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GET</code></td>
+<td><code>/api/tokens</code></td>
+<td>Runs with token data, sorted by <code>total_tokens</code> desc</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Query parameters for <code>GET /api/tokens</code>:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Param</th>
+<th>Example</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>backend</code></td>
+<td><code>opencode</code></td>
+<td>Filter by backend name</td>
+</tr>
+<tr>
+<td><code>date_from</code></td>
+<td><code>2026-05-01</code></td>
+<td>Lower bound on <code>started_at</code> (inclusive)</td>
+</tr>
+<tr>
+<td><code>date_to</code></td>
+<td><code>2026-05-03</code></td>
+<td>Upper bound on <code>started_at</code> (inclusive)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response row shape:</strong></p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="p">{</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="nt">&quot;repo&quot;</span><span class="p">:</span><span class="w">            </span><span class="s2">&quot;https://github.com/org/myapp&quot;</span><span class="p">,</span>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span><span class="nt">&quot;task&quot;</span><span class="p">:</span><span class="w">            </span><span class="s2">&quot;Fix the off-by-one error in pagination&quot;</span><span class="p">,</span>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">  </span><span class="nt">&quot;backend&quot;</span><span class="p">:</span><span class="w">         </span><span class="s2">&quot;aider&quot;</span><span class="p">,</span>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">  </span><span class="nt">&quot;base_branch&quot;</span><span class="p">:</span><span class="w">     </span><span class="s2">&quot;main&quot;</span><span class="p">,</span>
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">  </span><span class="nt">&quot;create_pr&quot;</span><span class="p">:</span><span class="w">       </span><span class="kc">true</span><span class="p">,</span>
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">  </span><span class="nt">&quot;run_tests&quot;</span><span class="p">:</span><span class="w">       </span><span class="kc">true</span><span class="p">,</span>
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">  </span><span class="nt">&quot;timeout_seconds&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">300</span>
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="p">}</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="nt">&quot;run_id&quot;</span><span class="p">:</span><span class="w">            </span><span class="s2">&quot;run-20260503-120000-abc123&quot;</span><span class="p">,</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span><span class="nt">&quot;repo&quot;</span><span class="p">:</span><span class="w">              </span><span class="s2">&quot;https://github.com/org/repo&quot;</span><span class="p">,</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">  </span><span class="nt">&quot;task&quot;</span><span class="p">:</span><span class="w">              </span><span class="s2">&quot;Fix the login bug&quot;</span><span class="p">,</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">  </span><span class="nt">&quot;backend&quot;</span><span class="p">:</span><span class="w">           </span><span class="s2">&quot;opencode&quot;</span><span class="p">,</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">  </span><span class="nt">&quot;started_at&quot;</span><span class="p">:</span><span class="w">        </span><span class="s2">&quot;2026-05-03T12:00:00+00:00&quot;</span><span class="p">,</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">  </span><span class="nt">&quot;outcome&quot;</span><span class="p">:</span><span class="w">           </span><span class="s2">&quot;success&quot;</span><span class="p">,</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">  </span><span class="nt">&quot;prompt_tokens&quot;</span><span class="p">:</span><span class="w">     </span><span class="mi">12345</span><span class="p">,</span>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">  </span><span class="nt">&quot;completion_tokens&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">678</span><span class="p">,</span>
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="w">  </span><span class="nt">&quot;total_tokens&quot;</span><span class="p">:</span><span class="w">      </span><span class="mi">13023</span><span class="p">,</span>
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">  </span><span class="nt">&quot;duration_s&quot;</span><span class="p">:</span><span class="w">        </span><span class="mf">142.3</span>
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="p">}</span>
+</code></pre></div>
+<p><strong><code>POST /api/runs</code> body:</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="p">{</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span><span class="nt">&quot;repo&quot;</span><span class="p">:</span><span class="w">            </span><span class="s2">&quot;https://github.com/org/myapp&quot;</span><span class="p">,</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span><span class="nt">&quot;task&quot;</span><span class="p">:</span><span class="w">            </span><span class="s2">&quot;Fix the off-by-one error in pagination&quot;</span><span class="p">,</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">  </span><span class="nt">&quot;backend&quot;</span><span class="p">:</span><span class="w">         </span><span class="s2">&quot;aider&quot;</span><span class="p">,</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">  </span><span class="nt">&quot;base_branch&quot;</span><span class="p">:</span><span class="w">     </span><span class="s2">&quot;main&quot;</span><span class="p">,</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">  </span><span class="nt">&quot;create_pr&quot;</span><span class="p">:</span><span class="w">       </span><span class="kc">true</span><span class="p">,</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">  </span><span class="nt">&quot;run_tests&quot;</span><span class="p">:</span><span class="w">       </span><span class="kc">true</span><span class="p">,</span>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="w">  </span><span class="nt">&quot;timeout_seconds&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">300</span>
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="p">}</span>
 </code></pre></div>
 <p><strong>SSE event types</strong> (from <code>GET /api/runs/{id}/stream</code>):</p>
 <table>
@@ -1468,22 +1668,22 @@ app state. Clicking <strong>Deploy</strong> calls <code>POST /api/serve/deploy</
 </tbody>
 </table>
 <p><strong><code>POST /api/serve/deploy</code> body:</strong></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="p">{</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span><span class="nt">&quot;profile&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;prod&quot;</span><span class="p">,</span>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span><span class="nt">&quot;model&quot;</span><span class="p">:</span><span class="w">   </span><span class="s2">&quot;minimax-m2.5&quot;</span>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="p">{</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span><span class="nt">&quot;profile&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;prod&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span><span class="nt">&quot;model&quot;</span><span class="p">:</span><span class="w">   </span><span class="s2">&quot;minimax-m2.5&quot;</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="p">}</span>
 </code></pre></div>
 <p><code>model</code> is optional — only used when <code>profile</code> is <code>prod</code>. Omit it to use the default
 (<code>qwen3-coder</code>).</p>
 <h2 id="architecture">Architecture<a class="headerlink" href="#architecture" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>Browser
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>  ← SSE stream   (phase changes + log lines, dashboard runs only)
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>  → REST API     (start run, list runs, cancel, serve control)
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>FastAPI app (dashboard/router.py)
-<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>  RunStore        — reads SQLite at ~/.agent-container/runs.db (all runs, CLI + dashboard)
-<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>  WorkspaceStore  — in-memory SSE event buffer (active dashboard runs only)
-<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>  ModalSandbox    — fires off runs in a thread pool, pushes events to WorkspaceStore
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>Browser
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>  ← SSE stream   (phase changes + log lines, dashboard runs only)
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>  → REST API     (start run, list runs, cancel, serve control)
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>FastAPI app (dashboard/router.py)
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>  RunStore        — reads SQLite at ~/.agent-container/runs.db (all runs, CLI + dashboard)
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>  WorkspaceStore  — in-memory SSE event buffer (active dashboard runs only)
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>  ModalSandbox    — fires off runs in a thread pool, pushes events to WorkspaceStore
 </code></pre></div>
 <p><code>RunStore</code> (SQLite) is the source of truth for the run list — it persists across server
 restarts and captures CLI runs. <code>WorkspaceStore</code> is a lightweight in-memory ring buffer used
@@ -1491,8 +1691,8 @@ only for streaming live events to the browser; it is not persisted.</p>
 <p>Dashboard runs write to both stores with the same pre-allocated <code>run_id</code>. CLI runs only write
 to SQLite (no SSE available).</p>
 <h2 id="expose-on-lan-team-network">Expose on LAN / team network<a class="headerlink" href="#expose-on-lan-team-network" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nv">DASHBOARD_HOST</span><span class="o">=</span><span class="m">0</span>.0.0.0<span class="w">   </span><span class="c1"># default: 127.0.0.1</span>
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="nv">DASHBOARD_PORT</span><span class="o">=</span><span class="m">8080</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nv">DASHBOARD_HOST</span><span class="o">=</span><span class="m">0</span>.0.0.0<span class="w">   </span><span class="c1"># default: 127.0.0.1</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="nv">DASHBOARD_PORT</span><span class="o">=</span><span class="m">8080</span>
 </code></pre></div>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
