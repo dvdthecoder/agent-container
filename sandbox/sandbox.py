@@ -128,7 +128,11 @@ class ModalSandbox:
         try:
             try:
                 _emit("phase", phase="WARMING")
-                _wait_for_inference(self.config.openai_base_url, start)
+                _wait_for_inference(
+                    self.config.openai_base_url,
+                    start,
+                    max_wait=float(spec.timeout_coldstart),
+                )
 
                 _emit("phase", phase="BOOTING")
                 sb = self._create(spec)
@@ -139,9 +143,7 @@ class ModalSandbox:
 
                 _emit("phase", phase="RUNNING")
                 backend = get_backend(spec.backend)
-                # Give the agent spec.timeout_seconds - 60s (same headroom
-                # given to OPENCODE_TIMEOUT) before we hard-terminate.
-                agent_timeout = float(spec.timeout_seconds - 60)
+                agent_timeout = float(spec.timeout_agent)
 
                 def _on_log(label: str, line: str) -> None:
                     _emit("log", text=line, source=label)
@@ -253,15 +255,14 @@ class ModalSandbox:
             **self.config.env_for_backend(spec.backend),
             **spec.env,
         }
-        # Give the opencode runner 60s less than the sandbox timeout so it
-        # can exit cleanly before Modal forcefully kills the container.
-        env.setdefault("OPENCODE_TIMEOUT", str(spec.timeout_seconds - 60))
+        # opencode runner budget = timeout_agent (already excludes cold-start).
+        env.setdefault("OPENCODE_TIMEOUT", str(spec.timeout_agent))
         # Single shared app — all sandbox runs attach to the same app so
         # Modal doesn't accumulate one app per run (the original leak).
         app = modal.App.lookup("agent-container-sandbox", create_if_missing=True)
         return modal.Sandbox.create(
             image=image,
-            timeout=spec.timeout_seconds,
+            timeout=spec.total_timeout,
             secrets=[modal.Secret.from_dict(env)] if env else [],
             app=app,
             cpu=spec.cpu,
