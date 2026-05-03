@@ -56,7 +56,10 @@ CREATE TABLE IF NOT EXISTS runs (
     branch          TEXT,
     pr_url          TEXT,
     duration_s      REAL,
-    sandbox_id      TEXT
+    sandbox_id      TEXT,
+    prompt_tokens   INTEGER,
+    completion_tokens INTEGER,
+    total_tokens    INTEGER
 );
 
 CREATE TABLE IF NOT EXISTS events (
@@ -95,6 +98,9 @@ class RunRow:
     pr_url: str | None
     duration_s: float | None
     sandbox_id: str | None
+    prompt_tokens: int | None = None
+    completion_tokens: int | None = None
+    total_tokens: int | None = None
 
 
 @dataclass
@@ -143,6 +149,9 @@ class RunLogger:
             ("initiated_by", "TEXT NOT NULL DEFAULT 'cli'"),
             ("base_branch", "TEXT NOT NULL DEFAULT 'main'"),
             ("timeout_seconds", "INTEGER NOT NULL DEFAULT 600"),
+            ("prompt_tokens", "INTEGER"),
+            ("completion_tokens", "INTEGER"),
+            ("total_tokens", "INTEGER"),
         ]
         for col, defn in migrations:
             if col not in existing:
@@ -198,6 +207,21 @@ class RunLogger:
                 "INSERT INTO events (run_id, ts, elapsed_s, phase, source, level, message)"
                 " VALUES (?,?,?,?,?,?,?)",
                 (self.run_id, now, round(elapsed, 3), ph, source, level, message),
+            )
+            self._conn.commit()
+
+    def set_token_usage(
+        self,
+        prompt_tokens: int,
+        completion_tokens: int,
+        total_tokens: int,
+    ) -> None:
+        """Persist token consumption for this run (parsed from runner stderr)."""
+        with self._lock:
+            self._conn.execute(
+                "UPDATE runs SET prompt_tokens=?, completion_tokens=?, total_tokens=?"
+                " WHERE run_id=?",
+                (prompt_tokens, completion_tokens, total_tokens, self.run_id),
             )
             self._conn.commit()
 

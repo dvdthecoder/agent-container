@@ -9,6 +9,7 @@ ModalSandbox is the orchestrator.  Domain logic lives in dedicated modules:
 
 from __future__ import annotations
 
+import re
 import sys
 import time
 import urllib.error
@@ -145,8 +146,18 @@ class ModalSandbox:
                 backend = get_backend(spec.backend)
                 agent_timeout = float(spec.timeout_agent)
 
+                _token_usage_re = re.compile(
+                    r"\[runner\] token_usage: prompt=(\d+) completion=(\d+) total=(\d+)"
+                )
+
                 def _on_log(label: str, line: str) -> None:
                     _emit("log", text=line, source=label)
+                    m = _token_usage_re.search(line)
+                    if m:
+                        try:
+                            logger.set_token_usage(int(m[1]), int(m[2]), int(m[3]))
+                        except Exception:  # noqa: BLE001, S110
+                            pass
 
                 agent_output, exit_code = runner.run_agent(
                     sb,

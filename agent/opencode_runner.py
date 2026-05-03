@@ -58,6 +58,22 @@ TOOL_CHOICE = os.environ.get("OPENCODE_TOOL_CHOICE", "required")
 
 _PROXY_PORT = 8080
 
+# ---------------------------------------------------------------------------
+# Token usage accumulator — aggregated across all proxy turns this session
+# ---------------------------------------------------------------------------
+
+_token_counts: dict[str, int] = {"prompt": 0, "completion": 0}
+_token_lock = threading.Lock()
+
+
+def _accumulate_tokens(usage: dict) -> None:
+    """Thread-safely add *usage* totals to the session-level accumulator."""
+    if not usage:
+        return
+    with _token_lock:
+        _token_counts["prompt"] += int(usage.get("prompt_tokens", 0) or 0)
+        _token_counts["completion"] += int(usage.get("completion_tokens", 0) or 0)
+
 
 # ---------------------------------------------------------------------------
 # Format conversion helpers
@@ -239,6 +255,9 @@ class _ProxyHandler(http.server.BaseHTTPRequestHandler):
                 chat_req[key] = req[key]
 
         stream = chat_req["stream"]
+        # Request per-response usage stats from vLLM so we can track token consumption.
+        if stream:
+            chat_req["stream_options"] = {"include_usage": True}
         chat_body = json.dumps(chat_req).encode()
         url = f"{self.target}/v1/chat/completions"
         print(
@@ -262,7 +281,13 @@ class _ProxyHandler(http.server.BaseHTTPRequestHandler):
                 if stream:
                     self._stream_chat_to_responses(resp)
                 else:
-                    translated = self._translate_chat_response(resp.read())
+                    raw = resp.read()
+                    # Accumulate token usage from the non-streaming response.
+                    try:
+                        _accumulate_tokens(json.loads(raw).get("usage", {}))
+                    except Exception:  # noqa: BLE001, S110
+                        pass
+                    translated = self._translate_chat_response(raw)
                     self._send(200, translated)
         except urllib.error.HTTPError as e:
             body_err = e.read()
@@ -360,6 +385,10 @@ class _ProxyHandler(http.server.BaseHTTPRequestHandler):
                 chunk = json.loads(data)
             except json.JSONDecodeError:
                 continue
+
+            # vLLM emits a final chunk with `usage` when stream_options.include_usage=true.
+            if chunk.get("usage"):
+                _accumulate_tokens(chunk["usage"])
 
             delta = chunk.get("choices", [{}])[0].get("delta", {})
             text_delta = delta.get("content") or ""
@@ -781,6 +810,17 @@ def main() -> int:
         return 1
 
     client.terminate()
+
+    # Emit token usage so the host process can persist it to the run log.
+    with _token_lock:
+        p = _token_counts["prompt"]
+        c = _token_counts["completion"]
+    print(
+        f"[runner] token_usage: prompt={p} completion={c} total={p + c}",
+        file=sys.stderr,
+        flush=True,
+    )
+
     return 0
 
 

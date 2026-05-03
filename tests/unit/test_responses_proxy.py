@@ -16,7 +16,9 @@ from unittest.mock import MagicMock
 
 # Import the pure functions and the handler class directly.  The module-level
 # globals (TASK, BASE_URL, etc.) are fine — they just read from env/argv.
+import agent.opencode_runner as _proxy_mod
 from agent.opencode_runner import (
+    _accumulate_tokens,
     _convert_input_items,
     _convert_tools,
     _ProxyHandler,
@@ -348,3 +350,58 @@ class TestStreamChatToResponses:
         output = completed[0]["response"]["output"]
         assert len(output) == 1
         assert output[0]["type"] == "message"
+
+
+# ---------------------------------------------------------------------------
+# Token accumulation
+# ---------------------------------------------------------------------------
+
+
+def _reset_token_counts():
+    """Reset the module-level accumulator between tests."""
+    with _proxy_mod._token_lock:
+        _proxy_mod._token_counts["prompt"] = 0
+        _proxy_mod._token_counts["completion"] = 0
+
+
+class TestTokenAccumulation:
+    def setup_method(self):
+        _reset_token_counts()
+
+    def test_accumulate_adds_prompt_and_completion(self):
+        _accumulate_tokens({"prompt_tokens": 100, "completion_tokens": 50})
+        with _proxy_mod._token_lock:
+            assert _proxy_mod._token_counts["prompt"] == 100
+            assert _proxy_mod._token_counts["completion"] == 50
+
+    def test_accumulate_sums_across_calls(self):
+        _accumulate_tokens({"prompt_tokens": 100, "completion_tokens": 50})
+        _accumulate_tokens({"prompt_tokens": 200, "completion_tokens": 30})
+        with _proxy_mod._token_lock:
+            assert _proxy_mod._token_counts["prompt"] == 300
+            assert _proxy_mod._token_counts["completion"] == 80
+
+    def test_accumulate_noop_on_empty_dict(self):
+        _accumulate_tokens({})
+        with _proxy_mod._token_lock:
+            assert _proxy_mod._token_counts["prompt"] == 0
+
+    def test_accumulate_noop_on_none(self):
+        _accumulate_tokens(None)  # type: ignore[arg-type]
+        with _proxy_mod._token_lock:
+            assert _proxy_mod._token_counts["prompt"] == 0
+
+    def test_stream_picks_up_usage_chunk(self):
+        """A stream chunk with a top-level 'usage' field accumulates tokens."""
+        usage_chunk = {
+            "choices": [{"delta": {}}],
+            "usage": {"prompt_tokens": 42, "completion_tokens": 8, "total_tokens": 50},
+        }
+        lines = [
+            f"data: {json.dumps(usage_chunk)}\n".encode(),
+            b"data: [DONE]\n",
+        ]
+        _capture_streaming_sse(lines)
+        with _proxy_mod._token_lock:
+            assert _proxy_mod._token_counts["prompt"] == 42
+            assert _proxy_mod._token_counts["completion"] == 8
