@@ -164,6 +164,10 @@ database at `~/.agent-container/runs.db` via `RunLogger`. The `initiated_by` col
 the source. `RunStore` (read-side) is used by the dashboard's `GET /api/runs` to surface the
 full history in one list.
 
+Token usage (`prompt_tokens`, `completion_tokens`, `total_tokens`) is written to the same
+`runs` row when the opencode proxy emits its `[runner] token_usage:` summary line. The
+`GET /api/tokens` endpoint surfaces these columns for the dashboard Tokens tab.
+
 ## opencode adapter (thin proxy)
 
 opencode v1.14+ uses the OpenAI Responses API (`POST /v1/responses`). No self-hosted inference

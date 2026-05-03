@@ -249,13 +249,18 @@ make dashboard
 # → http://localhost:8000
 ```
 
-Live view of all runs — CLI and dashboard-started — newest first. Each run is a collapsible row:
-collapsed shows the phase indicator, repo, backend, and whether the run was started from the CLI
-or the dashboard; expanded shows the full log stream inline.
+Two-tab interface:
 
-The left sidebar has a **serve panel** (deploy the model server from the UI, choose profile and
-model) and the new-run form. Both CLI and dashboard runs write to the same SQLite log at
-`~/.agent-container/runs.db`.
+**Runs tab** — live view of all runs (CLI + dashboard), newest first. Each row is collapsible:
+collapsed shows the phase indicator, repo, backend, and source; expanded shows the full inline
+log stream.
+
+**Tokens tab** — per-run token consumption table. Sortable by any column. Filters: backend,
+date range. `$/1M tokens` rate input recalculates the cost estimate column live without reload.
+Summary bar shows cumulative tokens and estimated cost across visible runs.
+
+The left sidebar has a **serve panel** (deploy the model server from the UI) and the new-run
+form. Both CLI and dashboard runs write to the same SQLite log at `~/.agent-container/runs.db`.
 
 ---
 
@@ -304,9 +309,9 @@ make test-integration   # real Modal sandbox, stub agent (no LLM needed)
 make test-e2e           # real Modal sandbox + real model
 ```
 
-263 unit tests covering config, spec, sandbox, git ops, runner, tester, proxy, dashboard, MCP, and CLI. All run in-process with no external services.
+271 unit tests covering config, spec, sandbox, git ops, runner, tester, proxy, log store, dashboard, MCP, and CLI. All run in-process with no external services.
 
-The proxy test suite (`tests/unit/test_responses_proxy.py`) covers the complete Responses API → Chat Completions translation including the full SSE event sequence required by opencode's agentic loop.
+The proxy test suite (`tests/unit/test_responses_proxy.py`) covers the complete Responses API → Chat Completions translation including the full SSE event sequence and token accumulation logic.
 
 ---
 

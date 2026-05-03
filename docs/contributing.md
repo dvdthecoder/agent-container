@@ -88,11 +88,11 @@ pytest tests/integration/ -v -m integration  # integration only
 | E2e | Real model, fixture repo, full PR creation | Modal + model endpoint | Nightly |
 
 **Unit tests mock everything external.** The Modal SDK and subprocess are patched. Add unit
-tests first when adding a feature. 263 tests run in < 2 seconds.
+tests first when adding a feature. 271 tests run in < 2 seconds.
 
 The proxy test suite (`tests/unit/test_responses_proxy.py`) covers the Responses API →
-Chat Completions conversion layer, including the SSE event sequence, tool conversion, and
-message reshaping that underpins every opencode run.
+Chat Completions conversion layer, including the SSE event sequence, tool conversion,
+message reshaping, and token accumulation that underpins every opencode run.
 
 **Integration tests use `--backend stub`.** The stub backend echoes the task and exits 0 — no
 model tokens spent, no code changed. Exercises the full sandbox lifecycle at near-zero cost.
