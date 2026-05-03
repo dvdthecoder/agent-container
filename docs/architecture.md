@@ -139,14 +139,19 @@ Step 5 — Container destroyed
 
 ```
 AgentTaskSpec
-  repo, task, base_branch, image, env, timeout_seconds
+  repo, task, base_branch, image, env
+  timeout_coldstart  — warmup probe budget (default 300s)
+  timeout_agent      — agent execution budget, sets OPENCODE_TIMEOUT (default 600s)
+  timeout_tests      — test suite budget (default 120s)
+  total_timeout      — computed: sum of all three (Modal sandbox lifetime)
   backend, create_pr, run_tests
   initiated_by ("cli" | "dashboard")
   run_id (optional — dashboard pre-allocates; CLI auto-generates)
         ↓
 ModalSandbox.run(spec)
-  → RunLogger.create(...)  writes run row to ~/.agent-container/runs.db
-  → modal.Sandbox.create() boots ephemeral container
+  → RunLogger.create(...)    writes run row to ~/.agent-container/runs.db
+  → _wait_for_inference(...) WARMING: polls /v1/models for up to timeout_coldstart
+  → modal.Sandbox.create()   BOOTING: container lifetime = total_timeout
         ↓
 AgentTaskResult
   success, run_id, branch, pr_url, diff, diff_stat, duration_seconds, error, backend

@@ -225,6 +225,11 @@ spec = AgentTaskSpec(
     backend="aider",
     create_pr=True,
     run_tests=True,
+    # Per-phase timeouts — each phase gets its own budget:
+    timeout_coldstart=300,  # poll inference endpoint until ready
+    timeout_agent=600,      # agent execution (OPENCODE_TIMEOUT)
+    timeout_tests=120,      # test suite execution
+    # total Modal sandbox lifetime = sum of all three
 )
 
 result = ModalSandbox(config).run(spec)
@@ -298,6 +303,10 @@ make test               # unit tests — no external services, always free
 make test-integration   # real Modal sandbox, stub agent (no LLM needed)
 make test-e2e           # real Modal sandbox + real model
 ```
+
+263 unit tests covering config, spec, sandbox, git ops, runner, tester, proxy, dashboard, MCP, and CLI. All run in-process with no external services.
+
+The proxy test suite (`tests/unit/test_responses_proxy.py`) covers the complete Responses API → Chat Completions translation including the full SSE event sequence required by opencode's agentic loop.
 
 ---
 

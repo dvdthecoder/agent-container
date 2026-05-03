@@ -33,6 +33,15 @@ Pure Responses API ↔ Chat Completions adapter, zero model-specific code.
   infinite bash loop after the file is written
 - `make example BACKEND=opencode` produces a real diff and opens a PR (verified: fixture PR #12)
 
+### Phase 2.5 — Hardening + observability (done)
+Proxy correctness, per-phase timeouts, CI guards, test coverage.
+
+- [#64](https://github.com/dvdthecoder/agent-container/issues/64) Per-phase timeouts: `timeout_coldstart` / `timeout_agent` / `timeout_tests` replace the single `timeout_seconds` — each phase has its own budget; Modal sandbox lifetime = sum of all three
+- [#65](https://github.com/dvdthecoder/agent-container/issues/65) Warmup probe uses `timeout_coldstart` budget — cold-start burns are isolated from agent execution time
+- [#67](https://github.com/dvdthecoder/agent-container/issues/67) 24 unit tests for Responses API proxy — `_convert_tools`, `_convert_input_items`, `_translate_chat_response`, `_stream_chat_to_responses`, full SSE event sequence
+- CI guard: `scripts/check_container_imports.py` blocks dev-only packages (`pytest`, `ruff`, etc.) from being imported in `modal/` or `agent/` at commit time
+- opencode pinned to `1.14.31` — deliberate upgrade path with proxy compatibility check
+
 ### Phase 3 — SGLang validation (done)
 SGLang deployed as a separate Modal app (`agent-container-serve-sglang`); tool calling confirmed working with `hermes` parser.
 
@@ -60,6 +69,7 @@ Broaden the model menu and make runs observable beyond the final PR.
 
 | Issue | Task |
 |---|---|
+| [#130](https://github.com/dvdthecoder/agent-container/issues/130) | Token usage tab in dashboard — per-run prompt/completion/total tokens, cost estimate, filter by backend/date |
 | [#113](https://github.com/dvdthecoder/agent-container/issues/113) | Add Qwen3-Coder and Gemma 4 model profiles to `serve.py` (vLLM) |
 | [#114](https://github.com/dvdthecoder/agent-container/issues/114) | Docs: cost and quality comparison — self-hosted LLMs vs Claude API |
 | [#115](https://github.com/dvdthecoder/agent-container/issues/115) | Docs: step-by-step guide for adding a new model profile |
