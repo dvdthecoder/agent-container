@@ -1,34 +1,28 @@
 """Deploy a coding model on Modal GPU — OpenAI-compatible inference endpoint.
 
-Profiles
---------
-test        — fixed config, zero decisions needed.
-              Qwen2.5-Coder 32B · A100 80GB · vLLM  (~$4/hr, ~3 min cold start)
-              Reliable tool use; use this profile for opencode runs.
+Two profiles
+------------
+prod        — vLLM engine (default). Select a model with SERVE_MODEL.
+experiment  — SGLang engine, Qwen2.5-Coder 7B · A10G.
+              Deploys to agent-container-serve-experiment (separate app,
+              never disturbs the prod endpoint).
 
-prod        — flexible model, engine always vLLM.
-              Select with SERVE_MODEL (default: qwen3-coder).
-
-              Model registry:
-                qwen3-coder   Qwen3-Coder 80B       · 2× A100 80GB  (default)
-                qwen3-8b      Qwen3 8B               · A10G          (fast, cheap)
-                qwen3-30b     Qwen3 30B-A3B (MoE)   · A100 40GB     (efficient MoE)
-                gemma4-12b    Gemma 4 12B            · A10G          (Google, fast)
-                gemma4-27b    Gemma 4 27B            · A100 40GB     (Google, quality)
-                minimax-m2.5  MiniMax M2.5 (MoE)    · 8× A100 80GB  (very large)
-
-experiment  — SGLang engine, validated default model.
-              Qwen2.5-Coder 7B · A10G · SGLang
-              Deploys to agent-container-serve-experiment (separate app, non-destructive)
+Model registry (prod only)
+--------------------------
+  SERVE_MODEL=qwen2.5-coder-32b   Qwen2.5-Coder 32B · A100 80GB  (default, reliable tool use)
+  SERVE_MODEL=qwen3-coder         Qwen3-Coder 80B   · 2× A100 80GB
+  SERVE_MODEL=qwen3-8b            Qwen3 8B           · A10G         (fast, cheap)
+  SERVE_MODEL=qwen3-30b           Qwen3 30B-A3B MoE  · A100 40GB   (efficient MoE)
+  SERVE_MODEL=gemma4-12b          Gemma 4 12B        · A10G         (Google, fast)
+  SERVE_MODEL=gemma4-27b          Gemma 4 27B        · A100 40GB    (Google, quality)
+  SERVE_MODEL=minimax-m2.5        MiniMax M2.5 MoE   · 8× A100 80GB
 
 Usage
 -----
-modal deploy modal/serve.py                                      # test
-SERVE_PROFILE=prod                   modal deploy modal/serve.py  # prod (qwen3-coder 80B)
-SERVE_PROFILE=prod SERVE_MODEL=qwen3-8b    modal deploy ...       # prod (Qwen3 8B)
-SERVE_PROFILE=prod SERVE_MODEL=gemma4-27b  modal deploy ...       # prod (Gemma 4 27B)
-SERVE_PROFILE=prod SERVE_MODEL=minimax-m2.5 modal deploy ...      # prod (MiniMax M2.5)
-SERVE_PROFILE=experiment             modal deploy modal/serve.py  # experiment (SGLang)
+modal deploy modal/serve.py                                        # prod default
+SERVE_MODEL=qwen3-8b    modal deploy modal/serve.py               # prod, Qwen3 8B
+SERVE_MODEL=gemma4-27b  modal deploy modal/serve.py               # prod, Gemma 4 27B
+SERVE_PROFILE=experiment modal deploy modal/serve.py              # SGLang experiment
 
 After deployment Modal prints the endpoint URL:
   ✓ Created web function serve => https://your-org--agent-container-serve-serve.modal.run
@@ -36,7 +30,7 @@ After deployment Modal prints the endpoint URL:
 Add it to .env (no /v1 suffix):
   OPENAI_BASE_URL=https://your-org--agent-container-serve-serve.modal.run
   OPENAI_API_KEY=modal
-  OPENCODE_MODEL=<SERVED_MODEL_NAME from profile below>
+  OPENCODE_MODEL=<served_name from registry above>
 """
 
 from __future__ import annotations
@@ -56,21 +50,34 @@ if _env_file.exists():
             _k, _, _v = _line.partition("=")
             os.environ.setdefault(_k.strip(), _v.strip())
 
-# ── Profile + model configuration ────────────────────────────────────────────
+# ── Profile ───────────────────────────────────────────────────────────────────
+# "prod" (vLLM) is the default.  "experiment" uses SGLang and deploys to its
+# own Modal app so the prod endpoint is never disturbed.
 
-SERVE_PROFILE = os.environ.get("SERVE_PROFILE", "test")
+SERVE_PROFILE = os.environ.get("SERVE_PROFILE", "prod")
 
-# ── prod model registry ───────────────────────────────────────────────────────
-# SERVE_MODEL selects the model within the prod profile.
-# Add new models here — GPU, context, and tool-call parser are per-model.
+# ── Model registry (prod) ─────────────────────────────────────────────────────
+# Add new models here.  All use vLLM; GPU, context, and tool-call parser are
+# declared per-model so nothing needs changing outside this dict.
 #
-# tool_call_parser notes:
-#   hermes    — Qwen/Mistral/Llama models that emit tool calls in ChatML/hermes format
-#   pythonic  — Gemma 4 (Google's tool-call format, introduced in Gemma 3)
+# tool_call_parser:
+#   hermes    — Qwen/Mistral/Llama families (ChatML/hermes tool format)
+#   pythonic  — Gemma 4 (Google's pythonic tool format)
 #   Verify against vLLM docs when adding a new model family.
 
 _PROD_MODELS: dict[str, dict] = {
-    # ── Qwen3-Coder ──────────────────────────────────────────────────────────
+    # ── Qwen2.5-Coder ─────────────────────────────────────────────────────────
+    "qwen2.5-coder-32b": {
+        # Proven default: reliable tool use with opencode, ~3 min cold start.
+        "model_id": "Qwen/Qwen2.5-Coder-32B-Instruct",
+        "served_name": "qwen2.5-coder-32b",
+        "gpu": "A100-80GB",
+        "context_length": 32_768,
+        "tp_size": 1,
+        "tool_call_parser": "hermes",
+        "startup_timeout": 600,
+    },
+    # ── Qwen3-Coder ───────────────────────────────────────────────────────────
     "qwen3-coder": {
         "model_id": "Qwen/Qwen3-Coder-80B-Instruct",
         "served_name": "qwen3-coder",
@@ -80,7 +87,7 @@ _PROD_MODELS: dict[str, dict] = {
         "tool_call_parser": "hermes",
         "startup_timeout": 600,
     },
-    # ── Qwen3 general (non-coder) ─────────────────────────────────────────────
+    # ── Qwen3 general ─────────────────────────────────────────────────────────
     "qwen3-8b": {
         # Fast + cheap — good for simple tasks; fits comfortably on A10G (24 GB).
         "model_id": "Qwen/Qwen3-8B-Instruct",
@@ -92,7 +99,7 @@ _PROD_MODELS: dict[str, dict] = {
         "startup_timeout": 300,
     },
     "qwen3-30b": {
-        # MoE: 30 B total params / ~3 B active — efficient throughput on A100 40 GB.
+        # MoE: 30 B total / ~3 B active — efficient throughput on A100 40 GB.
         # Note: vLLM loads all expert weights; verify VRAM headroom before deploying.
         "model_id": "Qwen/Qwen3-30B-A3B-Instruct",
         "served_name": "qwen3-30b",
@@ -135,11 +142,27 @@ _PROD_MODELS: dict[str, dict] = {
         "startup_timeout": 600,
     },
 }
-_PROD_DEFAULT = "qwen3-coder"
 
-# ── Resolve profile variables ─────────────────────────────────────────────────
+# Default model when SERVE_MODEL is not set.
+_PROD_DEFAULT = "qwen2.5-coder-32b"
 
-if SERVE_PROFILE == "prod":
+# ── Resolve configuration variables ──────────────────────────────────────────
+
+if SERVE_PROFILE == "experiment":
+    # SGLang engine — validated on Qwen2.5-Coder 7B + A10G with hermes parser.
+    # Deploys to a separate Modal app so the prod endpoint is never disturbed.
+    # See docs/models.md for full SGLang setup notes (CUDA devel image, libnuma1).
+    MODEL_ID = "Qwen/Qwen2.5-Coder-7B-Instruct"
+    SERVED_MODEL_NAME = "qwen2.5-coder"
+    GPU = "A10G"
+    CONTEXT_LENGTH = 32_768
+    TP_SIZE = 1
+    SCALEDOWN_WINDOW = 300
+    STARTUP_TIMEOUT = 600
+    TOOL_CALL_PARSER = "hermes"
+
+else:
+    # prod — vLLM, model selected via SERVE_MODEL (default: qwen2.5-coder-32b).
     _model_key = os.environ.get("SERVE_MODEL", _PROD_DEFAULT)
     if _model_key not in _PROD_MODELS:
         raise ValueError(f"Unknown SERVE_MODEL={_model_key!r}. Available: {list(_PROD_MODELS)}")
@@ -153,36 +176,9 @@ if SERVE_PROFILE == "prod":
     SCALEDOWN_WINDOW = 600
     STARTUP_TIMEOUT: int = _m.get("startup_timeout", 600)
 
-elif SERVE_PROFILE == "experiment":
-    # SGLang engine — validated on Qwen2.5-Coder 7B + A10G with hermes parser.
-    # Deploys to a separate Modal app so test/prod endpoints are never disturbed.
-    # See docs/models.md for full SGLang setup notes (CUDA devel image, libnuma1).
-    MODEL_ID = "Qwen/Qwen2.5-Coder-7B-Instruct"
-    SERVED_MODEL_NAME = "qwen2.5-coder"
-    GPU = "A10G"
-    CONTEXT_LENGTH = 32_768
-    TP_SIZE = 1
-    SCALEDOWN_WINDOW = 300
-    STARTUP_TIMEOUT = 600
-    TOOL_CALL_PARSER = "hermes"
-
-else:
-    # test — zero config, fixed model + engine.
-    # 32B chosen over 7B for reliable tool use with opencode; 7B frequently
-    # responds with plain text instead of calling file-editing tools.
-    MODEL_ID = "Qwen/Qwen2.5-Coder-32B-Instruct"
-    SERVED_MODEL_NAME = "qwen2.5-coder-32b"
-    GPU = "A100-80GB"
-    CONTEXT_LENGTH = 32_768
-    TP_SIZE = 1
-    SCALEDOWN_WINDOW = 300
-    STARTUP_TIMEOUT = 600
-    TOOL_CALL_PARSER = "hermes"
-
 # ── Modal app ────────────────────────────────────────────────────────────────
 
-# experiment deploys to its own app so vLLM endpoints are never disturbed.
-# test and prod share agent-container-serve.
+# experiment deploys to its own app so prod endpoints are never disturbed.
 _APP_NAME = (
     "agent-container-serve-experiment" if SERVE_PROFILE == "experiment" else "agent-container-serve"
 )

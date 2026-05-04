@@ -91,8 +91,7 @@ def test_models_endpoint_contains_expected_model():
 
     model_ids = [m.get("id", "") for m in data.get("data", [])]
     assert any(_MODEL in mid for mid in model_ids), (
-        f"Expected model {_MODEL!r} not found in /v1/models.\n"
-        f"Available models: {model_ids}"
+        f"Expected model {_MODEL!r} not found in /v1/models.\nAvailable models: {model_ids}"
     )
 
 
