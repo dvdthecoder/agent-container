@@ -60,8 +60,10 @@ _BASE_IMAGE = (
         # pinned — update deliberately after verifying proxy compatibility
         "npm install -g opencode-ai@1.14.31",
     )
-    .add_local_file("agent/aider_runner.py", "/aider_runner.py", copy=True)
-    .add_local_file("agent/opencode_runner.py", "/opencode_runner.py", copy=True)
+    # copy=False (default): uploaded fresh from local disk on every sandbox start.
+    # This ensures code changes are picked up immediately without stale image caches.
+    .add_local_file("agent/aider_runner.py", "/aider_runner.py")
+    .add_local_file("agent/opencode_runner.py", "/opencode_runner.py")
 )
 
 
