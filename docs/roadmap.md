@@ -41,7 +41,8 @@ Proxy correctness, per-phase timeouts, CI guards, test coverage, token tracking.
 - [#67](https://github.com/dvdthecoder/agent-container/issues/67) 24 unit tests for Responses API proxy — `_convert_tools`, `_convert_input_items`, `_translate_chat_response`, `_stream_chat_to_responses`, full SSE event sequence
 - CI guard: `scripts/check_container_imports.py` blocks dev-only packages (`pytest`, `ruff`, etc.) from being imported in `modal/` or `agent/` at commit time
 - opencode pinned to `1.14.31` — deliberate upgrade path with proxy compatibility check
-- [#130](https://github.com/dvdthecoder/agent-container/issues/130) Token usage tab: proxy accumulates `usage` from every Chat Completions turn; persisted to SQLite; dashboard **Tokens** tab shows per-run prompt/completion/total tokens with live cost estimate and backend/date filters; 271 unit tests total
+- [#130](https://github.com/dvdthecoder/agent-container/issues/130) Token usage tab: proxy accumulates `usage` from every Chat Completions turn; persisted to SQLite; dashboard **Tokens** tab shows per-run prompt/completion/total tokens with live cost estimate and backend/date filters
+- [#132](https://github.com/dvdthecoder/agent-container/issues/132) aider token capture: parses `Tokens: X sent, Y received.` from aider stderr, emits same `[runner] token_usage:` line as opencode — both backends now populate the Tokens tab
 
 ### Phase 3 — SGLang validation (done)
 SGLang deployed as a separate Modal app (`agent-container-serve-sglang`); tool calling confirmed working with `hermes` parser.
@@ -53,22 +54,30 @@ SGLang deployed as a separate Modal app (`agent-container-serve-sglang`); tool c
 - Fix tool-call parser — `qwen`/`qwen25` hangs on first tool-schema request; `hermes` resolves in 3s
 - `make example BACKEND=opencode` against SGLang endpoint: tool call with 10 tools → ok (3.0s), PR opened
 
+### Phase 4 — Model expansion + richer observability (done)
+Broader model menu, live feedback during runs, serve endpoint validation.
+
+- [#113](https://github.com/dvdthecoder/agent-container/issues/113) Expanded prod model registry: `qwen3-8b`, `qwen3-30b`, `gemma4-12b`, `gemma4-27b` added alongside `qwen3-coder` and `minimax-m2.5`; `tool_call_parser` and `startup_timeout` are now per-model
+- Profile/model separation: `test` profile dissolved into `prod` with `qwen2.5-coder-32b` as the default `SERVE_MODEL`; only two profiles remain (`prod` vLLM, `experiment` SGLang)
+- [#111](https://github.com/dvdthecoder/agent-container/issues/111) Heartbeat thread in `agent/runner.py` — prints `[runner] still running elapsed=Xs` every 30 s when the agent is silent; terminal never goes dark during a long RUNNING phase
+- [#68](https://github.com/dvdthecoder/agent-container/issues/68) Serve endpoint integration tests — `tests/integration/test_serve_reachable.py` validates `GET /v1/models` (HTTP 200, model name present) and `POST /v1/chat/completions` (well-formed response); `.github/workflows/serve.yml` triggers manually after deploy
+- 282 unit tests total (up from 271); new `serve` pytest marker
+
 ---
 
 ## Planned
 
-### Phase 4 — Model expansion + richer observability
-Broaden the model menu and deepen run observability.
+### Phase 5 — Docs + quality tooling
+Fill documentation gaps and add model comparison data.
 
 | Issue | Task |
 |---|---|
-| [#113](https://github.com/dvdthecoder/agent-container/issues/113) | Add Qwen3-Coder and Gemma 4 model profiles to `serve.py` (vLLM) |
-| [#114](https://github.com/dvdthecoder/agent-container/issues/114) | Docs: cost and quality comparison — self-hosted LLMs vs Claude API |
-| [#115](https://github.com/dvdthecoder/agent-container/issues/115) | Docs: step-by-step guide for adding a new model profile |
+| [#114](https://github.com/dvdthecoder/agent-container/issues/114) | Cost and quality comparison — self-hosted LLMs vs Claude API; populate Tokens tab with baseline runs |
+| [#115](https://github.com/dvdthecoder/agent-container/issues/115) | Step-by-step guide for adding a new model profile |
+| [#71](https://github.com/dvdthecoder/agent-container/issues/71) | `docs/lessons-learned.md` — hard problems, gotchas, team scaling guide |
 | [#112](https://github.com/dvdthecoder/agent-container/issues/112) | Install opencode-monitor in sandbox — structured per-tool-call events in logs |
-| [#111](https://github.com/dvdthecoder/agent-container/issues/111) | Stream real-time agent progress in CLI during RUNNING phase |
 
-### Phase 5 — Production hardening
+### Phase 6 — Production hardening
 Close the gap between the current implementation and a fully team-deployed system.
 
 | Issue | Task |
@@ -76,7 +85,7 @@ Close the gap between the current implementation and a fully team-deployed syste
 | [#107](https://github.com/dvdthecoder/agent-container/issues/107) | Warm sandboxes via Modal snapshot API — eliminate cold-start clone+install latency |
 | [#108](https://github.com/dvdthecoder/agent-container/issues/108) | Deeper verification loop — Sentry errors, metrics, visual screenshots for frontend |
 
-### Phase 6 — Team and integrations
+### Phase 7 — Team and integrations
 Broader entry points and collaboration features.
 
 | Issue | Task |

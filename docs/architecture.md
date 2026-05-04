@@ -91,7 +91,7 @@ The `sglang` profile deploys to a **separate Modal app** (`agent-container-serve
 both inference servers can run simultaneously without interfering:
 
 ```
-agent-container-serve            → vLLM  (SERVE_PROFILE=test or prod)
+agent-container-serve            → vLLM  (SERVE_PROFILE=prod, default)
 agent-container-serve-experiment → SGLang (SERVE_PROFILE=experiment, hermes parser)
 ```
 

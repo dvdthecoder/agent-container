@@ -55,8 +55,10 @@ logs as they arrive. Rows remain in the list after completion — collapse them 
 
 ### Tokens tab
 
-Per-run token consumption for all completed runs that have token data (opencode via the Responses
-API proxy; other backends emit no usage data unless they log the `[runner] token_usage:` line).
+Per-run token consumption for all completed runs that have token data. Both `aider` and `opencode`
+emit token usage — `aider` by parsing its `Tokens: X sent, Y received.` stderr lines; `opencode`
+via the Responses API proxy's `usage` accumulation. Both emit the same `[runner] token_usage:`
+line that the sandbox intercepts and persists to SQLite.
 
 | Column | Description |
 |---|---|
@@ -106,14 +108,18 @@ load comes from SQLite, so CLI runs appear alongside dashboard runs automaticall
 The serve panel in the sidebar lets you deploy or redeploy the model server without touching
 the terminal.
 
-**Profile options:**
+**Model options (all `prod` / vLLM unless noted):**
 
-| Option | Profile + model |
+| Option | `SERVE_MODEL` |
 |---|---|
-| test — Qwen2.5-Coder 32B (A100 80GB) | `SERVE_PROFILE=test` |
-| prod — Qwen3-Coder 80B (2×A100) | `SERVE_PROFILE=prod` |
-| prod — MiniMax M2.5 (8×A100) | `SERVE_PROFILE=prod SERVE_MODEL=minimax-m2.5` |
-| experiment — SGLang (A10G) | `SERVE_PROFILE=experiment` |
+| Qwen2.5-Coder 32B · A100 80GB **(default)** | *(unset)* |
+| Qwen3-Coder 80B · 2×A100 80GB | `qwen3-coder` |
+| Qwen3 8B · A10G | `qwen3-8b` |
+| Qwen3 30B-A3B · A100 40GB | `qwen3-30b` |
+| Gemma 4 12B · A10G | `gemma4-12b` |
+| Gemma 4 27B · A100 40GB | `gemma4-27b` |
+| MiniMax M2.5 · 8×A100 80GB | `minimax-m2.5` |
+| SGLang experiment · A10G | `SERVE_PROFILE=experiment` |
 
 The status badge polls `GET /api/serve/status` every 30 seconds and shows the current Modal
 app state. Clicking **Deploy** calls `POST /api/serve/deploy` and triggers a background
