@@ -73,7 +73,8 @@ cmd = [
 # ---------------------------------------------------------------------------
 # Token tracking
 # ---------------------------------------------------------------------------
-# aider prints one line per model call to stderr in one of two formats:
+# aider prints one line per model call in one of two formats (stdout or stderr
+# depending on version — we scan both):
 #   Tokens: 2,841 sent, 381 received. Cost: $0.00 message, $0.00 session.
 #   Tokens: 2.7k sent, 109 received. Cost: $0.00 message, $0.00 session.
 # We accumulate across all turns and emit a summary line that sandbox.py
@@ -95,18 +96,19 @@ _prompt_tokens = 0
 _completion_tokens = 0
 
 
-def _stream(source, dest, is_stderr: bool) -> None:
-    """Forward *source* lines to *dest*, parsing token lines when on stderr."""
+def _stream(source, dest, is_stderr: bool) -> None:  # noqa: ARG001
+    """Forward *source* lines to *dest*, parsing token lines from either stream."""
     global _prompt_tokens, _completion_tokens  # noqa: PLW0603
     for raw in source:
         line = raw.decode("utf-8", errors="replace") if isinstance(raw, bytes) else raw
         dest.write(line)
         dest.flush()
-        if is_stderr:
-            m = _TOKEN_RE.search(line)
-            if m:
-                _prompt_tokens += _parse_tok(m.group(1))
-                _completion_tokens += _parse_tok(m.group(2))
+        # Scan both stdout and stderr — aider version determines which stream
+        # receives the "Tokens: X sent, Y received." summary line.
+        m = _TOKEN_RE.search(line)
+        if m:
+            _prompt_tokens += _parse_tok(m.group(1))
+            _completion_tokens += _parse_tok(m.group(2))
 
 
 # ---------------------------------------------------------------------------

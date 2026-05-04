@@ -162,13 +162,14 @@ class TestStream:
         assert self.mod._prompt_tokens == 800
         assert self.mod._completion_tokens == 180
 
-    def test_stdout_does_not_accumulate_tokens(self):
+    def test_stdout_also_accumulates_tokens(self):
+        # aider version determines which stream gets the Tokens line — scan both.
         self._run_stream(
             ["Tokens: 1,000 sent, 200 received. Cost: $0.00 message, $0.00 session."],
             is_stderr=False,
         )
-        assert self.mod._prompt_tokens == 0
-        assert self.mod._completion_tokens == 0
+        assert self.mod._prompt_tokens == 1000
+        assert self.mod._completion_tokens == 200
 
     def test_non_token_lines_forwarded_unchanged(self):
         output = self._run_stream(["hello world", "second line"], is_stderr=False)
