@@ -1,4 +1,4 @@
-.PHONY: test test-integration test-e2e lint mcp dashboard example stop-sandboxes
+.PHONY: test test-integration test-e2e test-serve test-analysis lint mcp dashboard example stop-sandboxes
 
 # ── unit tests (no external services, always free) ──────────────────────────
 test:
@@ -11,6 +11,32 @@ test-integration:
 # ── e2e tests (nightly — requires Modal tokens + live model endpoint) ────────
 test-e2e:
 	python3 -m pytest tests/integration/ tests/e2e/ -v --tb=short -m e2e
+
+# ── serve endpoint tests (requires OPENAI_BASE_URL + OPENCODE_MODEL) ─────────
+test-serve:
+	python3 -m pytest tests/integration/test_serve_reachable.py -v --tb=short -m serve
+
+# ── token / cost / quality analysis across backends ──────────────────────────
+# Fires real runs against the fixture repo, measures tokens + cost, prints a
+# Markdown summary.  Requires OPENAI_BASE_URL and OPENCODE_MODEL to be set.
+#
+# Usage:
+#   make test-analysis                           # aider + opencode, 1 run each
+#   make test-analysis BACKENDS=opencode RUNS=3  # 3 opencode runs
+#   make test-analysis BACKENDS=aider COST_PER_1M=0.80
+#   make test-analysis > docs/analysis/$(date +%Y-%m-%d).md
+#
+BACKENDS     ?= aider,opencode
+RUNS         ?= 1
+COST_PER_1M  ?= 1.00
+NO_PR        ?= 1
+
+test-analysis:
+	ANALYSIS_BACKENDS=$(BACKENDS) \
+	ANALYSIS_RUNS=$(RUNS) \
+	ANALYSIS_COST_PER_1M=$(COST_PER_1M) \
+	ANALYSIS_NO_PR=$(NO_PR) \
+	python3 scripts/token_analysis.py
 
 # ── linting ──────────────────────────────────────────────────────────────────
 lint:

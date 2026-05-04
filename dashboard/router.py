@@ -54,8 +54,8 @@ class StartRunRequest(BaseModel):
 
 
 class DeployRequest(BaseModel):
-    profile: str = "test"
-    model: str | None = None  # only used for prod profile
+    profile: str = "prod"
+    model: str | None = None  # selects from _PROD_MODELS when profile="prod"
 
 
 # ------------------------------------------------------------------ helpers

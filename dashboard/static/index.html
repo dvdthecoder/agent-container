@@ -551,12 +551,16 @@
         <span id="serve-status-badge" class="unknown">unknown</span>
       </div>
       <div>
-        <label for="srv-profile">Profile</label>
-        <select id="srv-profile">
-          <option value="test">test — Qwen2.5-Coder 32B (A100 80GB)</option>
-          <option value="prod">prod — Qwen3-Coder 80B (2×A100)</option>
-          <option value="prod-minimax" data-profile="prod" data-model="minimax-m2.5">prod — MiniMax M2.5 (8×A100)</option>
-          <option value="experiment">experiment — SGLang (A10G)</option>
+        <label for="srv-model">Model</label>
+        <select id="srv-model">
+          <option value="qwen2.5-coder-32b" data-profile="prod" data-model="qwen2.5-coder-32b" selected>qwen2.5-coder-32b · A100 80GB (default)</option>
+          <option value="qwen3-coder"        data-profile="prod" data-model="qwen3-coder">qwen3-coder · 2×A100 80GB</option>
+          <option value="qwen3-8b"           data-profile="prod" data-model="qwen3-8b">qwen3-8b · A10G (fast)</option>
+          <option value="qwen3-30b"          data-profile="prod" data-model="qwen3-30b">qwen3-30b · A100 40GB (MoE)</option>
+          <option value="gemma4-12b"         data-profile="prod" data-model="gemma4-12b">gemma4-12b · A10G</option>
+          <option value="gemma4-27b"         data-profile="prod" data-model="gemma4-27b">gemma4-27b · A100 40GB</option>
+          <option value="minimax-m2.5"       data-profile="prod" data-model="minimax-m2.5">minimax-m2.5 · 8×A100 80GB</option>
+          <option value="experiment"         data-profile="experiment">experiment — SGLang · A10G</option>
         </select>
       </div>
       <div>
@@ -732,7 +736,7 @@ async function apiPost(path, body) {
 
 // ------------------------------------------------------------------ serve panel
 async function deployServe() {
-  const sel = document.getElementById('srv-profile');
+  const sel = document.getElementById('srv-model');
   const opt = sel.options[sel.selectedIndex];
   const profile = opt.dataset.profile || opt.value;
   const model   = opt.dataset.model   || null;
