@@ -322,7 +322,7 @@ make test               # unit tests — no external services, always free
 make test-integration   # real Modal sandbox, stub agent (no LLM needed)
 make test-e2e           # real Modal sandbox + real model
 make test-serve         # inference endpoint reachability (requires OPENAI_BASE_URL + OPENCODE_MODEL)
-make test-analysis      # token/cost/quality analysis across backends (fires real runs, prints Markdown table)
+make test-analysis      # token/cost/quality analysis across backends (fires real runs, creates PRs, prints Markdown table)
 ```
 
 `test-analysis` accepts optional overrides:

@@ -69,7 +69,7 @@ make test               # unit tests — no external services, always fast
 make test-integration   # real Modal sandbox, stub agent (no model needed)
 make test-e2e           # real Modal sandbox + real model (nightly only)
 make test-serve         # inference endpoint reachability (requires OPENAI_BASE_URL + OPENCODE_MODEL)
-make test-analysis      # token/cost/quality analysis — fires real runs, prints Markdown table
+make test-analysis      # token/cost/quality analysis — fires real runs, creates PRs, prints Markdown table
 ```
 
 `test-analysis` accepts optional overrides:
