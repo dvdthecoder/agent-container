@@ -179,17 +179,29 @@ vars each backend needs, in the exact format it expects:
 
 ## Model profiles
 
-Three profiles in `modal/serve.py`, selected by `SERVE_PROFILE`:
+Two profiles in `modal/serve.py`, selected by `SERVE_PROFILE`:
 
-| Profile | Engine | Model | GPU | Context | Best for |
-|---|---|---|---|---|---|
-| `test` (default) | vLLM | Qwen2.5-Coder 32B | A100 80GB | 32k | Development, CI |
-| `prod` | vLLM | Qwen3-Coder 80B (default) | 2× A100 80GB | 128k | Production PRs |
-| `prod` + `SERVE_MODEL=minimax-m2.5` | vLLM | MiniMax M2.5 | 8× A100 80GB | 1M | Best quality / SWE-bench |
-| `experiment` | SGLang | Qwen2.5-Coder 32B | A100 80GB | 32k | SGLang evaluation |
+- **`prod`** (default) — vLLM engine. Model selected via `SERVE_MODEL`.
+- **`experiment`** — SGLang engine, Qwen2.5-Coder 7B, separate Modal app (never disturbs prod).
 
-`prod` selects the model via `SERVE_MODEL` (default `qwen3-coder`). `experiment` deploys to a
-separate Modal app (`agent-container-serve-experiment`) so the vLLM endpoint is never disturbed.
+### Model registry (`prod`)
+
+| `SERVE_MODEL` | Model | GPU | Context | Best for |
+|---|---|---|---|---|
+| `qwen2.5-coder-32b` (default) | Qwen2.5-Coder 32B | A100 80GB | 32k | Reliable tool use, development |
+| `qwen3-coder` | Qwen3-Coder 80B | 2× A100 80GB | 128k | Production PRs |
+| `qwen3-8b` | Qwen3 8B | A10G | 32k | Fast, cheap, simple tasks |
+| `qwen3-30b` | Qwen3 30B-A3B (MoE) | A100 40GB | 32k | Efficient MoE |
+| `gemma4-12b` | Gemma 4 12B | A10G | 32k | Google, fast |
+| `gemma4-27b` | Gemma 4 27B | A100 40GB | 32k | Google, quality |
+| `minimax-m2.5` | MiniMax M2.5 (MoE) | 8× A100 80GB | 1M | SWE-bench grade |
+
+```bash
+modal deploy modal/serve.py                        # prod, qwen2.5-coder-32b (default)
+SERVE_MODEL=qwen3-8b    modal deploy modal/serve.py # prod, Qwen3 8B
+SERVE_MODEL=gemma4-27b  modal deploy modal/serve.py # prod, Gemma 4 27B
+SERVE_PROFILE=experiment modal deploy modal/serve.py # SGLang experiment
+```
 
 Scale-to-zero is on by default — you only pay while runs are active. Model weights are cached in a
 Modal Volume so cold starts after the first don't re-download weights.
@@ -309,9 +321,11 @@ make test-integration   # real Modal sandbox, stub agent (no LLM needed)
 make test-e2e           # real Modal sandbox + real model
 ```
 
-271 unit tests covering config, spec, sandbox, git ops, runner, tester, proxy, log store, dashboard, MCP, and CLI. All run in-process with no external services.
+282 unit tests covering config, spec, sandbox, git ops, runner, tester, proxy, log store, dashboard, MCP, CLI, and aider runner. All run in-process with no external services.
 
 The proxy test suite (`tests/unit/test_responses_proxy.py`) covers the complete Responses API → Chat Completions translation including the full SSE event sequence and token accumulation logic.
+
+Serve endpoint integration tests (`tests/integration/test_serve_reachable.py`) validate the deployed inference endpoint against a live `OPENAI_BASE_URL` — skipped automatically when not configured.
 
 ---
 
@@ -322,6 +336,7 @@ The proxy test suite (`tests/unit/test_responses_proxy.py`) covers the complete 
 | Phase 1 | vLLM + aider: direct Chat Completions, end-to-end PR | ✅ |
 | Phase 2 | Clean opencode proxy: pure Responses API ↔ Chat Completions adapter | ✅ |
 | Phase 3 | SGLang validation: deploy alongside vLLM, confirm tool calling end-to-end | ✅ |
+| Phase 4 | Observability + model expansion: token tracking, heartbeat, model registry | ✅ |
 
 ---
 

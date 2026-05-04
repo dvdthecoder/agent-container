@@ -206,7 +206,7 @@ The sandbox cost is small relative to the model cost.
 
 ### Reducing cost
 
-- Use `SERVE_PROFILE=test` (32B test model) for simple, well-specified tasks — 8× cheaper
+- Use `SERVE_MODEL=qwen3-8b` or `qwen2.5-coder-32b` (default) for simple, well-specified tasks — 8× cheaper than 80B models
 - Use `--backend aider` for targeted edits — fewer model calls than opencode
 - Use `--no-pr` during iteration to skip git push/PR overhead
 - Set `--timeout` appropriately — a stuck run burns GPU time
