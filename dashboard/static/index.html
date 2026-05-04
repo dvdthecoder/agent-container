@@ -1104,8 +1104,8 @@ function switchTab(name) {
 
 // ------------------------------------------------------------------ tokens tab
 let _tokensData = [];          // current loaded rows (after backend/date filter)
-let _tokensSortCol  = 'total_tokens';
-let _tokensSortDir  = -1;      // -1 = desc, 1 = asc
+let _tokensSortCol  = 'started_at';
+let _tokensSortDir  = -1;      // -1 = desc (latest first), 1 = asc
 
 async function loadTokens() {
   const backend  = document.getElementById('tok-backend').value;
@@ -1132,6 +1132,8 @@ function sortTokens(col) {
   } else {
     _tokensSortCol = col;
     _tokensSortDir = col === 'run_id' || col === 'repo' || col === 'backend' || col === 'outcome' ? 1 : -1;
+    // time columns also default descending (latest first)
+    if (col === 'started_at' || col === 'finished_at') _tokensSortDir = -1;
   }
   renderTokensTable();
 }
