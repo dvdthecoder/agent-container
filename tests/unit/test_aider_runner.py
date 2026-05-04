@@ -75,6 +75,13 @@ class TestTokenRegex:
         assert m.group(1) == "2,841"
         assert m.group(2) == "381"
 
+    def test_matches_abbreviated_k_format(self):
+        line = "Tokens: 2.7k sent, 109 received. Cost: $0.00 message, $0.00 session."
+        m = self.mod._TOKEN_RE.search(line)
+        assert m is not None
+        assert m.group(1) == "2.7k"
+        assert m.group(2) == "109"
+
     def test_matches_small_numbers(self):
         line = "Tokens: 100 sent, 50 received."
         m = self.mod._TOKEN_RE.search(line)
@@ -89,6 +96,26 @@ class TestTokenRegex:
     def test_does_not_match_partial_line(self):
         line = "Tokens: 100 sent."
         assert self.mod._TOKEN_RE.search(line) is None
+
+
+class TestParseTok:
+    def setup_method(self):
+        self.mod = _load_aider_runner()
+
+    def test_plain_integer(self):
+        assert self.mod._parse_tok("381") == 381
+
+    def test_comma_separated(self):
+        assert self.mod._parse_tok("2,841") == 2841
+
+    def test_k_suffix(self):
+        assert self.mod._parse_tok("2.7k") == 2700
+
+    def test_K_suffix(self):
+        assert self.mod._parse_tok("2.7K") == 2700
+
+    def test_m_suffix(self):
+        assert self.mod._parse_tok("1.2M") == 1_200_000
 
 
 # ---------------------------------------------------------------------------
@@ -116,6 +143,14 @@ class TestStream:
         )
         assert self.mod._prompt_tokens == 1000
         assert self.mod._completion_tokens == 200
+
+    def test_stderr_accumulates_abbreviated_tokens(self):
+        self._run_stream(
+            ["Tokens: 2.7k sent, 109 received. Cost: $0.00 message, $0.00 session."],
+            is_stderr=True,
+        )
+        assert self.mod._prompt_tokens == 2700
+        assert self.mod._completion_tokens == 109
 
     def test_stderr_accumulates_across_multiple_lines(self):
         lines = [

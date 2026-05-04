@@ -311,7 +311,7 @@ class _ProxyHandler(http.server.BaseHTTPRequestHandler):
         except json.JSONDecodeError:
             return raw
 
-        message = chat.get("choices", [{}])[0].get("message", {})
+        message = (chat.get("choices") or [{}])[0].get("message", {})
         text = message.get("content") or ""
         native_tool_calls = message.get("tool_calls") or []
 
@@ -390,7 +390,8 @@ class _ProxyHandler(http.server.BaseHTTPRequestHandler):
             if chunk.get("usage"):
                 _accumulate_tokens(chunk["usage"])
 
-            delta = chunk.get("choices", [{}])[0].get("delta", {})
+            # choices may be [] on usage-only chunks — use `or` so empty list falls back.
+            delta = (chunk.get("choices") or [{}])[0].get("delta", {})
             text_delta = delta.get("content") or ""
             if text_delta:
                 full_text.append(text_delta)
