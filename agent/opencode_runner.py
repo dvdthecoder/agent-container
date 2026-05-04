@@ -75,6 +75,22 @@ def _accumulate_tokens(usage: dict) -> None:
         _token_counts["completion"] += int(usage.get("completion_tokens", 0) or 0)
 
 
+def _emit_token_usage() -> None:
+    """Print the token summary line that sandbox.py captures for SQLite.
+
+    Call this on every exit path — success, failure, timeout, and the
+    end_turn grace-period path — so no run is invisible in the tokens tab.
+    """
+    with _token_lock:
+        p = _token_counts["prompt"]
+        c = _token_counts["completion"]
+    print(
+        f"[runner] token_usage: prompt={p} completion={c} total={p + c}",
+        file=sys.stderr,
+        flush=True,
+    )
+
+
 # ---------------------------------------------------------------------------
 # Format conversion helpers
 # ---------------------------------------------------------------------------
@@ -766,6 +782,7 @@ def main() -> int:
                 f"[runner] unexpected stop: {stop_reason or result.get('error', '')}",
                 file=sys.stderr,
             )
+            _emit_token_usage()
             client.terminate()
             return 1
         # session/prompt returned end_turn — for the OpenAI/vLLM provider this
@@ -781,6 +798,7 @@ def main() -> int:
             time.sleep(0.5)
         if not client._stop_reason:
             print("[runner] grace period elapsed, terminating", file=sys.stderr)
+        _emit_token_usage()
         client.terminate()
         return 0
 
@@ -805,16 +823,7 @@ def main() -> int:
         file=sys.stderr,
     )
 
-    # Always emit token usage — sandbox.py reads this line to persist tokens to SQLite.
-    # Emit before any early return so failed/timed-out runs still record what was spent.
-    with _token_lock:
-        p = _token_counts["prompt"]
-        c = _token_counts["completion"]
-    print(
-        f"[runner] token_usage: prompt={p} completion={c} total={p + c}",
-        file=sys.stderr,
-        flush=True,
-    )
+    _emit_token_usage()
 
     if stop_reason != "session_completed":
         print(f"[runner] unexpected stop: {stop_reason or 'timeout'}", file=sys.stderr)
