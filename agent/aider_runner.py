@@ -73,11 +73,23 @@ cmd = [
 # ---------------------------------------------------------------------------
 # Token tracking
 # ---------------------------------------------------------------------------
-# aider prints one line per model call to stderr:
+# aider prints one line per model call to stderr in one of two formats:
 #   Tokens: 2,841 sent, 381 received. Cost: $0.00 message, $0.00 session.
+#   Tokens: 2.7k sent, 109 received. Cost: $0.00 message, $0.00 session.
 # We accumulate across all turns and emit a summary line that sandbox.py
 # already knows how to parse: [runner] token_usage: prompt=X completion=Y total=Z
-_TOKEN_RE = re.compile(r"Tokens:\s+([\d,]+)\s+sent,\s+([\d,]+)\s+received")
+_TOKEN_RE = re.compile(r"Tokens:\s+([\d,.]+[kKmM]?)\s+sent,\s+([\d,.]+[kKmM]?)\s+received")
+
+
+def _parse_tok(s: str) -> int:
+    """Parse aider's token abbreviations: '2.7k' → 2700, '1.2M' → 1200000, '2,841' → 2841."""
+    s = s.replace(",", "")
+    if s[-1] in ("k", "K"):
+        return int(float(s[:-1]) * 1_000)
+    if s[-1] in ("m", "M"):
+        return int(float(s[:-1]) * 1_000_000)
+    return int(float(s))
+
 
 _prompt_tokens = 0
 _completion_tokens = 0
@@ -93,8 +105,8 @@ def _stream(source, dest, is_stderr: bool) -> None:
         if is_stderr:
             m = _TOKEN_RE.search(line)
             if m:
-                _prompt_tokens += int(m.group(1).replace(",", ""))
-                _completion_tokens += int(m.group(2).replace(",", ""))
+                _prompt_tokens += _parse_tok(m.group(1))
+                _completion_tokens += _parse_tok(m.group(2))
 
 
 # ---------------------------------------------------------------------------
