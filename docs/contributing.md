@@ -68,6 +68,15 @@ make stop-sandboxes
 make test               # unit tests — no external services, always fast
 make test-integration   # real Modal sandbox, stub agent (no model needed)
 make test-e2e           # real Modal sandbox + real model (nightly only)
+make test-serve         # inference endpoint reachability (requires OPENAI_BASE_URL + OPENCODE_MODEL)
+make test-analysis      # token/cost/quality analysis — fires real runs, prints Markdown table
+```
+
+`test-analysis` accepts optional overrides:
+
+```bash
+make test-analysis BACKENDS=aider,opencode RUNS=3 COST_PER_1M=0.80
+make test-analysis > docs/analysis/$(date +%Y-%m-%d).md
 ```
 
 Or run pytest directly with filters:

@@ -143,6 +143,8 @@ agent-run run \
 make example                # smoke test — unique task per run, always real work
 make example BACKEND=opencode
 make test                   # unit tests — no external services
+make test-serve             # inference endpoint reachability check
+make test-analysis          # token/cost/quality analysis across backends
 make dashboard              # live dashboard at http://localhost:8000
 make mcp                    # MCP server (stdio) for Claude Code / Gemini CLI
 make lint                   # ruff check
@@ -319,6 +321,15 @@ GITLAB_URL=https://gitlab.yourcompany.com   # omit for gitlab.com
 make test               # unit tests — no external services, always free
 make test-integration   # real Modal sandbox, stub agent (no LLM needed)
 make test-e2e           # real Modal sandbox + real model
+make test-serve         # inference endpoint reachability (requires OPENAI_BASE_URL + OPENCODE_MODEL)
+make test-analysis      # token/cost/quality analysis across backends (fires real runs, prints Markdown table)
+```
+
+`test-analysis` accepts optional overrides:
+
+```bash
+make test-analysis BACKENDS=aider,opencode RUNS=3 COST_PER_1M=0.80
+make test-analysis > docs/analysis/$(date +%Y-%m-%d).md
 ```
 
 282 unit tests covering config, spec, sandbox, git ops, runner, tester, proxy, log store, dashboard, MCP, CLI, and aider runner. All run in-process with no external services.
