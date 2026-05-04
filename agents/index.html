@@ -1397,8 +1397,8 @@ fix the code, and run again — all in one invocation. This requires the model t
 calling reliably and to reason across multiple turns.</p>
 <h3 id="when-to-use-aider">When to use aider<a class="headerlink" href="#when-to-use-aider" title="Permanent link">&para;</a></h3>
 <ul>
-<li><strong>Default choice.</strong> Works with the <code>test</code> profile (Qwen2.5-Coder 32B on A100 80GB) — smallest,
-  cheapest GPU.</li>
+<li><strong>Default choice.</strong> Works with the default model (<code>qwen2.5-coder-32b</code> on A100 80GB) — reliable
+  tool use, reasonable cost.</li>
 <li>The task is well-specified: "add a <code>sum_to_n</code> function to <code>mathlib.py</code>", "fix the off-by-one
   in <code>paginate()</code>". The model knows exactly what to write.</li>
 <li>You want the fastest turnaround — one model call, one diff, done.</li>
@@ -1448,14 +1448,14 @@ calling reliably and to reason across multiple turns.</p>
 <td>Yes</td>
 </tr>
 <tr>
-<td>Works on <code>test</code> profile (32B)</td>
+<td>Works with default model (32B)</td>
 <td>Yes</td>
 <td>Possible but weaker</td>
 </tr>
 <tr>
-<td>Recommended GPU profile</td>
-<td><code>test</code> or higher</td>
-<td><code>prod</code> or <code>minimax</code></td>
+<td>Recommended model</td>
+<td><code>qwen2.5-coder-32b</code> or higher</td>
+<td><code>qwen3-coder</code> or <code>minimax-m2.5</code></td>
 </tr>
 <tr>
 <td>Cold start sensitivity</td>

@@ -598,16 +598,27 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#gpu-profiles" class="md-nav__link">
+  <a href="#profiles-and-model-registry" class="md-nav__link">
     <span class="md-ellipsis">
       
-        GPU profiles
+        Profiles and model registry
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="GPU profiles">
+    <nav class="md-nav" aria-label="Profiles and model registry">
       <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#prod-model-registry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        prod model registry
+      
+    </span>
+  </a>
+  
+</li>
         
           <li class="md-nav__item">
   <a href="#model-names" class="md-nav__link">
@@ -1071,16 +1082,27 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#gpu-profiles" class="md-nav__link">
+  <a href="#profiles-and-model-registry" class="md-nav__link">
     <span class="md-ellipsis">
       
-        GPU profiles
+        Profiles and model registry
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="GPU profiles">
+    <nav class="md-nav" aria-label="Profiles and model registry">
       <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#prod-model-registry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        prod model registry
+      
+    </span>
+  </a>
+  
+</li>
         
           <li class="md-nav__item">
   <a href="#model-names" class="md-nav__link">
@@ -1192,13 +1214,18 @@ weights are cached so cold starts after the first are fast.</p>
 <p>Set <code>OPENAI_BASE_URL</code> without a trailing <code>/v1</code>. The inference server and adapter add it.</p>
 </div>
 <hr />
-<h2 id="gpu-profiles">GPU profiles<a class="headerlink" href="#gpu-profiles" title="Permanent link">&para;</a></h2>
-<p>Three profiles are built into <code>modal/serve.py</code>, selected by <code>SERVE_PROFILE</code>:</p>
+<h2 id="profiles-and-model-registry">Profiles and model registry<a class="headerlink" href="#profiles-and-model-registry" title="Permanent link">&para;</a></h2>
+<p>Two profiles in <code>modal/serve.py</code>, selected by <code>SERVE_PROFILE</code>:</p>
+<ul>
+<li><strong><code>prod</code></strong> (default) — vLLM engine, model selected via <code>SERVE_MODEL</code>.</li>
+<li><strong><code>experiment</code></strong> — SGLang engine, Qwen2.5-Coder 7B, deploys to a <strong>separate</strong> Modal app so the prod endpoint is never disturbed.</li>
+</ul>
+<h3 id="prod-model-registry">prod model registry<a class="headerlink" href="#prod-model-registry" title="Permanent link">&para;</a></h3>
+<p>All prod models use vLLM. Select with <code>SERVE_MODEL</code>:</p>
 <table>
 <thead>
 <tr>
-<th>Profile</th>
-<th>Engine</th>
+<th><code>SERVE_MODEL</code></th>
 <th>Model</th>
 <th>GPU</th>
 <th>Context</th>
@@ -1207,70 +1234,100 @@ weights are cached so cold starts after the first are fast.</p>
 </thead>
 <tbody>
 <tr>
-<td><code>test</code> (default)</td>
-<td>vLLM</td>
-<td>Qwen2.5-Coder-32B</td>
+<td><code>qwen2.5-coder-32b</code> <strong>(default)</strong></td>
+<td>Qwen2.5-Coder 32B</td>
 <td>A100 80GB</td>
 <td>32k</td>
 <td><code>modal deploy modal/serve.py</code></td>
 </tr>
 <tr>
-<td><code>prod</code></td>
-<td>vLLM</td>
-<td>Qwen3-Coder-80B (default)</td>
+<td><code>qwen3-coder</code></td>
+<td>Qwen3-Coder 80B</td>
 <td>2× A100 80GB</td>
 <td>128k</td>
-<td><code>SERVE_PROFILE=prod modal deploy modal/serve.py</code></td>
+<td><code>SERVE_MODEL=qwen3-coder modal deploy modal/serve.py</code></td>
 </tr>
 <tr>
-<td><code>prod</code> + <code>SERVE_MODEL=minimax-m2.5</code></td>
-<td>vLLM</td>
-<td>MiniMax-M2.5</td>
-<td>8× A100 80GB</td>
-<td>1M</td>
-<td><code>SERVE_PROFILE=prod SERVE_MODEL=minimax-m2.5 modal deploy modal/serve.py</code></td>
-</tr>
-<tr>
-<td><code>experiment</code></td>
-<td>SGLang</td>
-<td>Qwen2.5-Coder-32B</td>
+<td><code>qwen3-8b</code></td>
+<td>Qwen3 8B</td>
 <td>A10G</td>
 <td>32k</td>
-<td><code>SERVE_PROFILE=experiment modal deploy modal/serve.py</code></td>
+<td><code>SERVE_MODEL=qwen3-8b modal deploy modal/serve.py</code></td>
+</tr>
+<tr>
+<td><code>qwen3-30b</code></td>
+<td>Qwen3 30B-A3B (MoE)</td>
+<td>A100 40GB</td>
+<td>32k</td>
+<td><code>SERVE_MODEL=qwen3-30b modal deploy modal/serve.py</code></td>
+</tr>
+<tr>
+<td><code>gemma4-12b</code></td>
+<td>Gemma 4 12B</td>
+<td>A10G</td>
+<td>32k</td>
+<td><code>SERVE_MODEL=gemma4-12b modal deploy modal/serve.py</code></td>
+</tr>
+<tr>
+<td><code>gemma4-27b</code></td>
+<td>Gemma 4 27B</td>
+<td>A100 40GB</td>
+<td>32k</td>
+<td><code>SERVE_MODEL=gemma4-27b modal deploy modal/serve.py</code></td>
+</tr>
+<tr>
+<td><code>minimax-m2.5</code></td>
+<td>MiniMax M2.5 (MoE)</td>
+<td>8× A100 80GB</td>
+<td>1M</td>
+<td><code>SERVE_MODEL=minimax-m2.5 modal deploy modal/serve.py</code></td>
 </tr>
 </tbody>
 </table>
-<p><strong>Start with <code>test</code></strong> — cheap, fast iteration. Promote to <code>prod</code> for production-grade output
-quality. Use <code>SERVE_MODEL=minimax-m2.5</code> inside <code>prod</code> for maximum quality (SWE-bench grade).
-Use <code>experiment</code> to run SGLang instead of vLLM — see the comparison table below.</p>
-<p><code>prod</code> model selection is driven by <code>SERVE_MODEL</code>. Add new models to the <code>_PROD_MODELS</code> dict
-in <code>modal/serve.py</code> without touching the profile structure.</p>
-<p><code>experiment</code> deploys to a <strong>separate</strong> Modal app (<code>agent-container-serve-experiment</code>) so the
-vLLM endpoint is never disturbed — both can run simultaneously.</p>
+<p><strong>Start with the default (<code>qwen2.5-coder-32b</code>)</strong> — proven tool use, fast iteration.
+Switch to <code>qwen3-8b</code> or <code>gemma4-12b</code> for cheaper/faster runs on simple tasks.
+Use <code>qwen3-coder</code> or <code>minimax-m2.5</code> for production-grade output quality.</p>
+<p>Add new models to the <code>_PROD_MODELS</code> dict in <code>modal/serve.py</code> — GPU, context, and tool-call parser are declared per-model.</p>
 <h3 id="model-names">Model names<a class="headerlink" href="#model-names" title="Permanent link">&para;</a></h3>
-<p>Set <code>OPENCODE_MODEL</code> to match <code>SERVED_MODEL_NAME</code> in <code>modal/serve.py</code>:</p>
+<p>Set <code>OPENCODE_MODEL</code> to match <code>served_name</code> in <code>modal/serve.py</code>:</p>
 <table>
 <thead>
 <tr>
-<th>Profile</th>
+<th><code>SERVE_MODEL</code></th>
 <th><code>OPENCODE_MODEL</code></th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>test</code></td>
-<td><code>qwen2.5-coder</code></td>
+<td><code>qwen2.5-coder-32b</code> (default)</td>
+<td><code>qwen2.5-coder-32b</code></td>
 </tr>
 <tr>
-<td><code>prod</code> (default model)</td>
+<td><code>qwen3-coder</code></td>
 <td><code>qwen3-coder</code></td>
 </tr>
 <tr>
-<td><code>prod</code> + <code>SERVE_MODEL=minimax-m2.5</code></td>
+<td><code>qwen3-8b</code></td>
+<td><code>qwen3-8b</code></td>
+</tr>
+<tr>
+<td><code>qwen3-30b</code></td>
+<td><code>qwen3-30b</code></td>
+</tr>
+<tr>
+<td><code>gemma4-12b</code></td>
+<td><code>gemma4-12b</code></td>
+</tr>
+<tr>
+<td><code>gemma4-27b</code></td>
+<td><code>gemma4-27b</code></td>
+</tr>
+<tr>
+<td><code>minimax-m2.5</code></td>
 <td><code>minimax-m2.5</code></td>
 </tr>
 <tr>
-<td><code>experiment</code></td>
+<td><code>experiment</code> profile</td>
 <td><code>qwen2.5-coder</code></td>
 </tr>
 </tbody>
@@ -1310,7 +1367,7 @@ profiles and handles:</p>
 <tbody>
 <tr>
 <td>Status</td>
-<td>Default — <code>test</code> and <code>prod</code> profiles</td>
+<td>Default — <code>prod</code> profile</td>
 <td>Validated alternative (<code>experiment</code> profile)</td>
 </tr>
 <tr>
@@ -1452,33 +1509,41 @@ You pay only for active inference time.</p>
 <table>
 <thead>
 <tr>
-<th>Profile</th>
+<th><code>SERVE_MODEL</code></th>
 <th>Cold start</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>test</code></td>
+<td><code>qwen2.5-coder-32b</code> (default)</td>
 <td>~1–2 min</td>
 </tr>
 <tr>
-<td><code>prod</code> (qwen3-coder)</td>
-<td>~3–5 min</td>
+<td><code>qwen3-8b</code> / <code>gemma4-12b</code></td>
+<td>~1–2 min (A10G)</td>
 </tr>
 <tr>
-<td><code>prod</code> + <code>SERVE_MODEL=minimax-m2.5</code></td>
-<td>~8–12 min</td>
+<td><code>qwen3-30b</code> / <code>gemma4-27b</code></td>
+<td>~2–3 min (A100 40GB)</td>
 </tr>
 <tr>
-<td><code>experiment</code></td>
+<td><code>qwen3-coder</code></td>
+<td>~3–5 min (2× A100 80GB)</td>
+</tr>
+<tr>
+<td><code>minimax-m2.5</code></td>
+<td>~8–12 min (8× A100 80GB)</td>
+</tr>
+<tr>
+<td><code>experiment</code> (SGLang)</td>
 <td>~2–3 min (JIT compile adds ~1 min)</td>
 </tr>
 </tbody>
 </table>
 <p>Model weights are stored in a Modal Volume (<code>agent-container-models</code>) and are not
 re-downloaded on cold start after the first deploy.</p>
-<p>The agent sandbox waits for the model to be ready before starting (preflight probe with
-configurable timeout via <code>SERVE_COLDSTART_BUDGET</code>).</p>
+<p>The agent sandbox waits for the model to be ready before starting (WARMING phase polls
+<code>GET /v1/models</code> with a configurable budget via <code>timeout_coldstart</code>).</p>
 
 
 

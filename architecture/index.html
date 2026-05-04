@@ -1362,7 +1362,7 @@ run to PR: 29 seconds.</p>
 for the complete setup.</p>
 <p>The <code>sglang</code> profile deploys to a <strong>separate Modal app</strong> (<code>agent-container-serve-sglang</code>) so
 both inference servers can run simultaneously without interfering:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>agent-container-serve            → vLLM  (SERVE_PROFILE=test or prod)
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>agent-container-serve            → vLLM  (SERVE_PROFILE=prod, default)
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>agent-container-serve-experiment → SGLang (SERVE_PROFILE=experiment, hermes parser)
 </code></pre></div>
 <h3 id="agent-backends">Agent backends<a class="headerlink" href="#agent-backends" title="Permanent link">&para;</a></h3>

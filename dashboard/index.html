@@ -1367,8 +1367,10 @@ running, completed, and failed — in one unified list.</p>
 <p>Click anywhere on a row summary to expand or collapse it. New runs auto-expand and stream
 logs as they arrive. Rows remain in the list after completion — collapse them to keep the view clean.</p>
 <h3 id="tokens-tab">Tokens tab<a class="headerlink" href="#tokens-tab" title="Permanent link">&para;</a></h3>
-<p>Per-run token consumption for all completed runs that have token data (opencode via the Responses
-API proxy; other backends emit no usage data unless they log the <code>[runner] token_usage:</code> line).</p>
+<p>Per-run token consumption for all completed runs that have token data. Both <code>aider</code> and <code>opencode</code>
+emit token usage — <code>aider</code> by parsing its <code>Tokens: X sent, Y received.</code> stderr lines; <code>opencode</code>
+via the Responses API proxy's <code>usage</code> accumulation. Both emit the same <code>[runner] token_usage:</code>
+line that the sandbox intercepts and persists to SQLite.</p>
 <table>
 <thead>
 <tr>
@@ -1475,29 +1477,45 @@ load comes from SQLite, so CLI runs appear alongside dashboard runs automaticall
 <h2 id="serve-panel">Serve panel<a class="headerlink" href="#serve-panel" title="Permanent link">&para;</a></h2>
 <p>The serve panel in the sidebar lets you deploy or redeploy the model server without touching
 the terminal.</p>
-<p><strong>Profile options:</strong></p>
+<p><strong>Model options (all <code>prod</code> / vLLM unless noted):</strong></p>
 <table>
 <thead>
 <tr>
 <th>Option</th>
-<th>Profile + model</th>
+<th><code>SERVE_MODEL</code></th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>test — Qwen2.5-Coder 32B (A100 80GB)</td>
-<td><code>SERVE_PROFILE=test</code></td>
+<td>Qwen2.5-Coder 32B · A100 80GB <strong>(default)</strong></td>
+<td><em>(unset)</em></td>
 </tr>
 <tr>
-<td>prod — Qwen3-Coder 80B (2×A100)</td>
-<td><code>SERVE_PROFILE=prod</code></td>
+<td>Qwen3-Coder 80B · 2×A100 80GB</td>
+<td><code>qwen3-coder</code></td>
 </tr>
 <tr>
-<td>prod — MiniMax M2.5 (8×A100)</td>
-<td><code>SERVE_PROFILE=prod SERVE_MODEL=minimax-m2.5</code></td>
+<td>Qwen3 8B · A10G</td>
+<td><code>qwen3-8b</code></td>
 </tr>
 <tr>
-<td>experiment — SGLang (A10G)</td>
+<td>Qwen3 30B-A3B · A100 40GB</td>
+<td><code>qwen3-30b</code></td>
+</tr>
+<tr>
+<td>Gemma 4 12B · A10G</td>
+<td><code>gemma4-12b</code></td>
+</tr>
+<tr>
+<td>Gemma 4 27B · A100 40GB</td>
+<td><code>gemma4-27b</code></td>
+</tr>
+<tr>
+<td>MiniMax M2.5 · 8×A100 80GB</td>
+<td><code>minimax-m2.5</code></td>
+</tr>
+<tr>
+<td>SGLang experiment · A10G</td>
 <td><code>SERVE_PROFILE=experiment</code></td>
 </tr>
 </tbody>

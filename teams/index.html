@@ -1749,7 +1749,7 @@ Five engineers running two tasks each per day = ~$2.70–$6.70/day in model cost
 The sandbox cost is small relative to the model cost.</p>
 <h3 id="reducing-cost">Reducing cost<a class="headerlink" href="#reducing-cost" title="Permanent link">&para;</a></h3>
 <ul>
-<li>Use <code>SERVE_PROFILE=test</code> (32B test model) for simple, well-specified tasks — 8× cheaper</li>
+<li>Use <code>SERVE_MODEL=qwen3-8b</code> or <code>qwen2.5-coder-32b</code> (default) for simple, well-specified tasks — 8× cheaper than 80B models</li>
 <li>Use <code>--backend aider</code> for targeted edits — fewer model calls than opencode</li>
 <li>Use <code>--no-pr</code> during iteration to skip git push/PR overhead</li>
 <li>Set <code>--timeout</code> appropriately — a stuck run burns GPU time</li>

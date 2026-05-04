@@ -513,6 +513,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#phase-4-model-expansion-richer-observability-done" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 4 — Model expansion + richer observability (done)
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -531,10 +542,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#phase-4-model-expansion-richer-observability" class="md-nav__link">
+  <a href="#phase-5-docs-quality-tooling" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Phase 4 — Model expansion + richer observability
+        Phase 5 — Docs + quality tooling
       
     </span>
   </a>
@@ -542,10 +553,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#phase-5-production-hardening" class="md-nav__link">
+  <a href="#phase-6-production-hardening" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Phase 5 — Production hardening
+        Phase 6 — Production hardening
       
     </span>
   </a>
@@ -553,10 +564,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#phase-6-team-and-integrations" class="md-nav__link">
+  <a href="#phase-7-team-and-integrations" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Phase 6 — Team and integrations
+        Phase 7 — Team and integrations
       
     </span>
   </a>
@@ -1154,6 +1165,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#phase-4-model-expansion-richer-observability-done" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 4 — Model expansion + richer observability (done)
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1172,10 +1194,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#phase-4-model-expansion-richer-observability" class="md-nav__link">
+  <a href="#phase-5-docs-quality-tooling" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Phase 4 — Model expansion + richer observability
+        Phase 5 — Docs + quality tooling
       
     </span>
   </a>
@@ -1183,10 +1205,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#phase-5-production-hardening" class="md-nav__link">
+  <a href="#phase-6-production-hardening" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Phase 5 — Production hardening
+        Phase 6 — Production hardening
       
     </span>
   </a>
@@ -1194,10 +1216,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#phase-6-team-and-integrations" class="md-nav__link">
+  <a href="#phase-7-team-and-integrations" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Phase 6 — Team and integrations
+        Phase 7 — Team and integrations
       
     </span>
   </a>
@@ -1279,7 +1301,8 @@
 <li><a href="https://github.com/dvdthecoder/agent-container/issues/67">#67</a> 24 unit tests for Responses API proxy — <code>_convert_tools</code>, <code>_convert_input_items</code>, <code>_translate_chat_response</code>, <code>_stream_chat_to_responses</code>, full SSE event sequence</li>
 <li>CI guard: <code>scripts/check_container_imports.py</code> blocks dev-only packages (<code>pytest</code>, <code>ruff</code>, etc.) from being imported in <code>modal/</code> or <code>agent/</code> at commit time</li>
 <li>opencode pinned to <code>1.14.31</code> — deliberate upgrade path with proxy compatibility check</li>
-<li><a href="https://github.com/dvdthecoder/agent-container/issues/130">#130</a> Token usage tab: proxy accumulates <code>usage</code> from every Chat Completions turn; persisted to SQLite; dashboard <strong>Tokens</strong> tab shows per-run prompt/completion/total tokens with live cost estimate and backend/date filters; 271 unit tests total</li>
+<li><a href="https://github.com/dvdthecoder/agent-container/issues/130">#130</a> Token usage tab: proxy accumulates <code>usage</code> from every Chat Completions turn; persisted to SQLite; dashboard <strong>Tokens</strong> tab shows per-run prompt/completion/total tokens with live cost estimate and backend/date filters</li>
+<li><a href="https://github.com/dvdthecoder/agent-container/issues/132">#132</a> aider token capture: parses <code>Tokens: X sent, Y received.</code> from aider stderr, emits same <code>[runner] token_usage:</code> line as opencode — both backends now populate the Tokens tab</li>
 </ul>
 <h3 id="phase-3-sglang-validation-done">Phase 3 — SGLang validation (done)<a class="headerlink" href="#phase-3-sglang-validation-done" title="Permanent link">&para;</a></h3>
 <p>SGLang deployed as a separate Modal app (<code>agent-container-serve-sglang</code>); tool calling confirmed working with <code>hermes</code> parser.</p>
@@ -1291,10 +1314,19 @@
 <li>Fix tool-call parser — <code>qwen</code>/<code>qwen25</code> hangs on first tool-schema request; <code>hermes</code> resolves in 3s</li>
 <li><code>make example BACKEND=opencode</code> against SGLang endpoint: tool call with 10 tools → ok (3.0s), PR opened</li>
 </ul>
+<h3 id="phase-4-model-expansion-richer-observability-done">Phase 4 — Model expansion + richer observability (done)<a class="headerlink" href="#phase-4-model-expansion-richer-observability-done" title="Permanent link">&para;</a></h3>
+<p>Broader model menu, live feedback during runs, serve endpoint validation.</p>
+<ul>
+<li><a href="https://github.com/dvdthecoder/agent-container/issues/113">#113</a> Expanded prod model registry: <code>qwen3-8b</code>, <code>qwen3-30b</code>, <code>gemma4-12b</code>, <code>gemma4-27b</code> added alongside <code>qwen3-coder</code> and <code>minimax-m2.5</code>; <code>tool_call_parser</code> and <code>startup_timeout</code> are now per-model</li>
+<li>Profile/model separation: <code>test</code> profile dissolved into <code>prod</code> with <code>qwen2.5-coder-32b</code> as the default <code>SERVE_MODEL</code>; only two profiles remain (<code>prod</code> vLLM, <code>experiment</code> SGLang)</li>
+<li><a href="https://github.com/dvdthecoder/agent-container/issues/111">#111</a> Heartbeat thread in <code>agent/runner.py</code> — prints <code>[runner] still running elapsed=Xs</code> every 30 s when the agent is silent; terminal never goes dark during a long RUNNING phase</li>
+<li><a href="https://github.com/dvdthecoder/agent-container/issues/68">#68</a> Serve endpoint integration tests — <code>tests/integration/test_serve_reachable.py</code> validates <code>GET /v1/models</code> (HTTP 200, model name present) and <code>POST /v1/chat/completions</code> (well-formed response); <code>.github/workflows/serve.yml</code> triggers manually after deploy</li>
+<li>282 unit tests total (up from 271); new <code>serve</code> pytest marker</li>
+</ul>
 <hr />
 <h2 id="planned">Planned<a class="headerlink" href="#planned" title="Permanent link">&para;</a></h2>
-<h3 id="phase-4-model-expansion-richer-observability">Phase 4 — Model expansion + richer observability<a class="headerlink" href="#phase-4-model-expansion-richer-observability" title="Permanent link">&para;</a></h3>
-<p>Broaden the model menu and deepen run observability.</p>
+<h3 id="phase-5-docs-quality-tooling">Phase 5 — Docs + quality tooling<a class="headerlink" href="#phase-5-docs-quality-tooling" title="Permanent link">&para;</a></h3>
+<p>Fill documentation gaps and add model comparison data.</p>
 <table>
 <thead>
 <tr>
@@ -1304,28 +1336,24 @@
 </thead>
 <tbody>
 <tr>
-<td><a href="https://github.com/dvdthecoder/agent-container/issues/113">#113</a></td>
-<td>Add Qwen3-Coder and Gemma 4 model profiles to <code>serve.py</code> (vLLM)</td>
-</tr>
-<tr>
 <td><a href="https://github.com/dvdthecoder/agent-container/issues/114">#114</a></td>
-<td>Docs: cost and quality comparison — self-hosted LLMs vs Claude API</td>
+<td>Cost and quality comparison — self-hosted LLMs vs Claude API; populate Tokens tab with baseline runs</td>
 </tr>
 <tr>
 <td><a href="https://github.com/dvdthecoder/agent-container/issues/115">#115</a></td>
-<td>Docs: step-by-step guide for adding a new model profile</td>
+<td>Step-by-step guide for adding a new model profile</td>
+</tr>
+<tr>
+<td><a href="https://github.com/dvdthecoder/agent-container/issues/71">#71</a></td>
+<td><code>docs/lessons-learned.md</code> — hard problems, gotchas, team scaling guide</td>
 </tr>
 <tr>
 <td><a href="https://github.com/dvdthecoder/agent-container/issues/112">#112</a></td>
 <td>Install opencode-monitor in sandbox — structured per-tool-call events in logs</td>
 </tr>
-<tr>
-<td><a href="https://github.com/dvdthecoder/agent-container/issues/111">#111</a></td>
-<td>Stream real-time agent progress in CLI during RUNNING phase</td>
-</tr>
 </tbody>
 </table>
-<h3 id="phase-5-production-hardening">Phase 5 — Production hardening<a class="headerlink" href="#phase-5-production-hardening" title="Permanent link">&para;</a></h3>
+<h3 id="phase-6-production-hardening">Phase 6 — Production hardening<a class="headerlink" href="#phase-6-production-hardening" title="Permanent link">&para;</a></h3>
 <p>Close the gap between the current implementation and a fully team-deployed system.</p>
 <table>
 <thead>
@@ -1345,7 +1373,7 @@
 </tr>
 </tbody>
 </table>
-<h3 id="phase-6-team-and-integrations">Phase 6 — Team and integrations<a class="headerlink" href="#phase-6-team-and-integrations" title="Permanent link">&para;</a></h3>
+<h3 id="phase-7-team-and-integrations">Phase 7 — Team and integrations<a class="headerlink" href="#phase-7-team-and-integrations" title="Permanent link">&para;</a></h3>
 <p>Broader entry points and collaboration features.</p>
 <table>
 <thead>
