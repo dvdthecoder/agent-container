@@ -152,3 +152,54 @@ def test_timeout_raises_and_terminates_sandbox():
         run_agent(sb, OpenCodeBackend(), "task", timeout=0.1)
 
     sb.terminate.assert_called_once()
+
+
+# ------------------------------------------------------------------ heartbeat
+
+
+def test_heartbeat_fires_after_silence(capsys, monkeypatch):
+    """Heartbeat line is printed when agent is silent for >= _HEARTBEAT_INTERVAL."""
+    import time
+
+    import agent.runner as runner_mod
+
+    # Speed up the test: very short interval.
+    monkeypatch.setattr(runner_mod, "_HEARTBEAT_INTERVAL", 0.05)
+
+    # Proc yields no output but blocks briefly so the heartbeat has time to fire
+    # before _heartbeat_stop is set.  This simulates an agent that is running
+    # silently (LLM generating) before finishing.
+    def _slow_empty():
+        time.sleep(0.2)
+        return
+        yield  # type: ignore[misc]  # makes this a generator without producing values
+
+    proc = MagicMock()
+    proc.stdout.__iter__ = lambda self: _slow_empty()
+    proc.stderr.__iter__ = lambda self: iter([])
+    proc.returncode = 0
+    proc.wait.return_value = 0
+
+    sb = MagicMock()
+    sb.exec.return_value = proc
+
+    run_agent(sb, OpenCodeBackend(), "task")
+
+    captured = capsys.readouterr()
+    assert "still running" in captured.err
+
+
+def test_heartbeat_does_not_fire_when_output_is_flowing(capsys, monkeypatch):
+    """No heartbeat when output arrives within the interval."""
+    import agent.runner as runner_mod
+
+    monkeypatch.setattr(runner_mod, "_HEARTBEAT_INTERVAL", 60.0)
+
+    proc = _make_proc(stdout="line1\nline2\nline3")
+    sb = MagicMock()
+    sb.exec.return_value = proc
+
+    run_agent(sb, OpenCodeBackend(), "task")
+
+    captured = capsys.readouterr()
+    assert "still running" not in captured.err
