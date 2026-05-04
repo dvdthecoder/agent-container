@@ -504,7 +504,9 @@
     #tokens-table th:first-child,
     #tokens-table th:nth-child(2),
     #tokens-table th:nth-child(3),
-    #tokens-table th:nth-child(4) { text-align: left; }
+    #tokens-table th:nth-child(4),
+    #tokens-table th:nth-child(5),
+    #tokens-table th:nth-child(6) { text-align: left; }
     #tokens-table th:hover { color: var(--accent); }
     #tokens-table th.sort-asc::after  { content: " ↑"; }
     #tokens-table th.sort-desc::after { content: " ↓"; }
@@ -517,7 +519,10 @@
     #tokens-table td:first-child,
     #tokens-table td:nth-child(2),
     #tokens-table td:nth-child(3),
-    #tokens-table td:nth-child(4) { text-align: left; }
+    #tokens-table td:nth-child(4),
+    #tokens-table td:nth-child(5),
+    #tokens-table td:nth-child(6) { text-align: left; }
+    .tok-time { font-family: var(--mono); font-size: 11px; color: var(--muted); white-space: nowrap; }
     #tokens-table tr:hover td { background: rgba(88,166,255,.04); }
     .tok-runid  { font-family: var(--mono); font-size: 11px; color: var(--muted); white-space: nowrap; }
     .tok-repo   { color: var(--text); max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -695,7 +700,7 @@
       </div>
 
       <div id="tokens-scroll">
-        <div id="tokens-empty" style="display:none">No runs with token data yet. Token data is recorded for opencode runs once they complete.</div>
+        <div id="tokens-empty" style="display:none">No runs with token data yet. Token data is recorded for all backends once a run completes.</div>
         <table id="tokens-table" style="display:none">
           <thead>
             <tr>
@@ -703,6 +708,8 @@
               <th onclick="sortTokens('repo')">Repository</th>
               <th onclick="sortTokens('backend')">Backend</th>
               <th onclick="sortTokens('outcome')">Outcome</th>
+              <th onclick="sortTokens('started_at')">Started</th>
+              <th onclick="sortTokens('finished_at')">Finished</th>
               <th onclick="sortTokens('prompt_tokens')">Prompt</th>
               <th onclick="sortTokens('completion_tokens')">Completion</th>
               <th onclick="sortTokens('total_tokens')">Total</th>
@@ -1149,7 +1156,7 @@ function renderTokensTable() {
   table.querySelectorAll('th').forEach(th => {
     th.classList.remove('sort-asc', 'sort-desc');
   });
-  const colMap = ['run_id','repo','backend','outcome','prompt_tokens','completion_tokens','total_tokens','cost','duration_s'];
+  const colMap = ['run_id','repo','backend','outcome','started_at','finished_at','prompt_tokens','completion_tokens','total_tokens','cost','duration_s'];
   const thIdx = colMap.indexOf(_tokensSortCol);
   if (thIdx >= 0) {
     const th = table.querySelectorAll('th')[thIdx];
@@ -1183,12 +1190,16 @@ function renderTokensTable() {
     const dur = row.duration_s != null ? row.duration_s.toFixed(0) + 's' : '—';
     const outcome = row.outcome || '—';
     const outCls = outcome === 'success' ? 'success' : (outcome === 'error' || outcome === 'failed' ? 'failed' : '');
+    const started  = fmtTime(row.started_at);
+    const finished = fmtTime(row.finished_at);
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td class="tok-runid">${escHtml(row.run_id)}</td>
       <td><span class="tok-repo" title="${escHtml(row.repo)}">${escHtml(repoShort)}</span></td>
       <td class="tok-backend"><span class="badge badge-backend">${escHtml(row.backend)}</span></td>
       <td class="tok-outcome ${outCls}">${escHtml(outcome)}</td>
+      <td class="tok-time">${escHtml(started)}</td>
+      <td class="tok-time">${escHtml(finished)}</td>
       <td class="tok-num">${fmtNum(row.prompt_tokens)}</td>
       <td class="tok-num">${fmtNum(row.completion_tokens)}</td>
       <td class="tok-num">${fmtNum(row.total_tokens)}</td>
@@ -1206,6 +1217,19 @@ function rerenderTokenCosts() {
 function fmtNum(n) {
   if (n == null) return '—';
   return Number(n).toLocaleString('en-US');
+}
+
+function fmtTime(iso) {
+  if (!iso) return '—';
+  // Parse the ISO timestamp and format as "May 4 10:19:20" in local time.
+  const d = new Date(iso);
+  if (isNaN(d)) return iso;
+  const mo = d.toLocaleString('en-US', { month: 'short' });
+  const day = d.getDate();
+  const hh = String(d.getHours()).padStart(2, '0');
+  const mm = String(d.getMinutes()).padStart(2, '0');
+  const ss = String(d.getSeconds()).padStart(2, '0');
+  return `${mo} ${day} ${hh}:${mm}:${ss}`;
 }
 
 // ------------------------------------------------------------------ utils
