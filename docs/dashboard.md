@@ -56,16 +56,21 @@ logs as they arrive. Rows remain in the list after completion — collapse them 
 ### Tokens tab
 
 Per-run token consumption for all completed runs that have token data. Both `aider` and `opencode`
-emit token usage — `aider` by parsing its `Tokens: X sent, Y received.` stderr lines; `opencode`
-via the Responses API proxy's `usage` accumulation. Both emit the same `[runner] token_usage:`
-line that the sandbox intercepts and persists to SQLite.
+emit token usage — `aider` by parsing its `Tokens: X sent, Y received.` line (printed to stdout
+or stderr depending on aider version); `opencode` via the Responses API proxy's `usage`
+accumulation. Both emit the same `[runner] token_usage:` line that the sandbox intercepts and
+persists to SQLite.
+
+Rows are sorted by **Started** descending by default — most recent run at the top.
 
 | Column | Description |
 |---|---|
-| Run ID | Links the row to the run |
+| Run ID | Identifies the run |
 | Repository | Short form (org/repo) |
 | Backend | Badge (aider / opencode / …) |
 | Outcome | success / error / failed |
+| Started | Wall-clock start time (local) |
+| Finished | Wall-clock finish time (local), `—` if interrupted |
 | Prompt tokens | Input tokens charged |
 | Completion tokens | Output tokens charged |
 | Total tokens | Sum |
@@ -78,7 +83,7 @@ line that the sandbox intercepts and persists to SQLite.
 - **$/1M tokens** — cost rate input; updating it recalculates the Est. cost column live without reloading data
 - **Summary bar** — shows `N runs · X total tokens · est. $Y` for the current filtered set
 
-Click any column header to sort. Clicking the same header again reverses the sort direction.
+Click any column header to sort; click again to reverse. Time columns default to descending (latest first).
 
 ## `initiated_by` badge
 
@@ -144,7 +149,7 @@ The dashboard is a Backend-for-Frontend: all Modal and SQLite concerns stay serv
 
 | Method | Path | Description |
 |---|---|---|
-| `GET` | `/api/tokens` | Runs with token data, sorted by `total_tokens` desc |
+| `GET` | `/api/tokens` | Runs with token data, sorted by `total_tokens` desc (server-side) |
 
 **Query parameters for `GET /api/tokens`:**
 
@@ -163,6 +168,7 @@ The dashboard is a Backend-for-Frontend: all Modal and SQLite concerns stay serv
   "task":              "Fix the login bug",
   "backend":           "opencode",
   "started_at":        "2026-05-03T12:00:00+00:00",
+  "finished_at":       "2026-05-03T12:02:22+00:00",
   "outcome":           "success",
   "prompt_tokens":     12345,
   "completion_tokens": 678,
