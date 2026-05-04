@@ -1473,12 +1473,18 @@ Requires Modal tokens and a deployed model endpoint.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>make<span class="w"> </span><span class="nb">test</span><span class="w">               </span><span class="c1"># unit tests — no external services, always fast</span>
 <a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>make<span class="w"> </span>test-integration<span class="w">   </span><span class="c1"># real Modal sandbox, stub agent (no model needed)</span>
 <a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>make<span class="w"> </span>test-e2e<span class="w">           </span><span class="c1"># real Modal sandbox + real model (nightly only)</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>make<span class="w"> </span>test-serve<span class="w">         </span><span class="c1"># inference endpoint reachability (requires OPENAI_BASE_URL + OPENCODE_MODEL)</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>make<span class="w"> </span>test-analysis<span class="w">      </span><span class="c1"># token/cost/quality analysis — fires real runs, prints Markdown table</span>
+</code></pre></div>
+<p><code>test-analysis</code> accepts optional overrides:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>make<span class="w"> </span>test-analysis<span class="w"> </span><span class="nv">BACKENDS</span><span class="o">=</span>aider,opencode<span class="w"> </span><span class="nv">RUNS</span><span class="o">=</span><span class="m">3</span><span class="w"> </span><span class="nv">COST_PER_1M</span><span class="o">=</span><span class="m">0</span>.80
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>make<span class="w"> </span>test-analysis<span class="w"> </span>&gt;<span class="w"> </span>docs/analysis/<span class="k">$(</span>date<span class="w"> </span>+%Y-%m-%d<span class="k">)</span>.md
 </code></pre></div>
 <p>Or run pytest directly with filters:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>pytest<span class="w"> </span>tests/unit/<span class="w"> </span>-v
-<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>pytest<span class="w"> </span>tests/unit/test_config.py<span class="w"> </span>-v<span class="w">          </span><span class="c1"># single file</span>
-<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>pytest<span class="w"> </span>tests/unit/<span class="w"> </span>-k<span class="w"> </span><span class="s2">&quot;test_clone&quot;</span><span class="w"> </span>-v<span class="w">        </span><span class="c1"># by name pattern</span>
-<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>pytest<span class="w"> </span>tests/integration/<span class="w"> </span>-v<span class="w"> </span>-m<span class="w"> </span>integration<span class="w">  </span><span class="c1"># integration only</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>pytest<span class="w"> </span>tests/unit/<span class="w"> </span>-v
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>pytest<span class="w"> </span>tests/unit/test_config.py<span class="w"> </span>-v<span class="w">          </span><span class="c1"># single file</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>pytest<span class="w"> </span>tests/unit/<span class="w"> </span>-k<span class="w"> </span><span class="s2">&quot;test_clone&quot;</span><span class="w"> </span>-v<span class="w">        </span><span class="c1"># by name pattern</span>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>pytest<span class="w"> </span>tests/integration/<span class="w"> </span>-v<span class="w"> </span>-m<span class="w"> </span>integration<span class="w">  </span><span class="c1"># integration only</span>
 </code></pre></div>
 <h3 id="test-pyramid">Test pyramid<a class="headerlink" href="#test-pyramid" title="Permanent link">&para;</a></h3>
 <table>
@@ -1522,32 +1528,32 @@ Skipped in CI if <code>MODAL_TOKEN_ID</code> secret is not set.</p>
 <p><strong>E2e tests are nightly only.</strong> Never run on every commit.</p>
 <hr />
 <h2 id="linting">Linting<a class="headerlink" href="#linting" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>make<span class="w"> </span>lint<span class="w">        </span><span class="c1"># ruff check</span>
-<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>ruff<span class="w"> </span>format<span class="w"> </span>.<span class="w">    </span><span class="c1"># auto-format</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>make<span class="w"> </span>lint<span class="w">        </span><span class="c1"># ruff check</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>ruff<span class="w"> </span>format<span class="w"> </span>.<span class="w">    </span><span class="c1"># auto-format</span>
 </code></pre></div>
 <p>All checks run automatically on every commit via pre-commit hooks.</p>
 <hr />
 <h2 id="docs">Docs<a class="headerlink" href="#docs" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>pip<span class="w"> </span>install<span class="w"> </span>mkdocs-material
-<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>mkdocs<span class="w"> </span>serve<span class="w">     </span><span class="c1"># → http://localhost:8000</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>pip<span class="w"> </span>install<span class="w"> </span>mkdocs-material
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>mkdocs<span class="w"> </span>serve<span class="w">     </span><span class="c1"># → http://localhost:8000</span>
 </code></pre></div>
 <p>Published to GitHub Pages automatically on every push to <code>main</code>.</p>
 <hr />
 <h2 id="model-deployment">Model deployment<a class="headerlink" href="#model-deployment" title="Permanent link">&para;</a></h2>
 <h3 id="deploy-for-development-vllm-a100-80gb-4hr">Deploy for development (vLLM, A100 80GB, ~$4/hr)<a class="headerlink" href="#deploy-for-development-vllm-a100-80gb-4hr" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>modal<span class="w"> </span>deploy<span class="w"> </span>modal/serve.py
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>modal<span class="w"> </span>deploy<span class="w"> </span>modal/serve.py
 </code></pre></div>
 <h3 id="deploy-for-production-vllm-2-a100-80gb">Deploy for production (vLLM, 2× A100 80GB)<a class="headerlink" href="#deploy-for-production-vllm-2-a100-80gb" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="nv">SERVE_PROFILE</span><span class="o">=</span>prod<span class="w"> </span>modal<span class="w"> </span>deploy<span class="w"> </span>modal/serve.py
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="nv">SERVE_PROFILE</span><span class="o">=</span>prod<span class="w"> </span>modal<span class="w"> </span>deploy<span class="w"> </span>modal/serve.py
 </code></pre></div>
 <h3 id="phase-3-sglang-validation">Phase 3 — SGLang validation<a class="headerlink" href="#phase-3-sglang-validation" title="Permanent link">&para;</a></h3>
 <p>Deploys to a separate Modal app so the vLLM endpoint is untouched:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="nv">SERVE_PROFILE</span><span class="o">=</span>experiment<span class="w"> </span>modal<span class="w"> </span>deploy<span class="w"> </span>modal/serve.py
-<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="c1"># → https://your-org--agent-container-serve-experiment-serve.modal.run</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="nv">SERVE_PROFILE</span><span class="o">=</span>experiment<span class="w"> </span>modal<span class="w"> </span>deploy<span class="w"> </span>modal/serve.py
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="c1"># → https://your-org--agent-container-serve-experiment-serve.modal.run</span>
 </code></pre></div>
 <p>Point at the SGLang endpoint and run the opencode smoke test:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="nv">OPENAI_BASE_URL</span><span class="o">=</span>https://your-org--agent-container-serve-experiment-serve.modal.run<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="w">  </span>make<span class="w"> </span>example<span class="w"> </span><span class="nv">BACKEND</span><span class="o">=</span>opencode
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="nv">OPENAI_BASE_URL</span><span class="o">=</span>https://your-org--agent-container-serve-experiment-serve.modal.run<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="w">  </span>make<span class="w"> </span>example<span class="w"> </span><span class="nv">BACKEND</span><span class="o">=</span>opencode
 </code></pre></div>
 <p>Exit criteria: non-empty diff + PR opened. If it fails, the failure is in SGLang's tool-call
 parser — the opencode proxy is proven clean by Phase 2.</p>
@@ -1568,10 +1574,10 @@ parser — the opencode proxy is proven clean by Phase 2.</p>
 <li>Document the profile in <code>docs/models.md</code></li>
 </ol>
 <h2 id="commit-style">Commit style<a class="headerlink" href="#commit-style" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>feat(sandbox): add ModalSandbox lifecycle
-<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>fix(cli): rewrite localhost to host.docker.internal
-<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>docs: update model provider options
-<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>chore(ci): bump actions/checkout to v6
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>feat(sandbox): add ModalSandbox lifecycle
+<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>fix(cli): rewrite localhost to host.docker.internal
+<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>docs: update model provider options
+<a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a>chore(ci): bump actions/checkout to v6
 </code></pre></div>
 
 
