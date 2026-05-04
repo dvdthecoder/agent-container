@@ -108,16 +108,24 @@ def push_and_pr(
     Returns ``(branch_name, pr_url)``.  ``pr_url`` is ``None`` when the host
     is unsupported or the access token is not configured.
     """
+    import sys
+
     br = branch_name(backend)
 
     try:
         provider = detect_provider(repo)
-    except ValueError:
-        return br, None  # unsupported host — skip push and PR
+    except ValueError as exc:
+        print(f"[git] PR skipped — unsupported host: {exc}", file=sys.stderr)
+        return br, None
 
     token = config.token_for(provider.name)
     if not token:
-        return br, None  # no token — skip push and PR
+        print(
+            f"[git] PR skipped — no token configured for {provider.name} "
+            f"(set GITHUB_TOKEN / GITLAB_TOKEN)",
+            file=sys.stderr,
+        )
+        return br, None
 
     # git identity is required to create a commit inside the container.
     _git(sb, ["config", "user.email", "agent@agent-container"], workdir)
@@ -135,9 +143,11 @@ def push_and_pr(
     _git(sb, ["remote", "set-url", "origin", authed_url], workdir)
 
     push_proc = sb.exec("git", "push", "origin", br, workdir=workdir)
+    # Read stderr BEFORE wait() — Modal drains streams on wait().
+    push_stderr = push_proc.stderr.read()
     push_proc.wait()
     if push_proc.returncode != 0:
-        raise ConfigError(f"git push failed:\n{push_proc.stderr.read()}")
+        raise ConfigError(f"git push failed:\n{push_stderr}")
 
     owner, repo_name = provider.parse_repo(repo)
     pr_url = _open_pr(sb, provider, owner, repo_name, br, base_branch, backend, task, workdir)
@@ -150,9 +160,12 @@ def push_and_pr(
 def _git(sb: modal.Sandbox, args: list[str], workdir: str) -> None:
     """Run a git sub-command in *workdir*, raising ``ConfigError`` on failure."""
     proc = sb.exec("git", *args, workdir=workdir)
+    # Read stderr BEFORE wait() — Modal drains streams on wait(), so reading
+    # after returns empty even when there is an error message.
+    stderr = proc.stderr.read()
     proc.wait()
     if proc.returncode != 0:
-        raise ConfigError(f"git {args[0]} failed:\n{proc.stderr.read()}")
+        raise ConfigError(f"git {args[0]} failed:\n{stderr}")
 
 
 def _open_pr(
@@ -187,17 +200,30 @@ def _open_pr(
     # Build the curl command with provider-specific headers.
     # Headers may reference container env vars (e.g. $GITHUB_TOKEN) which the
     # shell expands because the whole command runs under `sh -c`.
+    # -f removed: we want to read the response body on error to surface the reason.
     header_flags = " ".join(f'-H "{h}"' for h in provider.pr_headers())
     api_url = provider.pr_api_url(owner, repo_name)
     curl_proc = sb.exec(
         "sh",
         "-c",
-        f"curl -sf -X POST {header_flags} {api_url} -d @/tmp/pr_payload.json",
+        f"curl -s -X POST {header_flags} {api_url} -d @/tmp/pr_payload.json",
     )
+    # Read stdout before wait() — Modal drains streams on wait().
     response = curl_proc.stdout.read()
+    curl_stderr = curl_proc.stderr.read()
     curl_proc.wait()
     if curl_proc.returncode != 0:
-        raise ConfigError(f"PR creation failed:\n{curl_proc.stderr.read()}")
+        raise ConfigError(f"PR curl failed (exit {curl_proc.returncode}):\n{curl_stderr}")
 
-    data = json.loads(response)
-    return data.get(provider.pr_url_field())
+    try:
+        data = json.loads(response)
+    except json.JSONDecodeError as exc:
+        raise ConfigError(f"PR API returned non-JSON (HTTP error?):\n{response[:500]}") from exc
+
+    pr_url = data.get(provider.pr_url_field())
+    if not pr_url:
+        # API returned JSON but not the URL field — usually an error body.
+        msg = data.get("message") or data.get("error") or str(data)[:300]
+        raise ConfigError(f"PR creation failed — API error: {msg}")
+
+    return pr_url
