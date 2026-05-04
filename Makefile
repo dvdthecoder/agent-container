@@ -29,7 +29,7 @@ test-serve:
 BACKENDS     ?= aider,opencode
 RUNS         ?= 1
 COST_PER_1M  ?= 1.00
-NO_PR        ?= 1
+NO_PR        ?= 0
 
 test-analysis:
 	ANALYSIS_BACKENDS=$(BACKENDS) \
