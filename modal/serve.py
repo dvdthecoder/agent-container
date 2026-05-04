@@ -7,8 +7,15 @@ test        — fixed config, zero decisions needed.
               Reliable tool use; use this profile for opencode runs.
 
 prod        — flexible model, engine always vLLM.
-              Default: Qwen3-Coder 80B · 2× A100 80GB
-              Override: SERVE_MODEL=minimax-m2.5  →  MiniMax M2.5 · 8× A100 80GB
+              Select with SERVE_MODEL (default: qwen3-coder).
+
+              Model registry:
+                qwen3-coder   Qwen3-Coder 80B       · 2× A100 80GB  (default)
+                qwen3-8b      Qwen3 8B               · A10G          (fast, cheap)
+                qwen3-30b     Qwen3 30B-A3B (MoE)   · A100 40GB     (efficient MoE)
+                gemma4-12b    Gemma 4 12B            · A10G          (Google, fast)
+                gemma4-27b    Gemma 4 27B            · A100 40GB     (Google, quality)
+                minimax-m2.5  MiniMax M2.5 (MoE)    · 8× A100 80GB  (very large)
 
 experiment  — SGLang engine, validated default model.
               Qwen2.5-Coder 7B · A10G · SGLang
@@ -16,10 +23,12 @@ experiment  — SGLang engine, validated default model.
 
 Usage
 -----
-modal deploy modal/serve.py                                   # test
-SERVE_PROFILE=prod    modal deploy modal/serve.py             # prod (Qwen3-Coder 80B)
-SERVE_PROFILE=prod SERVE_MODEL=minimax-m2.5 modal deploy ...  # prod (MiniMax M2.5)
-SERVE_PROFILE=experiment modal deploy modal/serve.py          # experiment (SGLang)
+modal deploy modal/serve.py                                      # test
+SERVE_PROFILE=prod                   modal deploy modal/serve.py  # prod (qwen3-coder 80B)
+SERVE_PROFILE=prod SERVE_MODEL=qwen3-8b    modal deploy ...       # prod (Qwen3 8B)
+SERVE_PROFILE=prod SERVE_MODEL=gemma4-27b  modal deploy ...       # prod (Gemma 4 27B)
+SERVE_PROFILE=prod SERVE_MODEL=minimax-m2.5 modal deploy ...      # prod (MiniMax M2.5)
+SERVE_PROFILE=experiment             modal deploy modal/serve.py  # experiment (SGLang)
 
 After deployment Modal prints the endpoint URL:
   ✓ Created web function serve => https://your-org--agent-container-serve-serve.modal.run
@@ -53,23 +62,77 @@ SERVE_PROFILE = os.environ.get("SERVE_PROFILE", "test")
 
 # ── prod model registry ───────────────────────────────────────────────────────
 # SERVE_MODEL selects the model within the prod profile.
-# Add new models here — GPU and context are inferred automatically.
+# Add new models here — GPU, context, and tool-call parser are per-model.
+#
+# tool_call_parser notes:
+#   hermes    — Qwen/Mistral/Llama models that emit tool calls in ChatML/hermes format
+#   pythonic  — Gemma 4 (Google's tool-call format, introduced in Gemma 3)
+#   Verify against vLLM docs when adding a new model family.
 
 _PROD_MODELS: dict[str, dict] = {
+    # ── Qwen3-Coder ──────────────────────────────────────────────────────────
     "qwen3-coder": {
         "model_id": "Qwen/Qwen3-Coder-80B-Instruct",
         "served_name": "qwen3-coder",
         "gpu": "A100-80GB:2",
         "context_length": 131_072,
         "tp_size": 2,
+        "tool_call_parser": "hermes",
+        "startup_timeout": 600,
     },
+    # ── Qwen3 general (non-coder) ─────────────────────────────────────────────
+    "qwen3-8b": {
+        # Fast + cheap — good for simple tasks; fits comfortably on A10G (24 GB).
+        "model_id": "Qwen/Qwen3-8B-Instruct",
+        "served_name": "qwen3-8b",
+        "gpu": "A10G",
+        "context_length": 32_768,
+        "tp_size": 1,
+        "tool_call_parser": "hermes",
+        "startup_timeout": 300,
+    },
+    "qwen3-30b": {
+        # MoE: 30 B total params / ~3 B active — efficient throughput on A100 40 GB.
+        # Note: vLLM loads all expert weights; verify VRAM headroom before deploying.
+        "model_id": "Qwen/Qwen3-30B-A3B-Instruct",
+        "served_name": "qwen3-30b",
+        "gpu": "A100-40GB",
+        "context_length": 32_768,
+        "tp_size": 1,
+        "tool_call_parser": "hermes",
+        "startup_timeout": 600,
+    },
+    # ── Gemma 4 (Google) ──────────────────────────────────────────────────────
+    "gemma4-12b": {
+        # Fits on A10G (24 GB); strong coding benchmarks for its size.
+        "model_id": "google/gemma-4-12b-it",
+        "served_name": "gemma4-12b",
+        "gpu": "A10G",
+        "context_length": 32_768,
+        "tp_size": 1,
+        "tool_call_parser": "pythonic",
+        "startup_timeout": 300,
+    },
+    "gemma4-27b": {
+        # Better quality than 12B; A100 40 GB gives comfortable VRAM headroom.
+        "model_id": "google/gemma-4-27b-it",
+        "served_name": "gemma4-27b",
+        "gpu": "A100-40GB",
+        "context_length": 32_768,
+        "tp_size": 1,
+        "tool_call_parser": "pythonic",
+        "startup_timeout": 600,
+    },
+    # ── MiniMax ───────────────────────────────────────────────────────────────
     "minimax-m2.5": {
-        # MiniMax M2.5 — MoE, 456B total / ~45B active, Lightning Attention (1M ctx)
+        # MoE, 456B total / ~45B active, Lightning Attention (1 M ctx).
         "model_id": "MiniMaxAI/MiniMax-M2.5",
         "served_name": "minimax-m2.5",
         "gpu": "A100-80GB:8",
         "context_length": 1_000_000,
         "tp_size": 8,
+        "tool_call_parser": "hermes",
+        "startup_timeout": 600,
     },
 }
 _PROD_DEFAULT = "qwen3-coder"
@@ -86,9 +149,9 @@ if SERVE_PROFILE == "prod":
     GPU: str | modal.gpu.A100 = _m["gpu"]
     CONTEXT_LENGTH: int = _m["context_length"]
     TP_SIZE: int = _m["tp_size"]
+    TOOL_CALL_PARSER: str = _m.get("tool_call_parser", "hermes")
     SCALEDOWN_WINDOW = 600
-    STARTUP_TIMEOUT = 600
-    TOOL_CALL_PARSER = "hermes"
+    STARTUP_TIMEOUT: int = _m.get("startup_timeout", 600)
 
 elif SERVE_PROFILE == "experiment":
     # SGLang engine — validated on Qwen2.5-Coder 7B + A10G with hermes parser.
