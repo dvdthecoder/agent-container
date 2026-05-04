@@ -805,14 +805,8 @@ def main() -> int:
         file=sys.stderr,
     )
 
-    if stop_reason != "session_completed":
-        print(f"[runner] unexpected stop: {stop_reason or 'timeout'}", file=sys.stderr)
-        client.terminate()
-        return 1
-
-    client.terminate()
-
-    # Emit token usage so the host process can persist it to the run log.
+    # Always emit token usage — sandbox.py reads this line to persist tokens to SQLite.
+    # Emit before any early return so failed/timed-out runs still record what was spent.
     with _token_lock:
         p = _token_counts["prompt"]
         c = _token_counts["completion"]
@@ -822,6 +816,12 @@ def main() -> int:
         flush=True,
     )
 
+    if stop_reason != "session_completed":
+        print(f"[runner] unexpected stop: {stop_reason or 'timeout'}", file=sys.stderr)
+        client.terminate()
+        return 1
+
+    client.terminate()
     return 0
 
 
