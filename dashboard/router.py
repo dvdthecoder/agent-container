@@ -257,6 +257,7 @@ def list_tokens(backend: str = "", date_from: str = "", date_to: str = "") -> li
                 "task": row.task,
                 "backend": row.backend,
                 "started_at": row.started_at,
+                "finished_at": row.finished_at,
                 "outcome": row.outcome,
                 "prompt_tokens": row.prompt_tokens or 0,
                 "completion_tokens": row.completion_tokens or 0,
