@@ -1,0 +1,63 @@
+name: Serve endpoint tests
+
+# Validates that the deployed inference endpoint is reachable and serving the
+# expected model.  Must be triggered manually (workflow_dispatch) or via a
+# repository_dispatch event after a successful `modal deploy`.
+#
+# Requires repository secrets:
+#   OPENAI_BASE_URL   — deployed Modal endpoint (no /v1 suffix)
+#   OPENAI_API_KEY    — "modal" for self-hosted endpoints
+#   OPENCODE_MODEL    — model name as served (e.g. qwen2.5-coder-32b)
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: "Inference endpoint base URL (overrides secret)"
+        required: false
+        default: ""
+      model:
+        description: "Model name to verify (overrides secret)"
+        required: false
+        default: ""
+
+jobs:
+  serve-check:
+    name: Serve endpoint reachability
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    env:
+      OPENAI_BASE_URL: ${{ inputs.base_url || secrets.OPENAI_BASE_URL }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY || 'modal' }}
+      OPENCODE_MODEL: ${{ inputs.model || secrets.OPENCODE_MODEL }}
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dev dependencies
+        run: pip install -e ".[dev]"
+
+      - name: Check serve env
+        id: env-check
+        run: |
+          if [ -z "$OPENAI_BASE_URL" ] || [ -z "$OPENCODE_MODEL" ]; then
+            echo "reachable=false" >> $GITHUB_OUTPUT
+            echo "::warning::OPENAI_BASE_URL or OPENCODE_MODEL not set — serve tests skipped"
+          else
+            echo "reachable=true" >> $GITHUB_OUTPUT
+            echo "Testing endpoint: $OPENAI_BASE_URL (model: $OPENCODE_MODEL)"
+          fi
+
+      - name: Run serve endpoint tests
+        if: steps.env-check.outputs.reachable == 'true'
+        run: pytest tests/integration/test_serve_reachable.py -v --tb=short -m serve
+
+      - name: Skip notice
+        if: steps.env-check.outputs.reachable == 'false'
+        run: echo "Serve tests skipped — set OPENAI_BASE_URL and OPENCODE_MODEL as repo secrets"

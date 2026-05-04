@@ -66,4 +66,5 @@ markers = [
     "unit: pure unit tests, no external services",
     "integration: requires Modal token, uses stub agent",
     "e2e: requires Modal token + real model endpoint, nightly only",
+    "serve: requires a deployed inference endpoint (OPENAI_BASE_URL + OPENCODE_MODEL)",
 ]
