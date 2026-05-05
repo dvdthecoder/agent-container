@@ -203,12 +203,27 @@ comma-separated, `k`/`K`, and `m`/`M` suffixes.
 
 ---
 
-### 16. Unpinned vLLM pulls breaking release
+### 16. vLLM + transformers pin cascade
 
-**Problem:** `pip_install("vllm")` with no version pin. vLLM 0.9.x introduced a regression where the engine core worker process dies before registering with the API server — `Engine core initialization failed. Failed core proc(s): {}`. The prod endpoint started returning connection refused after a routine redeploy with no code changes.
+**Problem:** Two separate crashes, same root cause (wrong model loading in the container):
 
-**Fix:** Pinned to `vllm==0.8.5` and `transformers==4.46.3`. Two issues required both pins:
-- vLLM 0.9.x: engine core worker crashes before registering with the API server
-- vLLM 0.8.5 + transformers 4.47+: `AttributeError: Qwen2Tokenizer has no attribute all_special_tokens_extended` — transformers 4.47 removed this property from `Qwen2TokenizerFast`; vLLM 0.8.5 calls it unconditionally in `get_cached_tokenizer()`
+1. `Engine core initialization failed. Failed core proc(s): {}` — observed with unpinned vLLM
+   (0.9.x). First instinct: pin to `vllm==0.8.5`.
 
-Rule: pin both `vllm` and `transformers` together. An unpinned `transformers` will eventually pull a version that breaks the pinned `vllm`.
+2. `AttributeError: Qwen2Tokenizer has no attribute all_special_tokens_extended` — observed after
+   pinning to `vllm==0.8.5`. vLLM 0.8.5 calls this in `get_cached_tokenizer()`. transformers
+   4.51.1+ (required by vLLM 0.8.5) removed the attribute from `Qwen2TokenizerFast`.
+   Pin attempt `transformers==4.46.3` conflicts: vLLM 0.8.5 requires `transformers>=4.51.1`.
+
+**Root cause:** Both crashes were triggered by the wrong model being loaded in the container
+(the SERVE_MODEL-not-baked bug, #15). When the container loaded `qwen2.5-coder-32b` on an
+A10G (22 GB) instead of the intended `qwen3-8b`, the tokenizer init failed with the attribute
+error, which surfaced as an engine core crash.
+
+**Fix:** Remove all version pins — use `pip_install("vllm", "huggingface_hub[hf_transfer]")`.
+With SERVE_MODEL correctly baked into the container secret (#15 fix), each container loads the
+intended model and the tokenizer init succeeds against the latest transformers.
+
+**Rule:** Don't pin vLLM reactively to silence a crash. Diagnose which model is actually loading
+first (`grep "Starting to load model"` in container logs). An OOM or tokenizer error on the
+wrong model is a config bug, not a vLLM version bug.
