@@ -257,3 +257,25 @@ KV cache.
 **Rule:** For any MoE model, size the GPU based on **total** parameter count, not active
 parameter count. vLLM's `gpu_memory_utilization` does not help if the weights alone exceed
 VRAM.
+
+---
+
+### 19. opencode `end_turn` grace period — file write race condition
+
+**Problem:** opencode occasionally returns `stopReason='end_turn'` from `session/prompt`
+before the file write from the preceding `edit` tool call is flushed to disk. The runner
+waits 90s for `session_completed`, terminates the sandbox when it doesn't arrive, and
+`collect_diff` finds an empty diff — even though the proxy confirmed the `edit` tool call
+was received and acknowledged by opencode. Observed as a ~33% flake rate on
+`qwen2.5-coder-32b` / opencode (1 failure in 3 runs, run-20260505-072253-d103de).
+
+**Symptom:** Proxy log shows `edit args={...}` and the model returned a clean text
+response; `session/prompt` returns `end_turn`; 90s grace period elapses; diff is empty.
+
+**Root cause:** `end_turn` is a session-level signal from opencode that the model finished
+responding — it does not guarantee all tool-call side effects (file writes) are durably
+committed before the grace period expires.
+
+**Mitigation (not yet fixed):** After the grace period, verify the diff is non-empty before
+terminating. If empty, extend the wait and re-check rather than treating it as a failure.
+Tracked in #112 (structured events would make tool-call completion observable).
