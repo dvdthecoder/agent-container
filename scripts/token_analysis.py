@@ -11,23 +11,38 @@ Usage
     make test-analysis BACKENDS=opencode COST_PER_1M=0.80
 
 Environment (read from .env or shell):
-    OPENAI_BASE_URL     required — deployed Modal endpoint
-    OPENAI_API_KEY      default: modal
-    OPENCODE_MODEL      required — served model name (e.g. qwen2.5-coder-32b)
-    GITHUB_TOKEN        optional — enables PR creation in analysis runs
-    ANALYSIS_BACKENDS   comma-sep backends to run (default: aider,opencode)
-    ANALYSIS_RUNS       runs per backend (default: 1)
+    OPENAI_BASE_URL       required — deployed Modal endpoint
+    OPENAI_API_KEY        default: modal
+    OPENCODE_MODEL        required — served model name (e.g. qwen2.5-coder-32b)
+    GITHUB_TOKEN          optional — enables PR creation in analysis runs
+    ANALYSIS_BACKENDS     comma-sep backends to run (default: aider,opencode)
+    ANALYSIS_RUNS         runs per backend (default: 1)
     ANALYSIS_COST_PER_1M  USD per 1M tokens for cost estimate (default: 1.00)
-    ANALYSIS_NO_PR      set to 1 to skip PR creation (faster, cheaper)
+    ANALYSIS_NO_PR        set to 1 to skip PR creation (faster, cheaper)
+    ANALYSIS_MODEL_LABEL  human-readable model label for tables/sidecars
+                          (default: value of OPENCODE_MODEL)
+    ANALYSIS_ENDPOINT     override OPENAI_BASE_URL for this run — useful when
+                          pointing at an isolated per-model app endpoint
+    ANALYSIS_OUTPUT_JSON  path to write a structured JSON sidecar alongside the
+                          Markdown output (used by combine_analysis.py)
 
 Output
 ------
 Prints a Markdown table to stdout and a summary line.  Pipe to a file:
     make test-analysis > docs/analysis/$(date +%Y-%m-%d).md
+
+Sidecar JSON (written when ANALYSIS_OUTPUT_JSON is set):
+    {
+      "model_label": "Qwen3 8B · A10G",
+      "cost_per_1m": 1.00,
+      "task": "...",
+      "rows": [{"backend": "aider", "run": 1, "success": true, ...}, ...]
+    }
 """
 
 from __future__ import annotations
 
+import json
 import os
 import sys
 import time
@@ -59,9 +74,20 @@ BACKENDS: list[str] = [b.strip() for b in _raw_backends.split(",") if b.strip()]
 RUNS_PER_BACKEND: int = int(os.environ.get("ANALYSIS_RUNS", "1"))
 COST_PER_1M: float = float(os.environ.get("ANALYSIS_COST_PER_1M", "1.00"))
 NO_PR: bool = os.environ.get("ANALYSIS_NO_PR", "0") == "1"
+# Optional: override the endpoint URL for this run (isolated app for a specific model).
+ANALYSIS_ENDPOINT: str = os.environ.get("ANALYSIS_ENDPOINT", "")
+# Human-readable label printed in tables and written to the JSON sidecar.
+# Defaults to OPENCODE_MODEL so it's always meaningful even if not set.
+ANALYSIS_MODEL_LABEL: str = os.environ.get("ANALYSIS_MODEL_LABEL", "")
+# If set, write a structured JSON sidecar to this path.
+ANALYSIS_OUTPUT_JSON: str = os.environ.get("ANALYSIS_OUTPUT_JSON", "")
 
 
 def _check_env() -> SandboxConfig:
+    # ANALYSIS_ENDPOINT overrides OPENAI_BASE_URL for this run (isolated app).
+    if ANALYSIS_ENDPOINT:
+        os.environ["OPENAI_BASE_URL"] = ANALYSIS_ENDPOINT
+
     base_url = os.environ.get("OPENAI_BASE_URL", "")
     model = os.environ.get("OPENCODE_MODEL", "")
     if not base_url:
@@ -98,8 +124,9 @@ def _fmt(n: int | None) -> str:
 def main() -> None:
     config = _check_env()
     model = os.environ.get("OPENCODE_MODEL", "unknown")
+    model_label = ANALYSIS_MODEL_LABEL or model
 
-    print(f"\n# Token Analysis — model: `{model}`\n", flush=True)
+    print(f"\n# Token Analysis — model: `{model_label}`\n", flush=True)
     print(f"Backends: {', '.join(BACKENDS)}  |  Runs per backend: {RUNS_PER_BACKEND}", flush=True)
     print(f"Cost rate: ${COST_PER_1M:.2f} / 1M tokens  |  Create PR: {not NO_PR}\n", flush=True)
 
@@ -192,6 +219,20 @@ def main() -> None:
     if total_all:
         grand_total = sum(total_all)
         print(f"\n**Grand total: {_fmt(grand_total)} tokens · est. {_cost(grand_total)}**\n")
+
+    # ── JSON sidecar ──────────────────────────────────────────────────────────
+    if ANALYSIS_OUTPUT_JSON:
+        sidecar = {
+            "model_label": model_label,
+            "model": model,
+            "cost_per_1m": COST_PER_1M,
+            "task": _TASK,
+            "rows": rows,
+        }
+        out_path = Path(ANALYSIS_OUTPUT_JSON)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.write_text(json.dumps(sidecar, indent=2))
+        print(f"[analysis] sidecar written to {out_path}", file=sys.stderr, flush=True)
 
 
 if __name__ == "__main__":

@@ -30,12 +30,18 @@ BACKENDS     ?= aider,opencode
 RUNS         ?= 1
 COST_PER_1M  ?= 1.00
 NO_PR        ?= 0
+MODEL_LABEL  ?=
+ENDPOINT     ?=
+OUTPUT_JSON  ?=
 
 test-analysis:
 	ANALYSIS_BACKENDS=$(BACKENDS) \
 	ANALYSIS_RUNS=$(RUNS) \
 	ANALYSIS_COST_PER_1M=$(COST_PER_1M) \
 	ANALYSIS_NO_PR=$(NO_PR) \
+	ANALYSIS_MODEL_LABEL=$(MODEL_LABEL) \
+	ANALYSIS_ENDPOINT=$(ENDPOINT) \
+	ANALYSIS_OUTPUT_JSON=$(OUTPUT_JSON) \
 	python3 scripts/token_analysis.py
 
 # ── model server deployment ───────────────────────────────────────────────────
