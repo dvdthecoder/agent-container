@@ -44,11 +44,6 @@ load_dotenv(_root / ".env")
 
 MATRIX_MODELS = [
     {
-        "key":   "qwen3-8b",
-        "label": "Qwen3 8B · A10G",
-        "gpu":   "A10G",
-    },
-    {
         "key":   "qwen2.5-coder-32b",
         "label": "Qwen2.5-Coder 32B · A100 80GB",
         "gpu":   "A100 80GB",

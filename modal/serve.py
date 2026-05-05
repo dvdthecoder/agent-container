@@ -11,7 +11,6 @@ Model registry (prod only)
 --------------------------
   SERVE_MODEL=qwen2.5-coder-32b   Qwen2.5-Coder 32B · A100 80GB  (default, reliable tool use)
   SERVE_MODEL=qwen3-coder         Qwen3-Coder 80B   · 2× A100 80GB
-  SERVE_MODEL=qwen3-8b            Qwen3 8B           · A10G         (fast, cheap)
   SERVE_MODEL=qwen3-30b           Qwen3 30B-A3B MoE  · A100 40GB   (efficient MoE)
   SERVE_MODEL=gemma4-12b          Gemma 4 12B        · A10G         (Google, fast)
   SERVE_MODEL=gemma4-27b          Gemma 4 27B        · A100 40GB    (Google, quality)
@@ -20,7 +19,6 @@ Model registry (prod only)
 Usage
 -----
 modal deploy modal/serve.py                                        # prod default
-SERVE_MODEL=qwen3-8b    modal deploy modal/serve.py               # prod, Qwen3 8B
 SERVE_MODEL=gemma4-27b  modal deploy modal/serve.py               # prod, Gemma 4 27B
 SERVE_PROFILE=experiment modal deploy modal/serve.py              # SGLang experiment
 
@@ -88,16 +86,6 @@ _PROD_MODELS: dict[str, dict] = {
         "startup_timeout": 600,
     },
     # ── Qwen3 general ─────────────────────────────────────────────────────────
-    "qwen3-8b": {
-        # Fast + cheap — good for simple tasks; fits comfortably on A10G (24 GB).
-        "model_id": "Qwen/Qwen3-8B",
-        "served_name": "qwen3-8b",
-        "gpu": "A10G",
-        "context_length": 32_768,
-        "tp_size": 1,
-        "tool_call_parser": "hermes",
-        "startup_timeout": 300,
-    },
     "qwen3-30b": {
         # MoE: 30 B total / ~3 B active — efficient throughput on A100 40 GB.
         # Note: vLLM loads all expert weights; verify VRAM headroom before deploying.

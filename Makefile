@@ -51,8 +51,8 @@ test-analysis:
 #
 # Usage:
 #   make deploy                    # default model (qwen2.5-coder-32b)
-#   make deploy MODEL=qwen3-8b     # specific model
-#   make deploy MODEL=all          # deploy all 4 analysis models in sequence
+#   make deploy MODEL=qwen3-30b    # specific model
+#   make deploy MODEL=all          # deploy all analysis models in sequence
 #   make deploy PROFILE=experiment # SGLang profile
 #
 # After each deploy, wait_for_serve.py polls GET /v1/models until 200 and
@@ -62,7 +62,7 @@ MODEL         ?= qwen2.5-coder-32b
 PROFILE       ?= prod
 WAIT_TIMEOUT  ?= 900
 # Models deployed (and waited on) by MODEL=all.
-_ANALYSIS_MODELS := qwen3-8b qwen2.5-coder-32b qwen3-30b gemma4-12b
+_ANALYSIS_MODELS := qwen2.5-coder-32b qwen3-30b gemma4-12b
 
 deploy:
 ifeq ($(MODEL),all)
