@@ -190,3 +190,21 @@ abbreviated counts: `2.7k sent, 109 received.` The regex matched nothing → `pr
 
 **Fix:** Updated regex to `[\d,.]+[kKmM]?` and added `_parse_tok()` that handles plain ints,
 comma-separated, `k`/`K`, and `m`/`M` suffixes.
+
+---
+
+## Modal deployment
+
+### 15. SERVE_MODEL not baked into container — wrong model loads every time
+
+**Problem:** `modal/serve.py` resolves `SERVE_MODEL` via `os.environ.get("SERVE_MODEL", _PROD_DEFAULT)` at module level. The container re-imports the module on every function invocation. `SERVE_PROFILE` was baked into the Modal secret but `SERVE_MODEL` was not. Result: every deployment — including isolated per-model apps — always loaded `qwen2.5-coder-32b` regardless of which model was passed at deploy time. `qwen3-8b` targeted an A10G (correct) but tried to load the 32B model (22GB OOM).
+
+**Fix:** Added `"SERVE_MODEL": os.environ.get("SERVE_MODEL", _PROD_DEFAULT)` to the Modal secret alongside `SERVE_PROFILE`. Rule: any env var read at module level that controls runtime behaviour must be baked into the container secret.
+
+---
+
+### 16. Unpinned vLLM pulls breaking release
+
+**Problem:** `pip_install("vllm")` with no version pin. vLLM 0.9.x introduced a regression where the engine core worker process dies before registering with the API server — `Engine core initialization failed. Failed core proc(s): {}`. The prod endpoint started returning connection refused after a routine redeploy with no code changes.
+
+**Fix:** Pinned to `vllm==0.8.5` (last known-good). Modal's image layer cache means the old container stays alive until the pip install line changes, so adding the pin forces a rebuild with the correct version.
