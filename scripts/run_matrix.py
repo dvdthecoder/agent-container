@@ -194,6 +194,9 @@ def main() -> None:
                         help="Seconds to wait for each endpoint after deploy (default: 900)")
     parser.add_argument("--skip-deploy", action="store_true",
                         help="Skip modal deploy steps (use already-running isolated apps)")
+    parser.add_argument("--models", default="",
+                        help="Comma-separated model keys to run (default: all). "
+                             "e.g. --models qwen3-8b,qwen3-30b")
     args = parser.parse_args()
 
     base_url = os.environ.get("OPENAI_BASE_URL", "")
@@ -203,8 +206,17 @@ def main() -> None:
 
     SIDECAR_DIR.mkdir(parents=True, exist_ok=True)
 
-    total = len(MATRIX_MODELS)
-    for i, model in enumerate(MATRIX_MODELS, 1):
+    models = MATRIX_MODELS
+    if args.models:
+        keys = {k.strip() for k in args.models.split(",")}
+        models = [m for m in MATRIX_MODELS if m["key"] in keys]
+        if not models:
+            print(f"[matrix] ERROR: no models matched --models={args.models!r}. "
+                  f"Available: {[m['key'] for m in MATRIX_MODELS]}", flush=True)
+            sys.exit(1)
+
+    total = len(models)
+    for i, model in enumerate(models, 1):
         print(f"\n[matrix] model {i}/{total}: {model['label']}", flush=True)
 
         if not args.skip_deploy:
@@ -217,6 +229,7 @@ def main() -> None:
             runs=args.runs,
             cost_per_1m=args.cost_per_1m,
         )
+
 
     out = combine(args.date)
     print(f"\n[matrix] done — {out}", flush=True)
