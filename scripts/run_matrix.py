@@ -1,7 +1,7 @@
 """Orchestrate a full model × backend analysis matrix.
 
 For each model in MATRIX_MODELS:
-  1. Deploy an isolated Modal app (SERVE_ISOLATED=1)
+  1. Deploy an isolated Modal app (model-specific app name)
   2. Wait until the endpoint is ready
   3. Run token_analysis.py against that endpoint, write a JSON sidecar
 
@@ -190,7 +190,7 @@ def main() -> None:
                         help="Skip modal deploy steps (use already-running isolated apps)")
     parser.add_argument("--models", default="",
                         help="Comma-separated model keys to run (default: all). "
-                             "e.g. --models qwen3-8b,qwen3-30b")
+                             "e.g. --models qwen2.5-coder-7b,qwen3-30b")
     args = parser.parse_args()
 
     base_url = os.environ.get("OPENAI_BASE_URL", "")

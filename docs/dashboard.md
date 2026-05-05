@@ -117,12 +117,10 @@ the terminal.
 
 | Option | `SERVE_MODEL` |
 |---|---|
+| Qwen2.5-Coder 7B · A10G | `qwen2.5-coder-7b` |
 | Qwen2.5-Coder 32B · A100 80GB **(default)** | *(unset)* |
+| Qwen3 30B-A3B · A100 80GB | `qwen3-30b` |
 | Qwen3-Coder 80B · 2×A100 80GB | `qwen3-coder` |
-| Qwen3 8B · A10G | `qwen3-8b` |
-| Qwen3 30B-A3B · A100 40GB | `qwen3-30b` |
-| Gemma 4 12B · A10G | `gemma4-12b` |
-| Gemma 4 27B · A100 40GB | `gemma4-27b` |
 | MiniMax M2.5 · 8×A100 80GB | `minimax-m2.5` |
 | SGLang experiment · A10G | `SERVE_PROFILE=experiment` |
 

@@ -8,7 +8,7 @@ Usage
 -----
     python3 scripts/combine_analysis.py docs/analysis/data/*.json
     python3 scripts/combine_analysis.py \\
-        docs/analysis/data/qwen3-8b.json \\
+        docs/analysis/data/qwen2.5-coder-7b.json \\
         docs/analysis/data/qwen2.5-coder-32b.json \\
         > docs/analysis/2026-05-05.md
 

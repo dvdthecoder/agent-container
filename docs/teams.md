@@ -206,7 +206,7 @@ The sandbox cost is small relative to the model cost.
 
 ### Reducing cost
 
-- Use `SERVE_MODEL=qwen3-8b` or `qwen2.5-coder-32b` (default) for simple, well-specified tasks — 8× cheaper than 80B models
+- Use `SERVE_MODEL=qwen2.5-coder-7b` for simple, well-specified tasks — A10G, ~10× cheaper than 80B models; `qwen2.5-coder-32b` (default) for complex tasks
 - Use `--backend aider` for targeted edits — fewer model calls than opencode
 - Use `--no-pr` during iteration to skip git push/PR overhead
 - Set `--timeout` appropriately — a stuck run burns GPU time

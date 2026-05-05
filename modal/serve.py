@@ -18,7 +18,7 @@ Model registry (prod only)
 Usage
 -----
 modal deploy modal/serve.py                                        # prod default
-SERVE_MODEL=gemma4-27b  modal deploy modal/serve.py               # prod, Gemma 4 27B
+SERVE_MODEL=qwen3-30b   modal deploy modal/serve.py               # prod, Qwen3 30B-A3B
 SERVE_PROFILE=experiment modal deploy modal/serve.py              # SGLang experiment
 
 After deployment Modal prints the endpoint URL:

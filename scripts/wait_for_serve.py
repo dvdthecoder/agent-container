@@ -96,9 +96,9 @@ def _url_for_app(app_name: str, base_url: str) -> str:
     extract the org slug and rebuild the URL for any other app name.
 
     Example:
-        base_url  = "https://dvdthecoder--agent-container-serve-serve.modal.run"
-        app_name  = "agent-container-serve-qwen3-8b"
-        → "https://dvdthecoder--agent-container-serve-qwen3-8b-serve.modal.run"
+        base_url  = "https://dvdthecoder--agent-container-serve-qwen2-5-coder-32b-serve.modal.run"
+        app_name  = "agent-container-serve-qwen2-5-coder-7b"
+        → "https://dvdthecoder--agent-container-serve-qwen2-5-coder-7b-serve.modal.run"
     """
     import re
 
@@ -129,7 +129,7 @@ def main() -> None:
         "--app-name",
         default="",
         help=(
-            "Modal app name to derive the URL from (e.g. agent-container-serve-qwen3-8b). "
+            "Modal app name to derive the URL from (e.g. agent-container-serve-qwen2-5-coder-7b). "
             "Requires OPENAI_BASE_URL to be set so the org slug can be extracted. "
             "Ignored when --url is provided."
         ),
