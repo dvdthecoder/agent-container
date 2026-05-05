@@ -90,7 +90,7 @@ _PROD_MODELS: dict[str, dict] = {
     # ── Qwen3 general ─────────────────────────────────────────────────────────
     "qwen3-8b": {
         # Fast + cheap — good for simple tasks; fits comfortably on A10G (24 GB).
-        "model_id": "Qwen/Qwen3-8B-Instruct",
+        "model_id": "Qwen/Qwen3-8B",
         "served_name": "qwen3-8b",
         "gpu": "A10G",
         "context_length": 32_768,
@@ -101,7 +101,7 @@ _PROD_MODELS: dict[str, dict] = {
     "qwen3-30b": {
         # MoE: 30 B total / ~3 B active — efficient throughput on A100 40 GB.
         # Note: vLLM loads all expert weights; verify VRAM headroom before deploying.
-        "model_id": "Qwen/Qwen3-30B-A3B-Instruct",
+        "model_id": "Qwen/Qwen3-30B-A3B",
         "served_name": "qwen3-30b",
         "gpu": "A100-40GB",
         "context_length": 32_768,
