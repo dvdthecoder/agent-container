@@ -75,6 +75,9 @@ dashboard/static/dist/
 logs/
 run-*.json
 
+# ── Analysis sidecars (intermediate per-model JSON, not for committing) ──────────
+docs/analysis/data/*.json
+
 # ── SQLite databases (local run logs, test DBs) ─────────────────────────────────
 *.db
 *.sqlite

@@ -1,4 +1,4 @@
-.PHONY: test test-integration test-e2e test-serve test-analysis deploy lint mcp dashboard example stop-sandboxes
+.PHONY: test test-integration test-e2e test-serve test-analysis combine-analysis deploy lint mcp dashboard example stop-sandboxes
 
 # ── unit tests (no external services, always free) ──────────────────────────
 test:
@@ -87,6 +87,22 @@ else
 	SERVE_MODEL=$(MODEL) SERVE_PROFILE=$(PROFILE) modal deploy modal/serve.py
 	python3 scripts/wait_for_serve.py --timeout $(WAIT_TIMEOUT)
 endif
+
+# ── combine analysis sidecars into a matrix page ─────────────────────────────
+# Merge all JSON sidecars in docs/analysis/data/ into one dated Markdown page.
+#
+# Usage:
+#   make combine-analysis                          # reads all *.json in data/
+#   make combine-analysis DATE=2026-05-05          # explicit date in filename
+#
+DATE          ?= $(shell date +%Y-%m-%d)
+_SIDECAR_DIR  := docs/analysis/data
+
+combine-analysis:
+	@mkdir -p $(_SIDECAR_DIR)
+	python3 scripts/combine_analysis.py $(_SIDECAR_DIR)/*.json \
+		> docs/analysis/$(DATE).md
+	@echo "[combine] wrote docs/analysis/$(DATE).md"
 
 # ── linting ──────────────────────────────────────────────────────────────────
 lint:

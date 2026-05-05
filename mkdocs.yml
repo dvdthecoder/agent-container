@@ -72,6 +72,8 @@ nav:
     - Team Setup: teams.md
     - Enterprise & GitLab: enterprise.md
     - Running & Contributing: contributing.md
+  - Analysis:
+    - Overview: analysis/index.md
   - Reference:
     - Lessons Learned: lessons-learned.md
 
