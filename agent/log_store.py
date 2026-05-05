@@ -89,7 +89,6 @@ class RunRow:
     repo: str
     task: str
     backend: str
-    model: str
     initiated_by: str
     base_branch: str
     timeout_seconds: int
@@ -100,6 +99,7 @@ class RunRow:
     pr_url: str | None
     duration_s: float | None
     sandbox_id: str | None
+    model: str = ""          # added after initial schema — empty string for old rows
     prompt_tokens: int | None = None
     completion_tokens: int | None = None
     total_tokens: int | None = None
