@@ -12,8 +12,6 @@ Model registry (prod only)
   SERVE_MODEL=qwen2.5-coder-32b   Qwen2.5-Coder 32B · A100 80GB  (default, reliable tool use)
   SERVE_MODEL=qwen3-coder         Qwen3-Coder 80B   · 2× A100 80GB
   SERVE_MODEL=qwen3-30b           Qwen3 30B-A3B MoE  · A100 80GB   (efficient MoE)
-  SERVE_MODEL=gemma4-12b          Gemma 4 12B        · A10G         (Google, fast)
-  SERVE_MODEL=gemma4-27b          Gemma 4 27B        · A100 40GB    (Google, quality)
   SERVE_MODEL=minimax-m2.5        MiniMax M2.5 MoE   · 8× A100 80GB
 
 Usage
@@ -95,27 +93,6 @@ _PROD_MODELS: dict[str, dict] = {
         "context_length": 32_768,
         "tp_size": 1,
         "tool_call_parser": "hermes",
-        "startup_timeout": 600,
-    },
-    # ── Gemma 4 (Google) ──────────────────────────────────────────────────────
-    "gemma4-12b": {
-        # Fits on A10G (24 GB); strong coding benchmarks for its size.
-        "model_id": "google/gemma-4-12b-it",
-        "served_name": "gemma4-12b",
-        "gpu": "A10G",
-        "context_length": 32_768,
-        "tp_size": 1,
-        "tool_call_parser": "pythonic",
-        "startup_timeout": 300,
-    },
-    "gemma4-27b": {
-        # Better quality than 12B; A100 40 GB gives comfortable VRAM headroom.
-        "model_id": "google/gemma-4-27b-it",
-        "served_name": "gemma4-27b",
-        "gpu": "A100-40GB",
-        "context_length": 32_768,
-        "tp_size": 1,
-        "tool_call_parser": "pythonic",
         "startup_timeout": 600,
     },
     # ── MiniMax ───────────────────────────────────────────────────────────────

@@ -62,7 +62,7 @@ MODEL         ?= qwen2.5-coder-32b
 PROFILE       ?= prod
 WAIT_TIMEOUT  ?= 900
 # Models deployed (and waited on) by MODEL=all.
-_ANALYSIS_MODELS := qwen2.5-coder-32b qwen3-30b gemma4-12b
+_ANALYSIS_MODELS := qwen2.5-coder-32b qwen3-30b
 
 deploy:
 ifeq ($(MODEL),all)

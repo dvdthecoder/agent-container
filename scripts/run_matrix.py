@@ -53,11 +53,6 @@ MATRIX_MODELS = [
         "label": "Qwen3 30B-A3B · A100 80GB",
         "gpu":   "A100 80GB",
     },
-    {
-        "key":   "gemma4-12b",
-        "label": "Gemma 4 12B · A10G",
-        "gpu":   "A10G",
-    },
 ]
 
 SIDECAR_DIR = _root / "docs" / "analysis" / "data"
