@@ -219,7 +219,11 @@ if SERVE_PROFILE == "experiment":
 else:
     image = (
         modal.Image.debian_slim(python_version="3.11")
-        .pip_install("vllm==0.8.5", "huggingface_hub[hf_transfer]")
+        .pip_install(
+            "vllm==0.8.5",
+            "transformers==4.46.3",   # 4.47+ removes all_special_tokens_extended from Qwen2TokenizerFast
+            "huggingface_hub[hf_transfer]",
+        )
         .env({"HF_HUB_ENABLE_HF_TRANSFER": "1"})
     )
 
