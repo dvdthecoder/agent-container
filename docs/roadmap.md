@@ -57,7 +57,7 @@ SGLang deployed as a separate Modal app (`agent-container-serve-sglang`); tool c
 ### Phase 4 — Model expansion + richer observability (done)
 Broader model menu, live feedback during runs, serve endpoint validation.
 
-- [#113](https://github.com/dvdthecoder/agent-container/issues/113) Expanded prod model registry: `qwen3-8b`, `qwen3-30b`, `gemma4-12b`, `gemma4-27b` added alongside `qwen3-coder` and `minimax-m2.5`; `tool_call_parser` and `startup_timeout` are now per-model
+- [#113](https://github.com/dvdthecoder/agent-container/issues/113) Expanded prod model registry: `qwen2.5-coder-7b`, `qwen3-30b`, `qwen3-coder`, `minimax-m2.5` alongside the default `qwen2.5-coder-32b`; `tool_call_parser` and `startup_timeout` are now per-model; each deploy gets a model-specific app name (`agent-container-serve-{slug}`) so multiple models run simultaneously
 - Profile/model separation: `test` profile dissolved into `prod` with `qwen2.5-coder-32b` as the default `SERVE_MODEL`; only two profiles remain (`prod` vLLM, `experiment` SGLang)
 - [#111](https://github.com/dvdthecoder/agent-container/issues/111) Heartbeat thread in `agent/runner.py` — prints `[runner] still running elapsed=Xs` every 30 s when the agent is silent; terminal never goes dark during a long RUNNING phase
 - [#68](https://github.com/dvdthecoder/agent-container/issues/68) Serve endpoint integration tests — `tests/integration/test_serve_reachable.py` validates `GET /v1/models` (HTTP 200, model name present) and `POST /v1/chat/completions` (well-formed response); `.github/workflows/serve.yml` triggers manually after deploy
@@ -70,12 +70,12 @@ Broader model menu, live feedback during runs, serve endpoint validation.
 ### Phase 5 — Docs + quality tooling
 Fill documentation gaps and add model comparison data.
 
-| Issue | Task |
-|---|---|
-| [#114](https://github.com/dvdthecoder/agent-container/issues/114) | Cost and quality comparison — self-hosted LLMs vs Claude API; populate Tokens tab with baseline runs |
-| [#115](https://github.com/dvdthecoder/agent-container/issues/115) | Step-by-step guide for adding a new model profile |
-| [#71](https://github.com/dvdthecoder/agent-container/issues/71) | `docs/lessons-learned.md` — hard problems, gotchas, team scaling guide |
-| [#112](https://github.com/dvdthecoder/agent-container/issues/112) | Install opencode-monitor in sandbox — structured per-tool-call events in logs |
+| Issue | Task | Status |
+|---|---|---|
+| [#114](https://github.com/dvdthecoder/agent-container/issues/114) | Model × backend analysis: token/cost/quality comparison across self-hosted models | ✅ [Baseline 2026-05-05](analysis/2026-05-05.md) — 3 models × 2 backends |
+| [#115](https://github.com/dvdthecoder/agent-container/issues/115) | Model profile guide — when to use 7B vs 32B vs MoE, GPU sizing rules | Planned |
+| [#71](https://github.com/dvdthecoder/agent-container/issues/71) | `docs/lessons-learned.md` — hard problems, gotchas, team scaling guide | ✅ 18 entries |
+| [#112](https://github.com/dvdthecoder/agent-container/issues/112) | Install opencode-monitor in sandbox — structured per-tool-call events in logs | Planned |
 
 ### Phase 6 — Production hardening
 Close the gap between the current implementation and a fully team-deployed system.

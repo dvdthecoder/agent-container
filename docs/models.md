@@ -29,16 +29,14 @@ All prod models use vLLM. Select with `SERVE_MODEL`:
 
 | `SERVE_MODEL` | Model | GPU | Context | Deploy command |
 |---|---|---|---|---|
-| `qwen2.5-coder-32b` **(default)** | Qwen2.5-Coder 32B | A100 80GB | 32k | `modal deploy modal/serve.py` |
-| `qwen3-coder` | Qwen3-Coder 80B | 2× A100 80GB | 128k | `SERVE_MODEL=qwen3-coder modal deploy modal/serve.py` |
-| `qwen3-8b` | Qwen3 8B | A10G | 32k | `SERVE_MODEL=qwen3-8b modal deploy modal/serve.py` |
-| `qwen3-30b` | Qwen3 30B-A3B (MoE) | A100 40GB | 32k | `SERVE_MODEL=qwen3-30b modal deploy modal/serve.py` |
-| `gemma4-12b` | Gemma 4 12B | A10G | 32k | `SERVE_MODEL=gemma4-12b modal deploy modal/serve.py` |
-| `gemma4-27b` | Gemma 4 27B | A100 40GB | 32k | `SERVE_MODEL=gemma4-27b modal deploy modal/serve.py` |
-| `minimax-m2.5` | MiniMax M2.5 (MoE) | 8× A100 80GB | 1M | `SERVE_MODEL=minimax-m2.5 modal deploy modal/serve.py` |
+| `qwen2.5-coder-7b` | Qwen2.5-Coder 7B | A10G | 32k | `make deploy MODEL=qwen2.5-coder-7b` |
+| `qwen2.5-coder-32b` **(default)** | Qwen2.5-Coder 32B | A100 80GB | 32k | `make deploy` |
+| `qwen3-30b` | Qwen3 30B-A3B (MoE) | A100 80GB | 32k | `make deploy MODEL=qwen3-30b` |
+| `qwen3-coder` | Qwen3-Coder 80B | 2× A100 80GB | 128k | `make deploy MODEL=qwen3-coder` |
+| `minimax-m2.5` | MiniMax M2.5 (MoE) | 8× A100 80GB | 1M | `make deploy MODEL=minimax-m2.5` |
 
 **Start with the default (`qwen2.5-coder-32b`)** — proven tool use, fast iteration.
-Switch to `qwen3-8b` or `gemma4-12b` for cheaper/faster runs on simple tasks.
+Use `qwen2.5-coder-7b` for cheaper/faster runs on simple tasks (A10G, ~$0.003/run).
 Use `qwen3-coder` or `minimax-m2.5` for production-grade output quality.
 
 Add new models to the `_PROD_MODELS` dict in `modal/serve.py` — GPU, context, and tool-call parser are declared per-model.
@@ -49,12 +47,10 @@ Set `OPENCODE_MODEL` to match `served_name` in `modal/serve.py`:
 
 | `SERVE_MODEL` | `OPENCODE_MODEL` |
 |---|---|
+| `qwen2.5-coder-7b` | `qwen2.5-coder-7b` |
 | `qwen2.5-coder-32b` (default) | `qwen2.5-coder-32b` |
-| `qwen3-coder` | `qwen3-coder` |
-| `qwen3-8b` | `qwen3-8b` |
 | `qwen3-30b` | `qwen3-30b` |
-| `gemma4-12b` | `gemma4-12b` |
-| `gemma4-27b` | `gemma4-27b` |
+| `qwen3-coder` | `qwen3-coder` |
 | `minimax-m2.5` | `minimax-m2.5` |
 | `experiment` profile | `qwen2.5-coder` |
 
@@ -165,9 +161,9 @@ You pay only for active inference time.
 
 | `SERVE_MODEL` | Cold start |
 |---|---|
-| `qwen2.5-coder-32b` (default) | ~1–2 min |
-| `qwen3-8b` / `gemma4-12b` | ~1–2 min (A10G) |
-| `qwen3-30b` / `gemma4-27b` | ~2–3 min (A100 40GB) |
+| `qwen2.5-coder-7b` | ~1 min (A10G) |
+| `qwen2.5-coder-32b` (default) | ~1–2 min (A100 80GB) |
+| `qwen3-30b` | ~2–3 min (A100 80GB, MoE weights) |
 | `qwen3-coder` | ~3–5 min (2× A100 80GB) |
 | `minimax-m2.5` | ~8–12 min (8× A100 80GB) |
 | `experiment` (SGLang) | ~2–3 min (JIT compile adds ~1 min) |
