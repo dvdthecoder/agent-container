@@ -291,9 +291,13 @@ else:
         modal.Secret.from_dict(
             {
                 "HF_TOKEN": os.environ["HF_TOKEN"],
-                # Bake SERVE_PROFILE into the container so module-level branches
-                # resolve correctly when the container re-imports this file.
+                # Bake SERVE_PROFILE and SERVE_MODEL into the container so
+                # module-level branches resolve correctly when the container
+                # re-imports this file.  Without SERVE_MODEL the container
+                # always falls back to the _PROD_DEFAULT regardless of which
+                # model was selected at deploy time.
                 "SERVE_PROFILE": SERVE_PROFILE,
+                "SERVE_MODEL": os.environ.get("SERVE_MODEL", _PROD_DEFAULT),
             }
         )
     ],
