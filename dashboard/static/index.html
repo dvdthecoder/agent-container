@@ -527,6 +527,7 @@
     .tok-runid  { font-family: var(--mono); font-size: 11px; color: var(--muted); white-space: nowrap; }
     .tok-repo   { color: var(--text); max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .tok-backend { white-space: nowrap; }
+    .tok-model   { font-family: var(--mono); font-size: 11px; color: var(--muted); white-space: nowrap; }
     .tok-outcome.success { color: var(--green); }
     .tok-outcome.error, .tok-outcome.failed { color: var(--red); }
     .tok-num    { font-family: var(--mono); color: var(--text); }
@@ -707,6 +708,7 @@
               <th onclick="sortTokens('run_id')">Run ID</th>
               <th onclick="sortTokens('repo')">Repository</th>
               <th onclick="sortTokens('backend')">Backend</th>
+              <th onclick="sortTokens('model')">Model</th>
               <th onclick="sortTokens('outcome')">Outcome</th>
               <th onclick="sortTokens('started_at')">Started</th>
               <th onclick="sortTokens('finished_at')">Finished</th>
@@ -1158,7 +1160,7 @@ function renderTokensTable() {
   table.querySelectorAll('th').forEach(th => {
     th.classList.remove('sort-asc', 'sort-desc');
   });
-  const colMap = ['run_id','repo','backend','outcome','started_at','finished_at','prompt_tokens','completion_tokens','total_tokens','cost','duration_s'];
+  const colMap = ['run_id','repo','backend','model','outcome','started_at','finished_at','prompt_tokens','completion_tokens','total_tokens','cost','duration_s'];
   const thIdx = colMap.indexOf(_tokensSortCol);
   if (thIdx >= 0) {
     const th = table.querySelectorAll('th')[thIdx];
@@ -1199,6 +1201,7 @@ function renderTokensTable() {
       <td class="tok-runid">${escHtml(row.run_id)}</td>
       <td><span class="tok-repo" title="${escHtml(row.repo)}">${escHtml(repoShort)}</span></td>
       <td class="tok-backend"><span class="badge badge-backend">${escHtml(row.backend)}</span></td>
+      <td class="tok-model">${escHtml(row.model || '—')}</td>
       <td class="tok-outcome ${outCls}">${escHtml(outcome)}</td>
       <td class="tok-time">${escHtml(started)}</td>
       <td class="tok-time">${escHtml(finished)}</td>

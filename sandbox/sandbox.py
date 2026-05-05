@@ -103,6 +103,7 @@ class ModalSandbox:
             repo=spec.repo,
             task=spec.resolved_task(),
             backend=spec.backend,
+            model=self.config.opencode_model,
             initiated_by=spec.initiated_by,
             base_branch=spec.base_branch,
             timeout_seconds=spec.timeout_seconds,

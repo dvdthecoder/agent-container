@@ -256,6 +256,7 @@ def list_tokens(backend: str = "", date_from: str = "", date_to: str = "") -> li
                 "repo": row.repo,
                 "task": row.task,
                 "backend": row.backend,
+                "model": row.model or "",
                 "started_at": row.started_at,
                 "finished_at": row.finished_at,
                 "outcome": row.outcome,

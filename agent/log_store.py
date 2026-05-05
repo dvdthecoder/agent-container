@@ -47,6 +47,7 @@ CREATE TABLE IF NOT EXISTS runs (
     repo            TEXT NOT NULL,
     task            TEXT NOT NULL,
     backend         TEXT NOT NULL,
+    model           TEXT NOT NULL DEFAULT '',
     initiated_by    TEXT NOT NULL DEFAULT 'cli',
     base_branch     TEXT NOT NULL DEFAULT 'main',
     timeout_seconds INTEGER NOT NULL DEFAULT 600,
@@ -88,6 +89,7 @@ class RunRow:
     repo: str
     task: str
     backend: str
+    model: str
     initiated_by: str
     base_branch: str
     timeout_seconds: int
@@ -146,6 +148,7 @@ class RunLogger:
         """Add columns introduced after initial schema (idempotent)."""
         existing = {row[1] for row in self._conn.execute("PRAGMA table_info(runs)").fetchall()}
         migrations = [
+            ("model", "TEXT NOT NULL DEFAULT ''"),
             ("initiated_by", "TEXT NOT NULL DEFAULT 'cli'"),
             ("base_branch", "TEXT NOT NULL DEFAULT 'main'"),
             ("timeout_seconds", "INTEGER NOT NULL DEFAULT 600"),
@@ -165,6 +168,7 @@ class RunLogger:
         repo: str,
         task: str,
         backend: str,
+        model: str = "",
         db_path: Path | None = None,
         initiated_by: str = "cli",
         base_branch: str = "main",
@@ -174,7 +178,7 @@ class RunLogger:
         """Create a new logger and insert the run row."""
         rid = run_id or new_run_id()
         logger = cls(rid, db_path)
-        logger._insert_run(repo, task, backend, initiated_by, base_branch, timeout_seconds)
+        logger._insert_run(repo, task, backend, model, initiated_by, base_branch, timeout_seconds)
         return logger
 
     def phase(self, phase: str) -> None:
@@ -256,6 +260,7 @@ class RunLogger:
         repo: str,
         task: str,
         backend: str,
+        model: str = "",
         initiated_by: str = "cli",
         base_branch: str = "main",
         timeout_seconds: int = 600,
@@ -264,10 +269,10 @@ class RunLogger:
         with self._lock:
             self._conn.execute(
                 "INSERT INTO runs"  # noqa: S608
-                " (run_id, repo, task, backend,"
+                " (run_id, repo, task, backend, model,"
                 " initiated_by, base_branch, timeout_seconds, started_at)"
-                " VALUES (?,?,?,?,?,?,?,?)",
-                (self.run_id, repo, task, backend, initiated_by, base_branch, timeout_seconds, now),
+                " VALUES (?,?,?,?,?,?,?,?,?)",
+                (self.run_id, repo, task, backend, model, initiated_by, base_branch, timeout_seconds, now),
             )
             self._conn.commit()
 
