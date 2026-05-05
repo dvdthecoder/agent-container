@@ -11,7 +11,7 @@ Model registry (prod only)
 --------------------------
   SERVE_MODEL=qwen2.5-coder-32b   Qwen2.5-Coder 32B · A100 80GB  (default, reliable tool use)
   SERVE_MODEL=qwen3-coder         Qwen3-Coder 80B   · 2× A100 80GB
-  SERVE_MODEL=qwen3-30b           Qwen3 30B-A3B MoE  · A100 40GB   (efficient MoE)
+  SERVE_MODEL=qwen3-30b           Qwen3 30B-A3B MoE  · A100 80GB   (efficient MoE)
   SERVE_MODEL=gemma4-12b          Gemma 4 12B        · A10G         (Google, fast)
   SERVE_MODEL=gemma4-27b          Gemma 4 27B        · A100 40GB    (Google, quality)
   SERVE_MODEL=minimax-m2.5        MiniMax M2.5 MoE   · 8× A100 80GB
@@ -87,11 +87,11 @@ _PROD_MODELS: dict[str, dict] = {
     },
     # ── Qwen3 general ─────────────────────────────────────────────────────────
     "qwen3-30b": {
-        # MoE: 30 B total / ~3 B active — efficient throughput on A100 40 GB.
-        # Note: vLLM loads all expert weights; verify VRAM headroom before deploying.
+        # MoE: 30 B total / ~3 B active — efficient throughput.
+        # vLLM loads all expert weights (~60 GB BF16); needs A100-80GB.
         "model_id": "Qwen/Qwen3-30B-A3B",
         "served_name": "qwen3-30b",
-        "gpu": "A100-40GB",
+        "gpu": "A100-80GB",
         "context_length": 32_768,
         "tp_size": 1,
         "tool_call_parser": "hermes",

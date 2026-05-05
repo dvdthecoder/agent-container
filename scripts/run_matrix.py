@@ -50,8 +50,8 @@ MATRIX_MODELS = [
     },
     {
         "key":   "qwen3-30b",
-        "label": "Qwen3 30B-A3B · A100 40GB",
-        "gpu":   "A100 40GB",
+        "label": "Qwen3 30B-A3B · A100 80GB",
+        "gpu":   "A100 80GB",
     },
     {
         "key":   "gemma4-12b",
