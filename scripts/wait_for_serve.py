@@ -37,6 +37,27 @@ import os
 POLL_INTERVAL = 30.0  # seconds between attempts (matches sandbox WARMING phase)
 
 
+def _update_env_file(base_url: str) -> None:
+    """Rewrite OPENAI_BASE_URL in the project .env file."""
+    env_path = _root / ".env"
+    if not env_path.exists():
+        print(f"[deploy] .env not found at {env_path} — skipping update", flush=True)
+        return
+    lines = env_path.read_text().splitlines(keepends=True)
+    new_lines = []
+    updated = False
+    for line in lines:
+        if line.startswith("OPENAI_BASE_URL="):
+            new_lines.append(f"OPENAI_BASE_URL={base_url}\n")
+            updated = True
+        else:
+            new_lines.append(line)
+    if not updated:
+        new_lines.append(f"OPENAI_BASE_URL={base_url}\n")
+    env_path.write_text("".join(new_lines))
+    print(f"[deploy] .env updated: OPENAI_BASE_URL={base_url}", flush=True)
+
+
 def wait(base_url: str, timeout: float) -> None:
     url = base_url.rstrip("/").rstrip("/v1").rstrip("/") + "/v1/models"
     deadline = time.monotonic() + timeout
@@ -113,6 +134,11 @@ def main() -> None:
             "Ignored when --url is provided."
         ),
     )
+    parser.add_argument(
+        "--update-env",
+        action="store_true",
+        help="After the endpoint is ready, write the resolved URL to OPENAI_BASE_URL in .env",
+    )
     args = parser.parse_args()
 
     env_url = os.environ.get("OPENAI_BASE_URL", "")
@@ -144,6 +170,9 @@ def main() -> None:
         sys.exit(1)
 
     wait(base_url, args.timeout)
+
+    if args.update_env:
+        _update_env_file(base_url)
 
 
 if __name__ == "__main__":

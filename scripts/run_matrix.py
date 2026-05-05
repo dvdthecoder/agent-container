@@ -120,7 +120,6 @@ def deploy_model(model: dict, wait_timeout: float) -> None:
         env={
             "SERVE_MODEL": model["key"],
             "SERVE_PROFILE": "prod",
-            "SERVE_ISOLATED": "1",
         },
     )
     _run(
