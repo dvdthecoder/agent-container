@@ -207,4 +207,8 @@ comma-separated, `k`/`K`, and `m`/`M` suffixes.
 
 **Problem:** `pip_install("vllm")` with no version pin. vLLM 0.9.x introduced a regression where the engine core worker process dies before registering with the API server — `Engine core initialization failed. Failed core proc(s): {}`. The prod endpoint started returning connection refused after a routine redeploy with no code changes.
 
-**Fix:** Pinned to `vllm==0.8.5` (last known-good). Modal's image layer cache means the old container stays alive until the pip install line changes, so adding the pin forces a rebuild with the correct version.
+**Fix:** Pinned to `vllm==0.8.5` and `transformers==4.46.3`. Two issues required both pins:
+- vLLM 0.9.x: engine core worker crashes before registering with the API server
+- vLLM 0.8.5 + transformers 4.47+: `AttributeError: Qwen2Tokenizer has no attribute all_special_tokens_extended` — transformers 4.47 removed this property from `Qwen2TokenizerFast`; vLLM 0.8.5 calls it unconditionally in `get_cached_tokenizer()`
+
+Rule: pin both `vllm` and `transformers` together. An unpinned `transformers` will eventually pull a version that breaks the pinned `vllm`.
