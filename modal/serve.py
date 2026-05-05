@@ -178,10 +178,24 @@ else:
 
 # ── Modal app ────────────────────────────────────────────────────────────────
 
-# experiment deploys to its own app so prod endpoints are never disturbed.
-_APP_NAME = (
-    "agent-container-serve-experiment" if SERVE_PROFILE == "experiment" else "agent-container-serve"
-)
+# SERVE_ISOLATED=1 deploys to a model-specific app name so multiple models
+# can run simultaneously without overwriting each other.  Used by the
+# analysis matrix workflow (make deploy MODEL=all ISOLATED=1).
+#
+# Naming:
+#   default (prod)      → agent-container-serve
+#   SERVE_ISOLATED=1    → agent-container-serve-{model_slug}  (e.g. agent-container-serve-qwen3-8b)
+#   SERVE_PROFILE=experiment → agent-container-serve-experiment  (unchanged)
+_SERVE_ISOLATED = os.environ.get("SERVE_ISOLATED", "0") == "1"
+
+if SERVE_PROFILE == "experiment":
+    _APP_NAME = "agent-container-serve-experiment"
+elif _SERVE_ISOLATED:
+    _model_slug = os.environ.get("SERVE_MODEL", _PROD_DEFAULT).replace(".", "-")
+    _APP_NAME = f"agent-container-serve-{_model_slug}"
+else:
+    _APP_NAME = "agent-container-serve"
+
 app = modal.App(_APP_NAME)
 
 # Persistent volume — model weights cached here across cold starts.

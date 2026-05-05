@@ -65,6 +65,32 @@ def wait(base_url: str, timeout: float) -> None:
         time.sleep(POLL_INTERVAL)
 
 
+def _url_for_app(app_name: str, base_url: str) -> str:
+    """Derive the Modal web endpoint URL for *app_name* from the known *base_url*.
+
+    Modal web endpoint URLs follow the pattern:
+        https://{org}--{app-name}-{function-name}.modal.run
+
+    Given the existing OPENAI_BASE_URL (which points at the prod app) we can
+    extract the org slug and rebuild the URL for any other app name.
+
+    Example:
+        base_url  = "https://dvdthecoder--agent-container-serve-serve.modal.run"
+        app_name  = "agent-container-serve-qwen3-8b"
+        → "https://dvdthecoder--agent-container-serve-qwen3-8b-serve.modal.run"
+    """
+    import re
+
+    m = re.match(r"(https://[^-]+)--[^.]+\.modal\.run", base_url)
+    if not m:
+        raise ValueError(
+            f"Cannot parse org slug from OPENAI_BASE_URL={base_url!r}. "
+            "Pass --url explicitly."
+        )
+    org_prefix = m.group(1)  # e.g. "https://dvdthecoder"
+    return f"{org_prefix}--{app_name}-serve.modal.run"
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Wait for inference endpoint to be ready.")
     parser.add_argument(
@@ -76,15 +102,43 @@ def main() -> None:
     parser.add_argument(
         "--url",
         default="",
-        help="Base URL to poll (default: OPENAI_BASE_URL from environment)",
+        help="Base URL to poll (overrides OPENAI_BASE_URL and --app-name)",
+    )
+    parser.add_argument(
+        "--app-name",
+        default="",
+        help=(
+            "Modal app name to derive the URL from (e.g. agent-container-serve-qwen3-8b). "
+            "Requires OPENAI_BASE_URL to be set so the org slug can be extracted. "
+            "Ignored when --url is provided."
+        ),
     )
     args = parser.parse_args()
 
-    base_url = args.url or os.environ.get("OPENAI_BASE_URL", "")
+    env_url = os.environ.get("OPENAI_BASE_URL", "")
+
+    if args.url:
+        base_url = args.url
+    elif args.app_name:
+        if not env_url:
+            print(
+                "[deploy] ERROR: --app-name requires OPENAI_BASE_URL to be set "
+                "(needed to extract the Modal org slug).",
+                flush=True,
+            )
+            sys.exit(1)
+        try:
+            base_url = _url_for_app(args.app_name, env_url)
+        except ValueError as exc:
+            print(f"[deploy] ERROR: {exc}", flush=True)
+            sys.exit(1)
+    else:
+        base_url = env_url
+
     if not base_url:
         print(
             "[deploy] ERROR: OPENAI_BASE_URL is not set. "
-            "Set it in .env or pass --url.",
+            "Set it in .env or pass --url / --app-name.",
             flush=True,
         )
         sys.exit(1)

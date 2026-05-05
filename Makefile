@@ -42,27 +42,41 @@ test-analysis:
 # Deploy a model to Modal and wait until the endpoint is ready.
 #
 # Usage:
-#   make deploy                          # deploy default (qwen2.5-coder-32b)
-#   make deploy MODEL=qwen3-8b           # deploy a specific model
-#   make deploy MODEL=all                # deploy each analysis model in sequence
-#   make deploy MODEL=qwen3-8b PROFILE=experiment  # SGLang profile
+#   make deploy                             # replace prod with default model
+#   make deploy MODEL=qwen3-8b              # replace prod with qwen3-8b
+#   make deploy MODEL=qwen3-8b ISOLATED=1   # isolated app (keeps prod running)
+#   make deploy MODEL=all                   # deploy all analysis models as
+#                                           # isolated apps simultaneously
+#   make deploy MODEL=x PROFILE=experiment  # SGLang profile
+#
+# ISOLATED=1: app name becomes agent-container-serve-{model} so multiple
+# models can run in parallel without overwriting each other.  MODEL=all
+# always uses isolated apps.
 #
 # After each deploy, wait_for_serve.py polls GET /v1/models until 200 so
 # the next make test-analysis call hits a warm endpoint immediately.
 #
 MODEL         ?= qwen2.5-coder-32b
 PROFILE       ?= prod
+ISOLATED      ?= 0
 WAIT_TIMEOUT  ?= 900
-# Models deployed by MODEL=all (space-separated for shell loop).
+# Models deployed (and waited on) by MODEL=all.
 _ANALYSIS_MODELS := qwen3-8b qwen2.5-coder-32b
 
 deploy:
 ifeq ($(MODEL),all)
 	@$(foreach m,$(_ANALYSIS_MODELS), \
-		echo "==> Deploying $(m) ..." && \
-		SERVE_MODEL=$(m) SERVE_PROFILE=$(PROFILE) modal deploy modal/serve.py && \
-		python3 scripts/wait_for_serve.py --timeout $(WAIT_TIMEOUT) && \
+		echo "==> Deploying $(m) (isolated) ..." && \
+		SERVE_MODEL=$(m) SERVE_PROFILE=$(PROFILE) SERVE_ISOLATED=1 modal deploy modal/serve.py && \
+		python3 scripts/wait_for_serve.py \
+			--app-name agent-container-serve-$(subst .,-,$(m)) \
+			--timeout $(WAIT_TIMEOUT) && \
 	) true
+else ifeq ($(ISOLATED),1)
+	SERVE_MODEL=$(MODEL) SERVE_PROFILE=$(PROFILE) SERVE_ISOLATED=1 modal deploy modal/serve.py
+	python3 scripts/wait_for_serve.py \
+		--app-name agent-container-serve-$(subst .,-,$(MODEL)) \
+		--timeout $(WAIT_TIMEOUT)
 else
 	SERVE_MODEL=$(MODEL) SERVE_PROFILE=$(PROFILE) modal deploy modal/serve.py
 	python3 scripts/wait_for_serve.py --timeout $(WAIT_TIMEOUT)
