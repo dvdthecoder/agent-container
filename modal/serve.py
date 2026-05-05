@@ -9,6 +9,7 @@ experiment  — SGLang engine, Qwen2.5-Coder 7B · A10G.
 
 Model registry (prod only)
 --------------------------
+  SERVE_MODEL=qwen2.5-coder-7b    Qwen2.5-Coder 7B  · A10G        (fast, cheap SLM)
   SERVE_MODEL=qwen2.5-coder-32b   Qwen2.5-Coder 32B · A100 80GB  (default, reliable tool use)
   SERVE_MODEL=qwen3-coder         Qwen3-Coder 80B   · 2× A100 80GB
   SERVE_MODEL=qwen3-30b           Qwen3 30B-A3B MoE  · A100 80GB   (efficient MoE)
@@ -63,6 +64,16 @@ SERVE_PROFILE = os.environ.get("SERVE_PROFILE", "prod")
 
 _PROD_MODELS: dict[str, dict] = {
     # ── Qwen2.5-Coder ─────────────────────────────────────────────────────────
+    "qwen2.5-coder-7b": {
+        # Small coding specialist — fits on A10G (24 GB), fast cold start.
+        "model_id": "Qwen/Qwen2.5-Coder-7B-Instruct",
+        "served_name": "qwen2.5-coder-7b",
+        "gpu": "A10G",
+        "context_length": 32_768,
+        "tp_size": 1,
+        "tool_call_parser": "hermes",
+        "startup_timeout": 300,
+    },
     "qwen2.5-coder-32b": {
         # Proven default: reliable tool use with opencode, ~3 min cold start.
         "model_id": "Qwen/Qwen2.5-Coder-32B-Instruct",
