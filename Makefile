@@ -1,4 +1,4 @@
-.PHONY: test test-integration test-e2e test-serve test-analysis combine-analysis deploy lint mcp dashboard example stop-sandboxes
+.PHONY: test test-integration test-e2e test-serve test-analysis combine-analysis analysis-matrix deploy lint mcp dashboard example stop-sandboxes
 
 # ── unit tests (no external services, always free) ──────────────────────────
 test:
@@ -67,7 +67,7 @@ PROFILE       ?= prod
 ISOLATED      ?= 0
 WAIT_TIMEOUT  ?= 900
 # Models deployed (and waited on) by MODEL=all.
-_ANALYSIS_MODELS := qwen3-8b qwen2.5-coder-32b
+_ANALYSIS_MODELS := qwen3-8b qwen2.5-coder-32b qwen3-30b gemma4-12b
 
 deploy:
 ifeq ($(MODEL),all)
@@ -87,6 +87,23 @@ else
 	SERVE_MODEL=$(MODEL) SERVE_PROFILE=$(PROFILE) modal deploy modal/serve.py
 	python3 scripts/wait_for_serve.py --timeout $(WAIT_TIMEOUT)
 endif
+
+# ── full model × backend analysis matrix ─────────────────────────────────────
+# Deploy all 4 analysis models as isolated apps, run both backends against
+# each, then combine results into a dated Markdown page.
+#
+# Usage:
+#   make analysis-matrix                 # deploy + run + combine
+#   make analysis-matrix BACKENDS=aider  # aider only (faster)
+#   make analysis-matrix DATE=2026-05-05 # explicit date in output filename
+#
+analysis-matrix:
+	python3 scripts/run_matrix.py \
+		--backends $(BACKENDS) \
+		--runs $(RUNS) \
+		--cost-per-1m $(COST_PER_1M) \
+		--date $(DATE) \
+		--wait-timeout $(WAIT_TIMEOUT)
 
 # ── combine analysis sidecars into a matrix page ─────────────────────────────
 # Merge all JSON sidecars in docs/analysis/data/ into one dated Markdown page.
