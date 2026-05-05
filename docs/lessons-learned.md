@@ -227,3 +227,33 @@ intended model and the tokenizer init succeeds against the latest transformers.
 **Rule:** Don't pin vLLM reactively to silence a crash. Diagnose which model is actually loading
 first (`grep "Starting to load model"` in container logs). An OOM or tokenizer error on the
 wrong model is a config bug, not a vLLM version bug.
+
+---
+
+### 17. Qwen3 general models don't use the -Instruct suffix
+
+**Problem:** `Qwen/Qwen3-8B-Instruct` and `Qwen/Qwen3-30B-A3B-Instruct` return 404 on
+HuggingFace. Qwen3 general-purpose models (8B, 30B-A3B, 32B, 235B) are released as hybrid
+think/non-think checkpoints without a separate instruct variant — the base repo is the
+instruction-tuned model.
+
+**Fix:** Drop the `-Instruct` suffix: `Qwen/Qwen3-8B`, `Qwen/Qwen3-30B-A3B`.
+
+**Rule:** The Qwen3-Coder line (`Qwen/Qwen3-Coder-80B-Instruct`) does keep `-Instruct`.
+Verify HF repo IDs in the browser before adding a new model family.
+
+---
+
+### 18. Qwen3-30B-A3B needs A100-80GB, not A100-40GB
+
+**Problem:** Qwen3-30B-A3B is a MoE model with 30B total parameters and ~3B active per
+forward pass. vLLM loads all expert weights regardless of sparsity. At BF16, 30B parameters
+= ~60 GB — does not fit on an A100-40GB (39.49 GiB). The container OOMed during CUDA graph
+capture, which surfaced as the V1 engine-core crash.
+
+**Fix:** Changed GPU to `A100-80GB`. The 80 GB card has sufficient headroom for weights +
+KV cache.
+
+**Rule:** For any MoE model, size the GPU based on **total** parameter count, not active
+parameter count. vLLM's `gpu_memory_utilization` does not help if the weights alone exceed
+VRAM.

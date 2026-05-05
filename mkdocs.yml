@@ -74,6 +74,7 @@ nav:
     - Running & Contributing: contributing.md
   - Analysis:
     - Overview: analysis/index.md
+    - 2026-05-05: analysis/2026-05-05.md
   - Reference:
     - Lessons Learned: lessons-learned.md
 

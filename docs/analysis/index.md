@@ -24,22 +24,20 @@ Each page covers one analysis run: a fixed task fired against all configured bac
 ## Running your own analysis
 
 ```bash
-# Deploy a model and wait for it to be ready
-make deploy MODEL=qwen3-8b
+# Deploy all models and run the full matrix
+make deploy MODEL=all
+python3 scripts/run_matrix.py --skip-deploy
 
-# Run analysis, write a JSON sidecar
+# Or deploy and analyse one model at a time
+make deploy MODEL=qwen2.5-coder-7b
 make test-analysis \
-  MODEL_LABEL="Qwen3 8B · A10G" \
-  OUTPUT_JSON=docs/analysis/data/qwen3-8b.json
+  MODEL_LABEL="Qwen2.5-Coder 7B · A10G" \
+  OUTPUT_JSON=docs/analysis/data/qwen2.5-coder-7b.json
 
-# Deploy a second model, run again
-make deploy MODEL=qwen2.5-coder-32b
-make test-analysis \
-  MODEL_LABEL="Qwen2.5-Coder 32B · A100" \
-  OUTPUT_JSON=docs/analysis/data/qwen32b.json
-
-# Combine into one page
+# Combine sidecars into a dated page
 make combine-analysis DATE=$(date +%Y-%m-%d)
 ```
 
 ## Analysis pages
+
+- [2026-05-05](2026-05-05.md) — baseline: 3 models × 2 backends, all pass
