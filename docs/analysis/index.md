@@ -40,4 +40,4 @@ make combine-analysis DATE=$(date +%Y-%m-%d)
 
 ## Analysis pages
 
-- [2026-05-05](2026-05-05.md) — baseline: 3 models × 2 backends, all pass
+- [2026-05-05](2026-05-05.md) — 3 models × 2 backends × 3 runs; 17/18 pass; cold-start bias visible in run 1 durations
