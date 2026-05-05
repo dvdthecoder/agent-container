@@ -99,7 +99,7 @@ class RunRow:
     pr_url: str | None
     duration_s: float | None
     sandbox_id: str | None
-    model: str = ""          # added after initial schema — empty string for old rows
+    model: str = ""  # added after initial schema — empty string for old rows
     prompt_tokens: int | None = None
     completion_tokens: int | None = None
     total_tokens: int | None = None
@@ -272,8 +272,17 @@ class RunLogger:
                 " (run_id, repo, task, backend, model,"
                 " initiated_by, base_branch, timeout_seconds, started_at)"
                 " VALUES (?,?,?,?,?,?,?,?,?)",
-                (self.run_id, repo, task, backend, model,
-                 initiated_by, base_branch, timeout_seconds, now),
+                (
+                    self.run_id,
+                    repo,
+                    task,
+                    backend,
+                    model,
+                    initiated_by,
+                    base_branch,
+                    timeout_seconds,
+                    now,
+                ),
             )
             self._conn.commit()
 

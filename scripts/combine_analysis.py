@@ -26,6 +26,7 @@ from pathlib import Path
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _fmt(n: int | None) -> str:
     if n is None:
         return "—"
@@ -50,6 +51,7 @@ def _pct_diff(a: float, b: float) -> str:
 # ---------------------------------------------------------------------------
 # Core
 # ---------------------------------------------------------------------------
+
 
 def load_sidecars(paths: list[Path]) -> list[dict]:
     sidecars = []
@@ -114,8 +116,7 @@ def render_summary_table(sidecars: list[dict]) -> str:
             successes = sum(1 for r in subset if r["success"])
             prompts = [r["prompt_tokens"] for r in subset if r.get("prompt_tokens") is not None]
             completions = [
-                r["completion_tokens"] for r in subset
-                if r.get("completion_tokens") is not None
+                r["completion_tokens"] for r in subset if r.get("completion_tokens") is not None
             ]
             totals = [r["total_tokens"] for r in subset if r.get("total_tokens") is not None]
             durs = [r["duration"] for r in subset if r.get("duration") is not None]
@@ -158,18 +159,17 @@ def render_analysis(sidecars: list[dict]) -> str:
     if len(sidecars) > 1:
         for backend in backends:
             backend_rows = [
-                (s["model_label"], [
-                    r for r in s["rows"]
-                    if r["backend"] == backend and r.get("total_tokens")
-                ])
+                (
+                    s["model_label"],
+                    [r for r in s["rows"] if r["backend"] == backend and r.get("total_tokens")],
+                )
                 for s in sidecars
             ]
             backend_rows = [(label, rs) for label, rs in backend_rows if rs]
             if len(backend_rows) < 2:
                 continue
             totals = [
-                (label, sum(r["total_tokens"] for r in rs) / len(rs))
-                for label, rs in backend_rows
+                (label, sum(r["total_tokens"] for r in rs) / len(rs)) for label, rs in backend_rows
             ]
             totals.sort(key=lambda x: x[1])
             cheapest_label, cheapest_avg = totals[0]
@@ -192,14 +192,12 @@ def render_analysis(sidecars: list[dict]) -> str:
         for backend in backends:
             for s in sidecars:
                 rs = [
-                    r for r in s["rows"]
-                    if r["backend"] == backend and r.get("completion_tokens")
+                    r for r in s["rows"] if r["backend"] == backend and r.get("completion_tokens")
                 ]
                 if rs:
                     avg_c = int(sum(r["completion_tokens"] for r in rs) / len(rs))
                     lines.append(
-                        f"- {s['model_label']} / {backend}:"
-                        f" avg {_fmt(avg_c)} completion tokens"
+                        f"- {s['model_label']} / {backend}: avg {_fmt(avg_c)} completion tokens"
                     )
 
     return "\n".join(lines)
@@ -222,7 +220,9 @@ def main(paths: list[Path]) -> None:
     print()
     print(f"**Models tested:** {models_str}")
     print()
-    print("**Repo:** [dvdthecoder/agent-container-fixture](https://github.com/dvdthecoder/agent-container-fixture)")
+    print(
+        "**Repo:** [dvdthecoder/agent-container-fixture](https://github.com/dvdthecoder/agent-container-fixture)"
+    )
     print()
     print("---")
     print()

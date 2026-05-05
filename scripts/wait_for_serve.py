@@ -29,6 +29,7 @@ from pathlib import Path
 _root = Path(__file__).parent.parent
 try:
     from dotenv import load_dotenv
+
     load_dotenv(_root / ".env")
 except ImportError:  # noqa: S110
     pass  # dotenv optional; rely on shell env
@@ -104,8 +105,7 @@ def _url_for_app(app_name: str, base_url: str) -> str:
     m = re.match(r"(https://[^-]+)--[^.]+\.modal\.run", base_url)
     if not m:
         raise ValueError(
-            f"Cannot parse org slug from OPENAI_BASE_URL={base_url!r}. "
-            "Pass --url explicitly."
+            f"Cannot parse org slug from OPENAI_BASE_URL={base_url!r}. Pass --url explicitly."
         )
     org_prefix = m.group(1)  # e.g. "https://dvdthecoder"
     return f"{org_prefix}--{app_name}-serve.modal.run"

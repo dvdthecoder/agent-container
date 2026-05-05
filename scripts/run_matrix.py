@@ -45,19 +45,19 @@ load_dotenv(_root / ".env")
 
 MATRIX_MODELS = [
     {
-        "key":   "qwen2.5-coder-7b",
+        "key": "qwen2.5-coder-7b",
         "label": "Qwen2.5-Coder 7B · A10G",
-        "gpu":   "A10G",
+        "gpu": "A10G",
     },
     {
-        "key":   "qwen2.5-coder-32b",
+        "key": "qwen2.5-coder-32b",
         "label": "Qwen2.5-Coder 32B · A100 80GB",
-        "gpu":   "A100 80GB",
+        "gpu": "A100 80GB",
     },
     {
-        "key":   "qwen3-30b",
+        "key": "qwen3-30b",
         "label": "Qwen3 30B-A3B · A100 80GB",
-        "gpu":   "A100 80GB",
+        "gpu": "A100 80GB",
     },
 ]
 
@@ -68,6 +68,7 @@ ANALYSIS_DIR = _root / "docs" / "analysis"
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _app_name(model_key: str) -> str:
     """Return the isolated Modal app name for a model key."""
@@ -105,10 +106,11 @@ def _run(cmd: list[str], env: dict | None = None, check: bool = True) -> int:
 # Steps
 # ---------------------------------------------------------------------------
 
+
 def deploy_model(model: dict, wait_timeout: float) -> None:
-    print(f"\n{'='*60}", flush=True)
+    print(f"\n{'=' * 60}", flush=True)
     print(f"[matrix] deploying {model['label']} ...", flush=True)
-    print(f"{'='*60}", flush=True)
+    print(f"{'=' * 60}", flush=True)
 
     app = _app_name(model["key"])
     _run(
@@ -119,14 +121,18 @@ def deploy_model(model: dict, wait_timeout: float) -> None:
         },
     )
     _run(
-        [sys.executable, "scripts/wait_for_serve.py",
-         "--app-name", app,
-         "--timeout", str(wait_timeout)],
+        [
+            sys.executable,
+            "scripts/wait_for_serve.py",
+            "--app-name",
+            app,
+            "--timeout",
+            str(wait_timeout),
+        ],
     )
 
 
-def run_analysis(model: dict, base_url: str, backends: str, runs: int,
-                 cost_per_1m: float) -> Path:
+def run_analysis(model: dict, base_url: str, backends: str, runs: int, cost_per_1m: float) -> Path:
     app = _app_name(model["key"])
     endpoint = _endpoint_url(app, base_url)
     sidecar = SIDECAR_DIR / f"{model['key']}.json"
@@ -175,23 +181,45 @@ def combine(date: str) -> Path:
 # Main
 # ---------------------------------------------------------------------------
 
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run the full model × backend analysis matrix.")
-    parser.add_argument("--backends", default="aider,opencode",
-                        help="Comma-separated backends (default: aider,opencode)")
-    parser.add_argument("--runs", type=int, default=1,
-                        help="Runs per backend per model (default: 1)")
-    parser.add_argument("--cost-per-1m", type=float, default=1.00,
-                        help="USD per 1M tokens for cost estimate (default: 1.00)")
-    parser.add_argument("--date", default=datetime.now(UTC).strftime("%Y-%m-%d"),
-                        help="Date string for the output filename (default: today)")
-    parser.add_argument("--wait-timeout", type=float, default=900.0,
-                        help="Seconds to wait for each endpoint after deploy (default: 900)")
-    parser.add_argument("--skip-deploy", action="store_true",
-                        help="Skip modal deploy steps (use already-running isolated apps)")
-    parser.add_argument("--models", default="",
-                        help="Comma-separated model keys to run (default: all). "
-                             "e.g. --models qwen2.5-coder-7b,qwen3-30b")
+    parser.add_argument(
+        "--backends",
+        default="aider,opencode",
+        help="Comma-separated backends (default: aider,opencode)",
+    )
+    parser.add_argument(
+        "--runs", type=int, default=1, help="Runs per backend per model (default: 1)"
+    )
+    parser.add_argument(
+        "--cost-per-1m",
+        type=float,
+        default=1.00,
+        help="USD per 1M tokens for cost estimate (default: 1.00)",
+    )
+    parser.add_argument(
+        "--date",
+        default=datetime.now(UTC).strftime("%Y-%m-%d"),
+        help="Date string for the output filename (default: today)",
+    )
+    parser.add_argument(
+        "--wait-timeout",
+        type=float,
+        default=900.0,
+        help="Seconds to wait for each endpoint after deploy (default: 900)",
+    )
+    parser.add_argument(
+        "--skip-deploy",
+        action="store_true",
+        help="Skip modal deploy steps (use already-running isolated apps)",
+    )
+    parser.add_argument(
+        "--models",
+        default="",
+        help="Comma-separated model keys to run (default: all). "
+        "e.g. --models qwen2.5-coder-7b,qwen3-30b",
+    )
     args = parser.parse_args()
 
     base_url = os.environ.get("OPENAI_BASE_URL", "")
@@ -206,8 +234,11 @@ def main() -> None:
         keys = {k.strip() for k in args.models.split(",")}
         models = [m for m in MATRIX_MODELS if m["key"] in keys]
         if not models:
-            print(f"[matrix] ERROR: no models matched --models={args.models!r}. "
-                  f"Available: {[m['key'] for m in MATRIX_MODELS]}", flush=True)
+            print(
+                f"[matrix] ERROR: no models matched --models={args.models!r}. "
+                f"Available: {[m['key'] for m in MATRIX_MODELS]}",
+                flush=True,
+            )
             sys.exit(1)
 
     total = len(models)
@@ -224,7 +255,6 @@ def main() -> None:
             runs=args.runs,
             cost_per_1m=args.cost_per_1m,
         )
-
 
     out = combine(args.date)
     print(f"\n[matrix] done — {out}", flush=True)
