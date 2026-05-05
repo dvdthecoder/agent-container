@@ -319,6 +319,46 @@
   
 
       
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../analysis/" class="md-tabs__link">
+          
+  
+  
+  Analysis
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../lessons-learned/" class="md-tabs__link">
+          
+  
+  
+  Reference
+
+        </a>
+      </li>
+    
+  
+
+      
     </ul>
   </div>
 </nav>
@@ -1055,6 +1095,208 @@
   
 
     
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Analysis
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Analysis
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../analysis/2026-05-05/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    2026-05-05
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../lessons-learned/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lessons Learned
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
   </ul>
 </nav>
                   </div>
@@ -1234,58 +1476,44 @@ weights are cached so cold starts after the first are fast.</p>
 </thead>
 <tbody>
 <tr>
+<td><code>qwen2.5-coder-7b</code></td>
+<td>Qwen2.5-Coder 7B</td>
+<td>A10G</td>
+<td>32k</td>
+<td><code>make deploy MODEL=qwen2.5-coder-7b</code></td>
+</tr>
+<tr>
 <td><code>qwen2.5-coder-32b</code> <strong>(default)</strong></td>
 <td>Qwen2.5-Coder 32B</td>
 <td>A100 80GB</td>
 <td>32k</td>
-<td><code>modal deploy modal/serve.py</code></td>
+<td><code>make deploy</code></td>
+</tr>
+<tr>
+<td><code>qwen3-30b</code></td>
+<td>Qwen3 30B-A3B (MoE)</td>
+<td>A100 80GB</td>
+<td>32k</td>
+<td><code>make deploy MODEL=qwen3-30b</code></td>
 </tr>
 <tr>
 <td><code>qwen3-coder</code></td>
 <td>Qwen3-Coder 80B</td>
 <td>2× A100 80GB</td>
 <td>128k</td>
-<td><code>SERVE_MODEL=qwen3-coder modal deploy modal/serve.py</code></td>
-</tr>
-<tr>
-<td><code>qwen3-8b</code></td>
-<td>Qwen3 8B</td>
-<td>A10G</td>
-<td>32k</td>
-<td><code>SERVE_MODEL=qwen3-8b modal deploy modal/serve.py</code></td>
-</tr>
-<tr>
-<td><code>qwen3-30b</code></td>
-<td>Qwen3 30B-A3B (MoE)</td>
-<td>A100 40GB</td>
-<td>32k</td>
-<td><code>SERVE_MODEL=qwen3-30b modal deploy modal/serve.py</code></td>
-</tr>
-<tr>
-<td><code>gemma4-12b</code></td>
-<td>Gemma 4 12B</td>
-<td>A10G</td>
-<td>32k</td>
-<td><code>SERVE_MODEL=gemma4-12b modal deploy modal/serve.py</code></td>
-</tr>
-<tr>
-<td><code>gemma4-27b</code></td>
-<td>Gemma 4 27B</td>
-<td>A100 40GB</td>
-<td>32k</td>
-<td><code>SERVE_MODEL=gemma4-27b modal deploy modal/serve.py</code></td>
+<td><code>make deploy MODEL=qwen3-coder</code></td>
 </tr>
 <tr>
 <td><code>minimax-m2.5</code></td>
 <td>MiniMax M2.5 (MoE)</td>
 <td>8× A100 80GB</td>
 <td>1M</td>
-<td><code>SERVE_MODEL=minimax-m2.5 modal deploy modal/serve.py</code></td>
+<td><code>make deploy MODEL=minimax-m2.5</code></td>
 </tr>
 </tbody>
 </table>
 <p><strong>Start with the default (<code>qwen2.5-coder-32b</code>)</strong> — proven tool use, fast iteration.
-Switch to <code>qwen3-8b</code> or <code>gemma4-12b</code> for cheaper/faster runs on simple tasks.
+Use <code>qwen2.5-coder-7b</code> for cheaper/faster runs on simple tasks (A10G, ~$0.003/run).
 Use <code>qwen3-coder</code> or <code>minimax-m2.5</code> for production-grade output quality.</p>
 <p>Add new models to the <code>_PROD_MODELS</code> dict in <code>modal/serve.py</code> — GPU, context, and tool-call parser are declared per-model.</p>
 <h3 id="model-names">Model names<a class="headerlink" href="#model-names" title="Permanent link">&para;</a></h3>
@@ -1299,28 +1527,20 @@ Use <code>qwen3-coder</code> or <code>minimax-m2.5</code> for production-grade o
 </thead>
 <tbody>
 <tr>
+<td><code>qwen2.5-coder-7b</code></td>
+<td><code>qwen2.5-coder-7b</code></td>
+</tr>
+<tr>
 <td><code>qwen2.5-coder-32b</code> (default)</td>
 <td><code>qwen2.5-coder-32b</code></td>
 </tr>
 <tr>
-<td><code>qwen3-coder</code></td>
-<td><code>qwen3-coder</code></td>
-</tr>
-<tr>
-<td><code>qwen3-8b</code></td>
-<td><code>qwen3-8b</code></td>
-</tr>
-<tr>
 <td><code>qwen3-30b</code></td>
 <td><code>qwen3-30b</code></td>
 </tr>
 <tr>
-<td><code>gemma4-12b</code></td>
-<td><code>gemma4-12b</code></td>
-</tr>
-<tr>
-<td><code>gemma4-27b</code></td>
-<td><code>gemma4-27b</code></td>
+<td><code>qwen3-coder</code></td>
+<td><code>qwen3-coder</code></td>
 </tr>
 <tr>
 <td><code>minimax-m2.5</code></td>
@@ -1515,16 +1735,16 @@ You pay only for active inference time.</p>
 </thead>
 <tbody>
 <tr>
+<td><code>qwen2.5-coder-7b</code></td>
+<td>~1 min (A10G)</td>
+</tr>
+<tr>
 <td><code>qwen2.5-coder-32b</code> (default)</td>
-<td>~1–2 min</td>
+<td>~1–2 min (A100 80GB)</td>
 </tr>
 <tr>
-<td><code>qwen3-8b</code> / <code>gemma4-12b</code></td>
-<td>~1–2 min (A10G)</td>
-</tr>
-<tr>
-<td><code>qwen3-30b</code> / <code>gemma4-27b</code></td>
-<td>~2–3 min (A100 40GB)</td>
+<td><code>qwen3-30b</code></td>
+<td>~2–3 min (A100 80GB, MoE weights)</td>
 </tr>
 <tr>
 <td><code>qwen3-coder</code></td>

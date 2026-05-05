@@ -319,6 +319,46 @@
   
 
       
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../analysis/" class="md-tabs__link">
+          
+  
+  
+  Analysis
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../lessons-learned/" class="md-tabs__link">
+          
+  
+  
+  Reference
+
+        </a>
+      </li>
+    
+  
+
+      
     </ul>
   </div>
 </nav>
@@ -1110,6 +1150,208 @@
   
 
     
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Analysis
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Analysis
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../analysis/2026-05-05/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    2026-05-05
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../lessons-learned/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lessons Learned
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
   </ul>
 </nav>
                   </div>
@@ -1368,9 +1610,11 @@ running, completed, and failed — in one unified list.</p>
 logs as they arrive. Rows remain in the list after completion — collapse them to keep the view clean.</p>
 <h3 id="tokens-tab">Tokens tab<a class="headerlink" href="#tokens-tab" title="Permanent link">&para;</a></h3>
 <p>Per-run token consumption for all completed runs that have token data. Both <code>aider</code> and <code>opencode</code>
-emit token usage — <code>aider</code> by parsing its <code>Tokens: X sent, Y received.</code> stderr lines; <code>opencode</code>
-via the Responses API proxy's <code>usage</code> accumulation. Both emit the same <code>[runner] token_usage:</code>
-line that the sandbox intercepts and persists to SQLite.</p>
+emit token usage — <code>aider</code> by parsing its <code>Tokens: X sent, Y received.</code> line (printed to stdout
+or stderr depending on aider version); <code>opencode</code> via the Responses API proxy's <code>usage</code>
+accumulation. Both emit the same <code>[runner] token_usage:</code> line that the sandbox intercepts and
+persists to SQLite.</p>
+<p>Rows are sorted by <strong>Started</strong> descending by default — most recent run at the top.</p>
 <table>
 <thead>
 <tr>
@@ -1381,7 +1625,7 @@ line that the sandbox intercepts and persists to SQLite.</p>
 <tbody>
 <tr>
 <td>Run ID</td>
-<td>Links the row to the run</td>
+<td>Identifies the run</td>
 </tr>
 <tr>
 <td>Repository</td>
@@ -1394,6 +1638,14 @@ line that the sandbox intercepts and persists to SQLite.</p>
 <tr>
 <td>Outcome</td>
 <td>success / error / failed</td>
+</tr>
+<tr>
+<td>Started</td>
+<td>Wall-clock start time (local)</td>
+</tr>
+<tr>
+<td>Finished</td>
+<td>Wall-clock finish time (local), <code>—</code> if interrupted</td>
 </tr>
 <tr>
 <td>Prompt tokens</td>
@@ -1422,7 +1674,7 @@ line that the sandbox intercepts and persists to SQLite.</p>
 - <strong>From / To date pickers</strong> — restrict to a date range
 - <strong>$/1M tokens</strong> — cost rate input; updating it recalculates the Est. cost column live without reloading data
 - <strong>Summary bar</strong> — shows <code>N runs · X total tokens · est. $Y</code> for the current filtered set</p>
-<p>Click any column header to sort. Clicking the same header again reverses the sort direction.</p>
+<p>Click any column header to sort; click again to reverse. Time columns default to descending (latest first).</p>
 <h2 id="initiated_by-badge"><code>initiated_by</code> badge<a class="headerlink" href="#initiated_by-badge" title="Permanent link">&para;</a></h2>
 <p>Every run row shows where the run was started:</p>
 <ul>
@@ -1487,28 +1739,20 @@ the terminal.</p>
 </thead>
 <tbody>
 <tr>
+<td>Qwen2.5-Coder 7B · A10G</td>
+<td><code>qwen2.5-coder-7b</code></td>
+</tr>
+<tr>
 <td>Qwen2.5-Coder 32B · A100 80GB <strong>(default)</strong></td>
 <td><em>(unset)</em></td>
 </tr>
 <tr>
-<td>Qwen3-Coder 80B · 2×A100 80GB</td>
-<td><code>qwen3-coder</code></td>
-</tr>
-<tr>
-<td>Qwen3 8B · A10G</td>
-<td><code>qwen3-8b</code></td>
-</tr>
-<tr>
-<td>Qwen3 30B-A3B · A100 40GB</td>
+<td>Qwen3 30B-A3B · A100 80GB</td>
 <td><code>qwen3-30b</code></td>
 </tr>
 <tr>
-<td>Gemma 4 12B · A10G</td>
-<td><code>gemma4-12b</code></td>
-</tr>
-<tr>
-<td>Gemma 4 27B · A100 40GB</td>
-<td><code>gemma4-27b</code></td>
+<td>Qwen3-Coder 80B · 2×A100 80GB</td>
+<td><code>qwen3-coder</code></td>
 </tr>
 <tr>
 <td>MiniMax M2.5 · 8×A100 80GB</td>
@@ -1580,7 +1824,7 @@ app state. Clicking <strong>Deploy</strong> calls <code>POST /api/serve/deploy</
 <tr>
 <td><code>GET</code></td>
 <td><code>/api/tokens</code></td>
-<td>Runs with token data, sorted by <code>total_tokens</code> desc</td>
+<td>Runs with token data, sorted by <code>total_tokens</code> desc (server-side)</td>
 </tr>
 </tbody>
 </table>
@@ -1618,12 +1862,13 @@ app state. Clicking <strong>Deploy</strong> calls <code>POST /api/serve/deploy</
 <a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">  </span><span class="nt">&quot;task&quot;</span><span class="p">:</span><span class="w">              </span><span class="s2">&quot;Fix the login bug&quot;</span><span class="p">,</span>
 <a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">  </span><span class="nt">&quot;backend&quot;</span><span class="p">:</span><span class="w">           </span><span class="s2">&quot;opencode&quot;</span><span class="p">,</span>
 <a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">  </span><span class="nt">&quot;started_at&quot;</span><span class="p">:</span><span class="w">        </span><span class="s2">&quot;2026-05-03T12:00:00+00:00&quot;</span><span class="p">,</span>
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">  </span><span class="nt">&quot;outcome&quot;</span><span class="p">:</span><span class="w">           </span><span class="s2">&quot;success&quot;</span><span class="p">,</span>
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">  </span><span class="nt">&quot;prompt_tokens&quot;</span><span class="p">:</span><span class="w">     </span><span class="mi">12345</span><span class="p">,</span>
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">  </span><span class="nt">&quot;completion_tokens&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">678</span><span class="p">,</span>
-<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="w">  </span><span class="nt">&quot;total_tokens&quot;</span><span class="p">:</span><span class="w">      </span><span class="mi">13023</span><span class="p">,</span>
-<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">  </span><span class="nt">&quot;duration_s&quot;</span><span class="p">:</span><span class="w">        </span><span class="mf">142.3</span>
-<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="p">}</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">  </span><span class="nt">&quot;finished_at&quot;</span><span class="p">:</span><span class="w">       </span><span class="s2">&quot;2026-05-03T12:02:22+00:00&quot;</span><span class="p">,</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">  </span><span class="nt">&quot;outcome&quot;</span><span class="p">:</span><span class="w">           </span><span class="s2">&quot;success&quot;</span><span class="p">,</span>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">  </span><span class="nt">&quot;prompt_tokens&quot;</span><span class="p">:</span><span class="w">     </span><span class="mi">12345</span><span class="p">,</span>
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="w">  </span><span class="nt">&quot;completion_tokens&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">678</span><span class="p">,</span>
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">  </span><span class="nt">&quot;total_tokens&quot;</span><span class="p">:</span><span class="w">      </span><span class="mi">13023</span><span class="p">,</span>
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="w">  </span><span class="nt">&quot;duration_s&quot;</span><span class="p">:</span><span class="w">        </span><span class="mf">142.3</span>
+<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="p">}</span>
 </code></pre></div>
 <p><strong><code>POST /api/runs</code> body:</strong></p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="p">{</span>

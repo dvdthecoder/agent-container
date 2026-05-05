@@ -319,6 +319,46 @@
   
 
       
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../analysis/" class="md-tabs__link">
+          
+  
+  
+  Analysis
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../lessons-learned/" class="md-tabs__link">
+          
+  
+  
+  Reference
+
+        </a>
+      </li>
+    
+  
+
+      
     </ul>
   </div>
 </nav>
@@ -1083,6 +1123,208 @@
   
 
     
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Analysis
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Analysis
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../analysis/2026-05-05/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    2026-05-05
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../lessons-learned/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lessons Learned
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
   </ul>
 </nav>
                   </div>
@@ -1317,7 +1559,7 @@
 <h3 id="phase-4-model-expansion-richer-observability-done">Phase 4 — Model expansion + richer observability (done)<a class="headerlink" href="#phase-4-model-expansion-richer-observability-done" title="Permanent link">&para;</a></h3>
 <p>Broader model menu, live feedback during runs, serve endpoint validation.</p>
 <ul>
-<li><a href="https://github.com/dvdthecoder/agent-container/issues/113">#113</a> Expanded prod model registry: <code>qwen3-8b</code>, <code>qwen3-30b</code>, <code>gemma4-12b</code>, <code>gemma4-27b</code> added alongside <code>qwen3-coder</code> and <code>minimax-m2.5</code>; <code>tool_call_parser</code> and <code>startup_timeout</code> are now per-model</li>
+<li><a href="https://github.com/dvdthecoder/agent-container/issues/113">#113</a> Expanded prod model registry: <code>qwen2.5-coder-7b</code>, <code>qwen3-30b</code>, <code>qwen3-coder</code>, <code>minimax-m2.5</code> alongside the default <code>qwen2.5-coder-32b</code>; <code>tool_call_parser</code> and <code>startup_timeout</code> are now per-model; each deploy gets a model-specific app name (<code>agent-container-serve-{slug}</code>) so multiple models run simultaneously</li>
 <li>Profile/model separation: <code>test</code> profile dissolved into <code>prod</code> with <code>qwen2.5-coder-32b</code> as the default <code>SERVE_MODEL</code>; only two profiles remain (<code>prod</code> vLLM, <code>experiment</code> SGLang)</li>
 <li><a href="https://github.com/dvdthecoder/agent-container/issues/111">#111</a> Heartbeat thread in <code>agent/runner.py</code> — prints <code>[runner] still running elapsed=Xs</code> every 30 s when the agent is silent; terminal never goes dark during a long RUNNING phase</li>
 <li><a href="https://github.com/dvdthecoder/agent-container/issues/68">#68</a> Serve endpoint integration tests — <code>tests/integration/test_serve_reachable.py</code> validates <code>GET /v1/models</code> (HTTP 200, model name present) and <code>POST /v1/chat/completions</code> (well-formed response); <code>.github/workflows/serve.yml</code> triggers manually after deploy</li>
@@ -1332,24 +1574,29 @@
 <tr>
 <th>Issue</th>
 <th>Task</th>
+<th>Status</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td><a href="https://github.com/dvdthecoder/agent-container/issues/114">#114</a></td>
-<td>Cost and quality comparison — self-hosted LLMs vs Claude API; populate Tokens tab with baseline runs</td>
+<td>Model × backend analysis: token/cost/quality comparison across self-hosted models</td>
+<td>✅ <a href="../analysis/2026-05-05/">Baseline 2026-05-05</a> — 3 models × 2 backends</td>
 </tr>
 <tr>
 <td><a href="https://github.com/dvdthecoder/agent-container/issues/115">#115</a></td>
-<td>Step-by-step guide for adding a new model profile</td>
+<td>Model profile guide — when to use 7B vs 32B vs MoE, GPU sizing rules</td>
+<td>Planned</td>
 </tr>
 <tr>
 <td><a href="https://github.com/dvdthecoder/agent-container/issues/71">#71</a></td>
 <td><code>docs/lessons-learned.md</code> — hard problems, gotchas, team scaling guide</td>
+<td>✅ 18 entries</td>
 </tr>
 <tr>
 <td><a href="https://github.com/dvdthecoder/agent-container/issues/112">#112</a></td>
 <td>Install opencode-monitor in sandbox — structured per-tool-call events in logs</td>
+<td>Planned</td>
 </tr>
 </tbody>
 </table>

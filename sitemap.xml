@@ -2,54 +2,66 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://dvdthecoder.github.io/agent-container/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://dvdthecoder.github.io/agent-container/agents/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://dvdthecoder.github.io/agent-container/architecture/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://dvdthecoder.github.io/agent-container/cli/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://dvdthecoder.github.io/agent-container/contributing/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://dvdthecoder.github.io/agent-container/dashboard/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://dvdthecoder.github.io/agent-container/enterprise/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-05</lastmod>
+    </url>
+    <url>
+         <loc>https://dvdthecoder.github.io/agent-container/lessons-learned/</loc>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://dvdthecoder.github.io/agent-container/logging/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://dvdthecoder.github.io/agent-container/mcp/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://dvdthecoder.github.io/agent-container/models/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://dvdthecoder.github.io/agent-container/quickstart/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://dvdthecoder.github.io/agent-container/roadmap/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-05</lastmod>
     </url>
     <url>
          <loc>https://dvdthecoder.github.io/agent-container/teams/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-05</lastmod>
+    </url>
+    <url>
+         <loc>https://dvdthecoder.github.io/agent-container/analysis/</loc>
+         <lastmod>2026-05-05</lastmod>
+    </url>
+    <url>
+         <loc>https://dvdthecoder.github.io/agent-container/analysis/2026-05-05/</loc>
+         <lastmod>2026-05-05</lastmod>
     </url>
 </urlset>
