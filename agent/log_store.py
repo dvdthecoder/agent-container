@@ -272,7 +272,8 @@ class RunLogger:
                 " (run_id, repo, task, backend, model,"
                 " initiated_by, base_branch, timeout_seconds, started_at)"
                 " VALUES (?,?,?,?,?,?,?,?,?)",
-                (self.run_id, repo, task, backend, model, initiated_by, base_branch, timeout_seconds, now),
+                (self.run_id, repo, task, backend, model,
+                 initiated_by, base_branch, timeout_seconds, now),
             )
             self._conn.commit()
 

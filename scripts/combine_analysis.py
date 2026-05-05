@@ -19,9 +19,8 @@ from __future__ import annotations
 
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -101,8 +100,11 @@ def render_summary_table(sidecars: list[dict]) -> str:
             if r["backend"] not in all_backends:
                 all_backends.append(r["backend"])
 
-    lines = ["| Model | Backend | Runs | Success | Avg prompt | Avg completion | Avg total | Avg cost | Avg duration |",
-             "|---|---|---|---|---|---|---|---|---|"]
+    header = (
+        "| Model | Backend | Runs | Success | Avg prompt | Avg completion"
+        " | Avg total | Avg cost | Avg duration |"
+    )
+    lines = [header, "|---|---|---|---|---|---|---|---|---|"]
     for s in sidecars:
         rate = s.get("cost_per_1m", 1.0)
         for backend in all_backends:
@@ -111,7 +113,10 @@ def render_summary_table(sidecars: list[dict]) -> str:
                 continue
             successes = sum(1 for r in subset if r["success"])
             prompts = [r["prompt_tokens"] for r in subset if r.get("prompt_tokens") is not None]
-            completions = [r["completion_tokens"] for r in subset if r.get("completion_tokens") is not None]
+            completions = [
+                r["completion_tokens"] for r in subset
+                if r.get("completion_tokens") is not None
+            ]
             totals = [r["total_tokens"] for r in subset if r.get("total_tokens") is not None]
             durs = [r["duration"] for r in subset if r.get("duration") is not None]
             avg_p = int(sum(prompts) / len(prompts)) if prompts else None
@@ -130,8 +135,6 @@ def render_analysis(sidecars: list[dict]) -> str:
     """Auto-generate analysis observations from the data."""
     rows = build_matrix(sidecars)
     backends = list({r["backend"] for r in rows})
-    models = [s["model_label"] for s in sidecars]
-
     lines = []
 
     # Framework overhead: aider vs opencode prompt tokens (same model)
@@ -154,12 +157,20 @@ def render_analysis(sidecars: list[dict]) -> str:
     # Model comparison for same backend (if multiple models)
     if len(sidecars) > 1:
         for backend in backends:
-            backend_rows = [(s["model_label"], [r for r in s["rows"] if r["backend"] == backend and r.get("total_tokens")])
-                            for s in sidecars]
+            backend_rows = [
+                (s["model_label"], [
+                    r for r in s["rows"]
+                    if r["backend"] == backend and r.get("total_tokens")
+                ])
+                for s in sidecars
+            ]
             backend_rows = [(label, rs) for label, rs in backend_rows if rs]
             if len(backend_rows) < 2:
                 continue
-            totals = [(label, sum(r["total_tokens"] for r in rs) / len(rs)) for label, rs in backend_rows]
+            totals = [
+                (label, sum(r["total_tokens"] for r in rs) / len(rs))
+                for label, rs in backend_rows
+            ]
             totals.sort(key=lambda x: x[1])
             cheapest_label, cheapest_avg = totals[0]
             most_label, most_avg = totals[-1]
@@ -180,10 +191,16 @@ def render_analysis(sidecars: list[dict]) -> str:
         lines.append("")
         for backend in backends:
             for s in sidecars:
-                rs = [r for r in s["rows"] if r["backend"] == backend and r.get("completion_tokens")]
+                rs = [
+                    r for r in s["rows"]
+                    if r["backend"] == backend and r.get("completion_tokens")
+                ]
                 if rs:
                     avg_c = int(sum(r["completion_tokens"] for r in rs) / len(rs))
-                    lines.append(f"- {s['model_label']} / {backend}: avg {_fmt(avg_c)} completion tokens")
+                    lines.append(
+                        f"- {s['model_label']} / {backend}:"
+                        f" avg {_fmt(avg_c)} completion tokens"
+                    )
 
     return "\n".join(lines)
 
@@ -195,7 +212,7 @@ def main(paths: list[Path]) -> None:
 
     sidecars = load_sidecars(paths)
     matrix = build_matrix(sidecars)
-    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    today = datetime.now(UTC).strftime("%Y-%m-%d")
     models_str = ", ".join(s["model_label"] for s in sidecars)
     task = sidecars[0]["task"] if sidecars else ""
 
@@ -205,7 +222,7 @@ def main(paths: list[Path]) -> None:
     print()
     print(f"**Models tested:** {models_str}")
     print()
-    print(f"**Repo:** [dvdthecoder/agent-container-fixture](https://github.com/dvdthecoder/agent-container-fixture)")
+    print("**Repo:** [dvdthecoder/agent-container-fixture](https://github.com/dvdthecoder/agent-container-fixture)")
     print()
     print("---")
     print()

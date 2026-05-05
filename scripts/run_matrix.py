@@ -28,7 +28,7 @@ import os
 import re
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 # Bootstrap — add project root to path and load .env
@@ -36,6 +36,7 @@ _root = Path(__file__).parent.parent
 sys.path.insert(0, str(_root))
 
 from dotenv import load_dotenv  # noqa: E402
+
 load_dotenv(_root / ".env")
 
 # ---------------------------------------------------------------------------
@@ -182,7 +183,7 @@ def main() -> None:
                         help="Runs per backend per model (default: 1)")
     parser.add_argument("--cost-per-1m", type=float, default=1.00,
                         help="USD per 1M tokens for cost estimate (default: 1.00)")
-    parser.add_argument("--date", default=datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+    parser.add_argument("--date", default=datetime.now(UTC).strftime("%Y-%m-%d"),
                         help="Date string for the output filename (default: today)")
     parser.add_argument("--wait-timeout", type=float, default=900.0,
                         help="Seconds to wait for each endpoint after deploy (default: 900)")

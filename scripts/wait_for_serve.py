@@ -19,6 +19,7 @@ a backlog of pending Modal function calls.
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 import time
 import urllib.request
@@ -29,10 +30,8 @@ _root = Path(__file__).parent.parent
 try:
     from dotenv import load_dotenv
     load_dotenv(_root / ".env")
-except ImportError:
+except ImportError:  # noqa: S110
     pass  # dotenv optional; rely on shell env
-
-import os
 
 POLL_INTERVAL = 30.0  # seconds between attempts (matches sandbox WARMING phase)
 
@@ -72,7 +71,7 @@ def wait(base_url: str, timeout: float) -> None:
                 if resp.status == 200:
                     print(f"[deploy] endpoint ready  elapsed={elapsed:.0f}s", flush=True)
                     return
-        except Exception:  # noqa: BLE001
+        except Exception:  # noqa: BLE001, S110
             pass  # still cold — keep polling
 
         if time.monotonic() >= deadline:
