@@ -593,10 +593,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#phase-6-production-hardening" class="md-nav__link">
+  <a href="#phase-6-frugal-knowledge-injection" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Phase 6 — Production hardening
+        Phase 6 — Frugal knowledge injection
       
     </span>
   </a>
@@ -604,10 +604,21 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#phase-7-team-and-integrations" class="md-nav__link">
+  <a href="#phase-7-production-hardening" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Phase 7 — Team and integrations
+        Phase 7 — Production hardening
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-8-team-and-integrations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 8 — Team and integrations
       
     </span>
   </a>
@@ -848,6 +859,34 @@
     
   
     Agent Backends
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../context/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Building Agent Context
   
 
     
@@ -1475,10 +1514,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#phase-6-production-hardening" class="md-nav__link">
+  <a href="#phase-6-frugal-knowledge-injection" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Phase 6 — Production hardening
+        Phase 6 — Frugal knowledge injection
       
     </span>
   </a>
@@ -1486,10 +1525,21 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#phase-7-team-and-integrations" class="md-nav__link">
+  <a href="#phase-7-production-hardening" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Phase 7 — Team and integrations
+        Phase 7 — Production hardening
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-8-team-and-integrations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 8 — Team and integrations
       
     </span>
   </a>
@@ -1609,7 +1659,7 @@
 <tr>
 <td><a href="https://github.com/dvdthecoder/agent-container/issues/114">#114</a></td>
 <td>Model × backend analysis: token/cost/quality comparison across self-hosted models</td>
-<td>✅ <a href="../analysis/2026-05-05/">Baseline 2026-05-05</a> — 3 models × 2 backends</td>
+<td>✅ <a href="../analysis/2026-05-05/">2026-05-05</a> baseline + <a href="../analysis/2026-05-08/">2026-05-08</a> post-#150</td>
 </tr>
 <tr>
 <td><a href="https://github.com/dvdthecoder/agent-container/issues/115">#115</a></td>
@@ -1619,16 +1669,57 @@
 <tr>
 <td><a href="https://github.com/dvdthecoder/agent-container/issues/71">#71</a></td>
 <td><code>docs/lessons-learned.md</code> — hard problems, gotchas, team scaling guide</td>
-<td>✅ 18 entries</td>
+<td>✅ 20 entries</td>
 </tr>
 <tr>
 <td><a href="https://github.com/dvdthecoder/agent-container/issues/112">#112</a></td>
-<td>Install opencode-monitor in sandbox — structured per-tool-call events in logs</td>
+<td>Parse structured JSON events from opencode into SQLite (thinking token tracking)</td>
+<td>Planned</td>
+</tr>
+<tr>
+<td><a href="https://github.com/dvdthecoder/agent-container/issues/153">#153</a></td>
+<td>Re-run matrix post-#150 with both backends to confirm <code>&lt;think&gt;</code> strip + updated opencode/aider ratio</td>
 <td>Planned</td>
 </tr>
 </tbody>
 </table>
-<h3 id="phase-6-production-hardening">Phase 6 — Production hardening<a class="headerlink" href="#phase-6-production-hardening" title="Permanent link">&para;</a></h3>
+<h3 id="phase-6-frugal-knowledge-injection">Phase 6 — Frugal knowledge injection<a class="headerlink" href="#phase-6-frugal-knowledge-injection" title="Permanent link">&para;</a></h3>
+<p>Give agents the context they need to succeed without blowing the token budget.</p>
+<p>Agents currently start cold — bare task string, no conventions, no file context. Each exploratory
+tool turn costs ~26k tokens in opencode prompt overhead. The frugal answer is three layers of
+selective context injection. See <a href="../context/">Building Agent Context</a> for the full design.</p>
+<table>
+<thead>
+<tr>
+<th>Issue</th>
+<th>Task</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/dvdthecoder/agent-container/issues/154">#154</a></td>
+<td>Phase 1: <code>AGENTS.md</code> auto-injection — read from repo root, prepend to task prompt</td>
+<td>Planned</td>
+</tr>
+<tr>
+<td><a href="https://github.com/dvdthecoder/agent-container/issues/154">#154</a></td>
+<td>Phase 2: Structured YAML task spec — acceptance criteria, constraints, context files</td>
+<td>Planned</td>
+</tr>
+<tr>
+<td><a href="https://github.com/dvdthecoder/agent-container/issues/154">#154</a></td>
+<td>Phase 3: Diff scanner — secret detection, scope guardrails, OWASP checks</td>
+<td>Planned</td>
+</tr>
+<tr>
+<td><a href="https://github.com/dvdthecoder/agent-container/issues/152">#152</a></td>
+<td>Fix 32B reliability — verify diff non-empty before terminating after end_turn race</td>
+<td>Planned</td>
+</tr>
+</tbody>
+</table>
+<h3 id="phase-7-production-hardening">Phase 7 — Production hardening<a class="headerlink" href="#phase-7-production-hardening" title="Permanent link">&para;</a></h3>
 <p>Close the gap between the current implementation and a fully team-deployed system.</p>
 <table>
 <thead>
@@ -1648,7 +1739,7 @@
 </tr>
 </tbody>
 </table>
-<h3 id="phase-7-team-and-integrations">Phase 7 — Team and integrations<a class="headerlink" href="#phase-7-team-and-integrations" title="Permanent link">&para;</a></h3>
+<h3 id="phase-8-team-and-integrations">Phase 8 — Team and integrations<a class="headerlink" href="#phase-8-team-and-integrations" title="Permanent link">&para;</a></h3>
 <p>Broader entry points and collaboration features.</p>
 <table>
 <thead>
