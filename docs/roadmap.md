@@ -72,12 +72,27 @@ Fill documentation gaps and add model comparison data.
 
 | Issue | Task | Status |
 |---|---|---|
-| [#114](https://github.com/dvdthecoder/agent-container/issues/114) | Model × backend analysis: token/cost/quality comparison across self-hosted models | ✅ [Baseline 2026-05-05](analysis/2026-05-05.md) — 3 models × 2 backends |
+| [#114](https://github.com/dvdthecoder/agent-container/issues/114) | Model × backend analysis: token/cost/quality comparison across self-hosted models | ✅ [2026-05-05](analysis/2026-05-05.md) baseline + [2026-05-08](analysis/2026-05-08.md) post-#150 |
 | [#115](https://github.com/dvdthecoder/agent-container/issues/115) | Model profile guide — when to use 7B vs 32B vs MoE, GPU sizing rules | Planned |
-| [#71](https://github.com/dvdthecoder/agent-container/issues/71) | `docs/lessons-learned.md` — hard problems, gotchas, team scaling guide | ✅ 18 entries |
-| [#112](https://github.com/dvdthecoder/agent-container/issues/112) | Install opencode-monitor in sandbox — structured per-tool-call events in logs | Planned |
+| [#71](https://github.com/dvdthecoder/agent-container/issues/71) | `docs/lessons-learned.md` — hard problems, gotchas, team scaling guide | ✅ 20 entries |
+| [#112](https://github.com/dvdthecoder/agent-container/issues/112) | Parse structured JSON events from opencode into SQLite (thinking token tracking) | Planned |
+| [#153](https://github.com/dvdthecoder/agent-container/issues/153) | Re-run matrix post-#150 with both backends to confirm `<think>` strip + updated opencode/aider ratio | Planned |
 
-### Phase 6 — Production hardening
+### Phase 6 — Frugal knowledge injection
+Give agents the context they need to succeed without blowing the token budget.
+
+Agents currently start cold — bare task string, no conventions, no file context. Each exploratory
+tool turn costs ~26k tokens in opencode prompt overhead. The frugal answer is three layers of
+selective context injection. See [Building Agent Context](context.md) for the full design.
+
+| Issue | Task | Status |
+|---|---|---|
+| [#154](https://github.com/dvdthecoder/agent-container/issues/154) | Phase 1: `AGENTS.md` auto-injection — read from repo root, prepend to task prompt | Planned |
+| [#154](https://github.com/dvdthecoder/agent-container/issues/154) | Phase 2: Structured YAML task spec — acceptance criteria, constraints, context files | Planned |
+| [#154](https://github.com/dvdthecoder/agent-container/issues/154) | Phase 3: Diff scanner — secret detection, scope guardrails, OWASP checks | Planned |
+| [#152](https://github.com/dvdthecoder/agent-container/issues/152) | Fix 32B reliability — verify diff non-empty before terminating after end_turn race | Planned |
+
+### Phase 7 — Production hardening
 Close the gap between the current implementation and a fully team-deployed system.
 
 | Issue | Task |
@@ -85,7 +100,7 @@ Close the gap between the current implementation and a fully team-deployed syste
 | [#107](https://github.com/dvdthecoder/agent-container/issues/107) | Warm sandboxes via Modal snapshot API — eliminate cold-start clone+install latency |
 | [#108](https://github.com/dvdthecoder/agent-container/issues/108) | Deeper verification loop — Sentry errors, metrics, visual screenshots for frontend |
 
-### Phase 7 — Team and integrations
+### Phase 8 — Team and integrations
 Broader entry points and collaboration features.
 
 | Issue | Task |
