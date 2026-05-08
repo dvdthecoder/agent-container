@@ -62,6 +62,82 @@ class TestConvertTools:
         assert result[0]["function"]["name"] == "read"
         assert result[1]["function"]["name"] == "edit"
 
+    def test_property_descriptions_stripped(self):
+        """Per-property descriptions are removed to reduce schema token count."""
+        tool = {
+            "type": "function",
+            "name": "edit",
+            "description": "Edit a file",  # top-level kept
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "path": {"type": "string", "description": "Path to the file"},
+                    "content": {"type": "string", "description": "New file content"},
+                },
+                "required": ["path", "content"],
+            },
+        }
+        result = _convert_tools([tool])
+        fn = result[0]["function"]
+        # Top-level tool description is preserved
+        assert fn["description"] == "Edit a file"
+        # Per-property descriptions are gone
+        props = fn["parameters"]["properties"]
+        assert "description" not in props["path"]
+        assert "description" not in props["content"]
+        # Other property fields survive
+        assert props["path"]["type"] == "string"
+        assert props["content"]["type"] == "string"
+        # required array survives
+        assert fn["parameters"]["required"] == ["path", "content"]
+
+    def test_tool_without_properties_unaffected(self):
+        """Tools with no properties schema pass through unchanged."""
+        tool = {"type": "function", "name": "bash", "parameters": {"type": "object"}}
+        result = _convert_tools([tool])
+        assert result[0]["function"]["parameters"] == {"type": "object"}
+
+
+# ---------------------------------------------------------------------------
+# _POST_EDIT_TOOLS filtering (tested via the constant, not HTTP)
+# ---------------------------------------------------------------------------
+
+
+class TestPostEditToolFiltering:
+    """Validate the _POST_EDIT_TOOLS constant and the filtering logic used in
+    _handle_responses when has_edit_call is True."""
+
+    def test_post_edit_tools_contains_verification_tools(self):
+        from agent.opencode_runner import _POST_EDIT_TOOLS
+
+        assert "bash" in _POST_EDIT_TOOLS
+        assert "read" in _POST_EDIT_TOOLS
+        assert "grep" in _POST_EDIT_TOOLS
+        assert "glob" in _POST_EDIT_TOOLS
+
+    def test_post_edit_tools_excludes_edit_write(self):
+        from agent.opencode_runner import _POST_EDIT_TOOLS
+
+        assert "edit" not in _POST_EDIT_TOOLS
+        assert "write" not in _POST_EDIT_TOOLS
+        assert "patch" not in _POST_EDIT_TOOLS
+
+    def test_filter_keeps_only_verification_tools(self):
+        from agent.opencode_runner import _POST_EDIT_TOOLS
+
+        all_tools = [
+            {"type": "function", "function": {"name": "bash"}},
+            {"type": "function", "function": {"name": "read"}},
+            {"type": "function", "function": {"name": "edit"}},
+            {"type": "function", "function": {"name": "write"}},
+            {"type": "function", "function": {"name": "glob"}},
+        ]
+        filtered = [t for t in all_tools if t["function"]["name"] in _POST_EDIT_TOOLS]
+        names = {t["function"]["name"] for t in filtered}
+        assert names == {"bash", "read", "glob"}
+        assert "edit" not in names
+        assert "write" not in names
+
 
 # ---------------------------------------------------------------------------
 # _convert_input_items

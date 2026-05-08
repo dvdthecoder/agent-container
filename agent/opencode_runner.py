@@ -101,17 +101,37 @@ def _convert_tools(tools: list) -> list:
 
     Responses API:    {"type": "function", "name": "x", "parameters": {}}
     Chat Completions: {"type": "function", "function": {"name": "x", "parameters": {}}}
+
+    Per-property ``description`` fields are stripped from parameter schemas.
+    The model calls tools by name and argument key — it does not need prose
+    descriptions to do so.  Top-level tool descriptions are kept so the model
+    knows *when* to use each tool.  This removes ~150-250 tokens per tool.
     """
     out = []
     for t in tools:
         if not isinstance(t, dict):
             continue
         if t.get("type") == "function" and "function" not in t:
-            out.append(
-                {"type": "function", "function": {k: v for k, v in t.items() if k != "type"}}
-            )
+            fn: dict = {k: v for k, v in t.items() if k != "type"}
         else:
-            out.append(t)
+            fn = dict(t.get("function", {}))
+
+        # Strip per-property descriptions from parameter schemas.
+        params = fn.get("parameters", {})
+        if isinstance(params.get("properties"), dict):
+            fn = {
+                **fn,
+                "parameters": {
+                    **params,
+                    "properties": {
+                        k: {sk: sv for sk, sv in v.items() if sk != "description"}
+                        for k, v in params["properties"].items()
+                        if isinstance(v, dict)
+                    },
+                },
+            }
+
+        out.append({"type": "function", "function": fn})
     return out
 
 
@@ -177,6 +197,11 @@ def _convert_input_items(items: list) -> list:
     return messages
 
 
+# Tools kept after an edit/write call has appeared in context.
+# Once a change is made the model only needs verification tools — there is no
+# reason to resend edit/write/patch/list/search schemas on every subsequent turn.
+_POST_EDIT_TOOLS: frozenset[str] = frozenset({"bash", "read", "grep", "glob"})
+
 # ---------------------------------------------------------------------------
 # Proxy handler
 # ---------------------------------------------------------------------------
@@ -210,10 +235,11 @@ class _ProxyHandler(http.server.BaseHTTPRequestHandler):
             return
 
         tools_count = len(req.get("tools", []))
+        tools_bytes = sum(len(json.dumps(t)) for t in req.get("tools", []))
         input_type = type(req.get("input", "")).__name__
         print(
             f"[proxy] request: input_type={input_type}"
-            f" tools={tools_count} stream={req.get('stream')}",
+            f" tools={tools_count} tools_bytes={tools_bytes} stream={req.get('stream')}",
             file=sys.stderr,
         )
 
@@ -248,7 +274,6 @@ class _ProxyHandler(http.server.BaseHTTPRequestHandler):
         # Without this the model calls read+edit simultaneously and uses prior
         # knowledge (often wrong) for oldString rather than the actual file content.
         if req.get("tools"):
-            chat_req["tools"] = _convert_tools(req["tools"])
             # Switch to tool_choice=auto only AFTER an edit/write call has
             # already appeared in the conversation history.  This ensures:
             #   - Before edit: "required" forces the model to call read then edit
@@ -262,6 +287,14 @@ class _ProxyHandler(http.server.BaseHTTPRequestHandler):
                 and item.get("name") in ("edit", "write", "patch")
                 for item in raw_input_list
             )
+            converted = _convert_tools(req["tools"])
+            if has_edit_call:
+                # Post-edit: drop all tools except verification tools.
+                # This saves ~6 × ~400 tokens per post-edit turn.
+                converted = [
+                    t for t in converted if t.get("function", {}).get("name") in _POST_EDIT_TOOLS
+                ]
+            chat_req["tools"] = converted
             effective_tool_choice = "auto" if has_edit_call else TOOL_CHOICE
             chat_req["tool_choice"] = effective_tool_choice
             chat_req["parallel_tool_calls"] = False
@@ -276,9 +309,12 @@ class _ProxyHandler(http.server.BaseHTTPRequestHandler):
             chat_req["stream_options"] = {"include_usage": True}
         chat_body = json.dumps(chat_req).encode()
         url = f"{self.target}/v1/chat/completions"
+        sent_tools = chat_req.get("tools", [])
+        sent_bytes = sum(len(json.dumps(t)) for t in sent_tools)
         print(
             f"[proxy] → chat/completions  stream={stream}"
-            f"  tools={len(chat_req.get('tools', []))}  messages={len(messages)}",
+            f"  tools={len(sent_tools)}/{tools_count} sent_bytes={sent_bytes}"
+            f"  messages={len(messages)}",
             file=sys.stderr,
         )
 
