@@ -22,7 +22,62 @@ from agent.opencode_runner import (
     _convert_input_items,
     _convert_tools,
     _ProxyHandler,
+    _strip_think,
 )
+
+# ---------------------------------------------------------------------------
+# _strip_think
+# ---------------------------------------------------------------------------
+
+
+class TestStripThink:
+    def test_no_think_block_unchanged(self):
+        text = "Here is the fix."
+        stripped, n = _strip_think(text)
+        assert stripped == text
+        assert n == 0
+
+    def test_closed_think_block_removed(self):
+        text = "<think>step 1\nstep 2</think>Here is the fix."
+        stripped, n = _strip_think(text)
+        assert stripped == "Here is the fix."
+        assert n > 0
+
+    def test_multiple_think_blocks_all_removed(self):
+        text = "<think>first</think>answer<think>second</think> done"
+        stripped, n = _strip_think(text)
+        assert "<think>" not in stripped
+        assert "answer" in stripped
+        assert "done" in stripped
+        assert n > 0
+
+    def test_unclosed_think_block_tail_dropped(self):
+        text = "prefix<think>unfinished reasoning"
+        stripped, n = _strip_think(text)
+        assert stripped == "prefix"
+        assert n > 0
+
+    def test_empty_think_block(self):
+        text = "<think></think>answer"
+        stripped, n = _strip_think(text)
+        assert stripped == "answer"
+
+    def test_empty_string(self):
+        stripped, n = _strip_think("")
+        assert stripped == ""
+        assert n == 0
+
+    def test_only_think_block_returns_empty(self):
+        text = "<think>pure reasoning, no answer</think>"
+        stripped, n = _strip_think(text)
+        assert stripped == ""
+        assert n > 0
+
+    def test_whitespace_trimmed_after_strip(self):
+        text = "<think>thought</think>  \n  answer  \n"
+        stripped, _ = _strip_think(text)
+        assert stripped == "answer"
+
 
 # ---------------------------------------------------------------------------
 # _convert_tools

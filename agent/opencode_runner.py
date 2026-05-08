@@ -28,6 +28,7 @@ import http.server
 import json
 import os
 import queue
+import re
 import subprocess
 import sys
 import threading
@@ -94,6 +95,34 @@ def _emit_token_usage() -> None:
 # ---------------------------------------------------------------------------
 # Format conversion helpers
 # ---------------------------------------------------------------------------
+
+_THINK_RE = re.compile(r"<think>.*?</think>", re.DOTALL)
+
+
+def _strip_think(text: str) -> tuple[str, int]:
+    """Remove <think>…</think> blocks from a model response.
+
+    Thinking models (e.g. Qwen3) emit reasoning traces inside <think> tags
+    before their final answer.  These traces are useful for the model during
+    generation but become pure overhead when resent as context on subsequent
+    turns — they can add 1,000–2,000 tokens per prior turn to the prompt.
+
+    Stripping them from the text returned to opencode means opencode stores a
+    clean assistant message in its session history, so future requests never
+    include the thinking content.  The model's final answer is preserved.
+
+    Also handles unclosed tags: if <think> is present but </think> is not
+    (model cut off mid-thought), the tail from <think> onward is dropped.
+
+    Returns:
+        (stripped_text, n_chars_removed)
+    """
+    stripped = _THINK_RE.sub("", text)
+    # Handle unclosed <think> (model interrupted mid-reasoning block).
+    if "<think>" in stripped:
+        stripped = stripped[: stripped.index("<think>")]
+    stripped = stripped.strip()
+    return stripped, len(text) - len(stripped)
 
 
 def _convert_tools(tools: list) -> list:
@@ -364,13 +393,15 @@ class _ProxyHandler(http.server.BaseHTTPRequestHandler):
             return raw
 
         message = (chat.get("choices") or [{}])[0].get("message", {})
-        text = message.get("content") or ""
+        raw_text = message.get("content") or ""
+        text, think_chars = _strip_think(raw_text)
         native_tool_calls = message.get("tool_calls") or []
 
         preview = text[:300] if text else "<empty>"
+        think_note = f" think_stripped={think_chars}chars" if think_chars else ""
         print(
             f"[proxy] ← response: tool_calls={len(native_tool_calls)}"
-            f" text={len(text)}chars preview={preview!r}",
+            f" text={len(text)}chars{think_note} preview={preview!r}",
             file=sys.stderr,
         )
 
@@ -464,13 +495,14 @@ class _ProxyHandler(http.server.BaseHTTPRequestHandler):
                 if fn.get("arguments"):
                     buf["arguments"] += fn["arguments"]
 
-        text = "".join(full_text)
+        text, think_chars = _strip_think("".join(full_text))
         n_tool_calls = len(tool_calls_buf)
         n_text_chars = len(text)
         tool_names = [tool_calls_buf[i]["name"] for i in sorted(tool_calls_buf)]
+        think_note = f" think_stripped={think_chars}chars" if think_chars else ""
         print(
             f"[proxy] ← stream done: tool_calls={n_tool_calls}"
-            f" text={n_text_chars}chars tool_choice={TOOL_CHOICE}"
+            f" text={n_text_chars}chars{think_note} tool_choice={TOOL_CHOICE}"
             f" tools={tool_names}",
             file=sys.stderr,
         )
