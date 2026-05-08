@@ -279,3 +279,25 @@ committed before the grace period expires.
 **Mitigation (not yet fixed):** After the grace period, verify the diff is non-empty before
 terminating. If empty, extend the wait and re-check rather than treating it as a failure.
 Tracked in #112 (structured events would make tool-call completion observable).
+
+---
+
+### 20. Qwen3 thinking tokens inflate prompt context on subsequent turns
+
+**Problem:** Qwen3 is a hybrid think/no-think model that emits `<think>` blocks before its
+final answer. These thinking outputs (~1,300–2,400 tokens per response) become part of the
+conversation history and are resent as context on every subsequent turn. For a 3-turn run,
+the accumulated thinking adds ~14k tokens on top of the normal framework overhead:
+
+- Baseline framework overhead (Coder models): ~26k prompt tokens
+- Qwen3 with thinking: ~46k prompt tokens (+44%)
+
+**Implication:** Qwen3's higher prompt cost is not from better outputs — completion tokens
+for the actual code change are similar or lower. It's pure thinking verbosity in the context
+window. Qwen3 costs ~1.8× per run compared to Coder models on opencode, making it a poor
+cost/quality trade-off for straightforward coding tasks.
+
+**Mitigation options:**
+1. Strip `<think>` blocks from assistant messages before returning them to opencode (proxy-level).
+2. Use `OPENCODE_TOOL_CHOICE=auto` with a model that has native thinking-budget controls.
+3. Prefer Qwen2.5-Coder models for tasks where reasoning depth is not needed.
