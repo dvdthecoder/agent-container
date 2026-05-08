@@ -1028,6 +1028,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../analysis/2026-05-08/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    2026-05-08
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../analysis/2026-05-05/" class="md-nav__link">
         
   
@@ -1502,6 +1530,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#20-qwen3-thinking-tokens-inflate-prompt-context-on-subsequent-turns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        20. Qwen3 thinking tokens inflate prompt context on subsequent turns
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1872,6 +1911,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#20-qwen3-thinking-tokens-inflate-prompt-context-on-subsequent-turns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        20. Qwen3 thinking tokens inflate prompt context on subsequent turns
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -2095,6 +2145,24 @@ committed before the grace period expires.</p>
 <p><strong>Mitigation (not yet fixed):</strong> After the grace period, verify the diff is non-empty before
 terminating. If empty, extend the wait and re-check rather than treating it as a failure.
 Tracked in #112 (structured events would make tool-call completion observable).</p>
+<hr />
+<h3 id="20-qwen3-thinking-tokens-inflate-prompt-context-on-subsequent-turns">20. Qwen3 thinking tokens inflate prompt context on subsequent turns<a class="headerlink" href="#20-qwen3-thinking-tokens-inflate-prompt-context-on-subsequent-turns" title="Permanent link">&para;</a></h3>
+<p><strong>Problem:</strong> Qwen3 is a hybrid think/no-think model that emits <code>&lt;think&gt;</code> blocks before its
+final answer. These thinking outputs (~1,300–2,400 tokens per response) become part of the
+conversation history and are resent as context on every subsequent turn. For a 3-turn run,
+the accumulated thinking adds ~14k tokens on top of the normal framework overhead:</p>
+<ul>
+<li>Baseline framework overhead (Coder models): ~26k prompt tokens</li>
+<li>Qwen3 with thinking: ~46k prompt tokens (+44%)</li>
+</ul>
+<p><strong>Implication:</strong> Qwen3's higher prompt cost is not from better outputs — completion tokens
+for the actual code change are similar or lower. It's pure thinking verbosity in the context
+window. Qwen3 costs ~1.8× per run compared to Coder models on opencode, making it a poor
+cost/quality trade-off for straightforward coding tasks.</p>
+<p><strong>Mitigation options:</strong>
+1. Strip <code>&lt;think&gt;</code> blocks from assistant messages before returning them to opencode (proxy-level).
+2. Use <code>OPENCODE_TOOL_CHOICE=auto</code> with a model that has native thinking-budget controls.
+3. Prefer Qwen2.5-Coder models for tasks where reasoning depth is not needed.</p>
 
 
 
