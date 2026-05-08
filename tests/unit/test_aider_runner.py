@@ -60,6 +60,38 @@ def _load_aider_runner() -> types.ModuleType:
 
 
 # ---------------------------------------------------------------------------
+# _load_agents_md
+# ---------------------------------------------------------------------------
+
+
+class TestLoadAgentsMd:
+    """Tests for the AGENTS.md loader — same logic as opencode_runner."""
+
+    def test_returns_empty_when_file_absent(self, tmp_path):
+        mod = _load_aider_runner()
+        assert mod._load_agents_md(str(tmp_path)) == ""
+
+    def test_returns_content_when_present(self, tmp_path):
+        (tmp_path / "AGENTS.md").write_text("## Rules\n- no shell=True\n")
+        mod = _load_aider_runner()
+        result = mod._load_agents_md(str(tmp_path))
+        assert "no shell=True" in result
+
+    def test_blank_file_returns_empty(self, tmp_path):
+        (tmp_path / "AGENTS.md").write_text("\n\n")
+        mod = _load_aider_runner()
+        assert mod._load_agents_md(str(tmp_path)) == ""
+
+    def test_truncates_at_cap(self, tmp_path):
+        cap = _load_aider_runner()._AGENTS_MD_CAP
+        (tmp_path / "AGENTS.md").write_text("a" * (cap + 200))
+        mod = _load_aider_runner()
+        result = mod._load_agents_md(str(tmp_path))
+        assert "truncated" in result
+        assert len(result) <= cap + 100
+
+
+# ---------------------------------------------------------------------------
 # Regex tests
 # ---------------------------------------------------------------------------
 

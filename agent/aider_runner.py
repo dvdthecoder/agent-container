@@ -25,6 +25,7 @@ import re
 import subprocess
 import sys
 import threading
+from pathlib import Path
 
 TASK = " ".join(sys.argv[1:]) if len(sys.argv) > 1 else ""
 API_KEY = os.environ.get("OPENAI_API_KEY", "modal")
@@ -35,6 +36,47 @@ BASE_URL = os.environ.get("OPENAI_BASE_URL", "")
 if not TASK:
     print("Usage: aider_runner.py <task>", file=sys.stderr)
     sys.exit(1)
+
+# ---------------------------------------------------------------------------
+# AGENTS.md — repo-level conventions injected into the task message
+# ---------------------------------------------------------------------------
+
+_AGENTS_MD_CAP = 4_000  # chars (~1,000 tokens). Truncate beyond this with a note.
+
+
+def _load_agents_md(workdir: str) -> str:
+    """Read AGENTS.md from the repo root and return its content, or '' if absent.
+
+    AGENTS.md is the de facto standard (OpenAI/Google, Aug 2025) for giving
+    coding agents repo-level conventions, architecture rules, and testing
+    instructions.  Prepending it to the task message eliminates exploratory
+    tool calls the agent would otherwise spend discovering these facts.
+
+    Content is capped at _AGENTS_MD_CAP chars so a pathologically large file
+    does not blow the token budget.
+    """
+    path = Path(workdir) / "AGENTS.md"
+    if not path.exists():
+        print("[runner] AGENTS.md not found — running without repo conventions", file=sys.stderr)
+        return ""
+    content = path.read_text(encoding="utf-8").strip()
+    if not content:
+        print("[runner] AGENTS.md is empty — skipping", file=sys.stderr)
+        return ""
+    if len(content) > _AGENTS_MD_CAP:
+        content = content[:_AGENTS_MD_CAP]
+        content += "\n\n[AGENTS.md truncated — file exceeds 4,000 chars]"
+        print(
+            f"[runner] AGENTS.md truncated to {_AGENTS_MD_CAP} chars (file was larger)",
+            file=sys.stderr,
+        )
+    else:
+        print(f"[runner] AGENTS.md loaded: {len(content)} chars", file=sys.stderr)
+    return content
+
+
+_conventions = _load_agents_md(WORKDIR)
+_full_task = f"{_conventions}\n\n---\n\n{TASK}" if _conventions else TASK
 
 # litellm requires the openai/ provider prefix to route via the OpenAI
 # provider — it strips the prefix before sending to the API, so vLLM
@@ -65,7 +107,7 @@ cmd = [
     "--openai-api-key",
     API_KEY,
     "--message",
-    TASK,
+    _full_task,
     # No --openai-api-base — OPENAI_BASE_URL env var is already set in the
     # container and is read correctly by the OpenAI SDK.
 ]

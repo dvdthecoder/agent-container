@@ -35,6 +35,7 @@ import threading
 import time
 import urllib.error
 import urllib.request
+from pathlib import Path
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -58,6 +59,44 @@ TIMEOUT_SECONDS = int(os.environ.get("OPENCODE_TIMEOUT", "300"))
 TOOL_CHOICE = os.environ.get("OPENCODE_TOOL_CHOICE", "required")
 
 _PROXY_PORT = 8080
+
+# ---------------------------------------------------------------------------
+# AGENTS.md — repo-level conventions injected into the task prompt
+# ---------------------------------------------------------------------------
+
+_AGENTS_MD_CAP = 4_000  # chars (~1,000 tokens). Truncate beyond this with a note.
+
+
+def _load_agents_md(workdir: str) -> str:
+    """Read AGENTS.md from the repo root and return its content, or '' if absent.
+
+    AGENTS.md is the de facto standard (OpenAI/Google, Aug 2025) for giving
+    coding agents repo-level conventions, architecture rules, and testing
+    instructions.  Prepending it to the task prompt eliminates exploratory
+    tool calls the agent would otherwise spend discovering these facts.
+
+    Content is capped at _AGENTS_MD_CAP chars so a pathologically large file
+    does not blow the token budget.
+    """
+    path = Path(workdir) / "AGENTS.md"
+    if not path.exists():
+        print("[runner] AGENTS.md not found — running without repo conventions", file=sys.stderr)
+        return ""
+    content = path.read_text(encoding="utf-8").strip()
+    if not content:
+        print("[runner] AGENTS.md is empty — skipping", file=sys.stderr)
+        return ""
+    if len(content) > _AGENTS_MD_CAP:
+        content = content[:_AGENTS_MD_CAP]
+        content += "\n\n[AGENTS.md truncated — file exceeds 4,000 chars]"
+        print(
+            f"[runner] AGENTS.md truncated to {_AGENTS_MD_CAP} chars (file was larger)",
+            file=sys.stderr,
+        )
+    else:
+        print(f"[runner] AGENTS.md loaded: {len(content)} chars", file=sys.stderr)
+    return content
+
 
 # ---------------------------------------------------------------------------
 # Token usage accumulator — aggregated across all proxy turns this session
@@ -796,6 +835,12 @@ def main() -> int:
 
     _write_config()
 
+    # Build composite prompt: repo conventions (AGENTS.md) + task.
+    # AGENTS.md is read from the cloned workspace after the sandbox has cloned
+    # the repo.  If absent the task is sent unchanged.
+    conventions = _load_agents_md(CWD)
+    full_task = f"{conventions}\n\n---\n\n{TASK}" if conventions else TASK
+
     print("[runner] starting opencode acp ...", file=sys.stderr)
     client = AcpClient()
     _id = 0
@@ -834,7 +879,7 @@ def main() -> int:
     )
     result = req(
         "session/prompt",
-        {"sessionId": sid, "prompt": [{"type": "text", "text": TASK}]},
+        {"sessionId": sid, "prompt": [{"type": "text", "text": full_task}]},
         timeout=float(TIMEOUT_SECONDS),
     )
 

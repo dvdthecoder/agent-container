@@ -18,9 +18,11 @@ from unittest.mock import MagicMock
 # globals (TASK, BASE_URL, etc.) are fine — they just read from env/argv.
 import agent.opencode_runner as _proxy_mod
 from agent.opencode_runner import (
+    _AGENTS_MD_CAP,
     _accumulate_tokens,
     _convert_input_items,
     _convert_tools,
+    _load_agents_md,
     _ProxyHandler,
     _strip_think,
 )
@@ -77,6 +79,41 @@ class TestStripThink:
         text = "<think>thought</think>  \n  answer  \n"
         stripped, _ = _strip_think(text)
         assert stripped == "answer"
+
+
+# ---------------------------------------------------------------------------
+# _load_agents_md
+# ---------------------------------------------------------------------------
+
+
+class TestLoadAgentsMd:
+    def test_returns_empty_when_file_absent(self, tmp_path):
+        result = _load_agents_md(str(tmp_path))
+        assert result == ""
+
+    def test_returns_content_when_file_present(self, tmp_path):
+        (tmp_path / "AGENTS.md").write_text("## Conventions\n- use type hints\n")
+        result = _load_agents_md(str(tmp_path))
+        assert "use type hints" in result
+
+    def test_returns_empty_for_blank_file(self, tmp_path):
+        (tmp_path / "AGENTS.md").write_text("   \n\n   ")
+        result = _load_agents_md(str(tmp_path))
+        assert result == ""
+
+    def test_truncates_large_file(self, tmp_path):
+        big = "x" * (_AGENTS_MD_CAP + 500)
+        (tmp_path / "AGENTS.md").write_text(big)
+        result = _load_agents_md(str(tmp_path))
+        assert len(result) <= _AGENTS_MD_CAP + 100  # cap + truncation note
+        assert "truncated" in result
+
+    def test_small_file_not_truncated(self, tmp_path):
+        content = "# AGENTS\nuse dataclasses"
+        (tmp_path / "AGENTS.md").write_text(content)
+        result = _load_agents_md(str(tmp_path))
+        assert result == content
+        assert "truncated" not in result
 
 
 # ---------------------------------------------------------------------------
