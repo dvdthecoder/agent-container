@@ -28,6 +28,7 @@ class AgentTaskSpec:
     backend: str = "opencode"  # opencode | claude | gemini
     initiated_by: str = "cli"  # cli | dashboard
     run_id: str | None = None  # pre-allocated run ID (dashboard sets this)
+    conventions: str | None = None  # fallback AGENTS.md content for repos that don't have one
 
     def __post_init__(self) -> None:
         if self.task is None and self.task_file is None:

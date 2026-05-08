@@ -68,7 +68,13 @@ _AGENTS_MD_CAP = 4_000  # chars (~1,000 tokens). Truncate beyond this with a not
 
 
 def _load_agents_md(workdir: str) -> str:
-    """Read AGENTS.md from the repo root and return its content, or '' if absent.
+    """Return repo conventions for the task prompt, or '' if none available.
+
+    Precedence:
+      1. AGENTS.md in the cloned repo root  — repo-level, highest trust
+      2. AGENT_CONVENTIONS env var          — caller-provided fallback for
+                                              repos that don't have AGENTS.md
+      3. Nothing                            — task sent unchanged
 
     AGENTS.md is the de facto standard (OpenAI/Google, Aug 2025) for giving
     coding agents repo-level conventions, architecture rules, and testing
@@ -79,22 +85,35 @@ def _load_agents_md(workdir: str) -> str:
     does not blow the token budget.
     """
     path = Path(workdir) / "AGENTS.md"
-    if not path.exists():
-        print("[runner] AGENTS.md not found — running without repo conventions", file=sys.stderr)
-        return ""
-    content = path.read_text(encoding="utf-8").strip()
-    if not content:
-        print("[runner] AGENTS.md is empty — skipping", file=sys.stderr)
-        return ""
+    if path.exists():
+        content = path.read_text(encoding="utf-8").strip()
+        if not content:
+            print("[runner] AGENTS.md is empty — skipping", file=sys.stderr)
+            return ""
+        source = "AGENTS.md"
+    else:
+        content = os.environ.get("AGENT_CONVENTIONS", "").strip()
+        if not content:
+            print(
+                "[runner] AGENTS.md not found, AGENT_CONVENTIONS not set"
+                " — running without repo conventions",
+                file=sys.stderr,
+            )
+            return ""
+        source = "AGENT_CONVENTIONS env var"
+
     if len(content) > _AGENTS_MD_CAP:
         content = content[:_AGENTS_MD_CAP]
-        content += "\n\n[AGENTS.md truncated — file exceeds 4,000 chars]"
+        content += "\n\n[Conventions truncated — content exceeds 4,000 chars]"
         print(
-            f"[runner] AGENTS.md truncated to {_AGENTS_MD_CAP} chars (file was larger)",
+            f"[runner] conventions truncated to {_AGENTS_MD_CAP} chars (source: {source})",
             file=sys.stderr,
         )
     else:
-        print(f"[runner] AGENTS.md loaded: {len(content)} chars", file=sys.stderr)
+        print(
+            f"[runner] conventions loaded: {len(content)} chars (source: {source})",
+            file=sys.stderr,
+        )
     return content
 
 

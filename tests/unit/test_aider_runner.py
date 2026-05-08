@@ -67,7 +67,8 @@ def _load_aider_runner() -> types.ModuleType:
 class TestLoadAgentsMd:
     """Tests for the AGENTS.md loader — same logic as opencode_runner."""
 
-    def test_returns_empty_when_file_absent(self, tmp_path):
+    def test_returns_empty_when_file_absent(self, tmp_path, monkeypatch):
+        monkeypatch.delenv("AGENT_CONVENTIONS", raising=False)
         mod = _load_aider_runner()
         assert mod._load_agents_md(str(tmp_path)) == ""
 
@@ -89,6 +90,25 @@ class TestLoadAgentsMd:
         result = mod._load_agents_md(str(tmp_path))
         assert "truncated" in result
         assert len(result) <= cap + 100
+
+    def test_env_var_used_when_file_absent(self, tmp_path, monkeypatch):
+        monkeypatch.setenv("AGENT_CONVENTIONS", "- no shell=True")
+        mod = _load_aider_runner()
+        result = mod._load_agents_md(str(tmp_path))
+        assert "no shell=True" in result
+
+    def test_file_takes_precedence_over_env_var(self, tmp_path, monkeypatch):
+        monkeypatch.setenv("AGENT_CONVENTIONS", "from env var")
+        (tmp_path / "AGENTS.md").write_text("from file")
+        mod = _load_aider_runner()
+        result = mod._load_agents_md(str(tmp_path))
+        assert result == "from file"
+
+    def test_env_var_truncated_when_large(self, tmp_path, monkeypatch):
+        mod = _load_aider_runner()
+        monkeypatch.setenv("AGENT_CONVENTIONS", "y" * (mod._AGENTS_MD_CAP + 200))
+        result = mod._load_agents_md(str(tmp_path))
+        assert "truncated" in result
 
 
 # ---------------------------------------------------------------------------

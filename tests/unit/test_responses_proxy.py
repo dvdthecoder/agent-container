@@ -87,33 +87,54 @@ class TestStripThink:
 
 
 class TestLoadAgentsMd:
-    def test_returns_empty_when_file_absent(self, tmp_path):
+    def test_returns_empty_when_file_absent_and_no_env(self, tmp_path, monkeypatch):
+        monkeypatch.delenv("AGENT_CONVENTIONS", raising=False)
         result = _load_agents_md(str(tmp_path))
         assert result == ""
 
-    def test_returns_content_when_file_present(self, tmp_path):
+    def test_returns_content_when_file_present(self, tmp_path, monkeypatch):
+        monkeypatch.delenv("AGENT_CONVENTIONS", raising=False)
         (tmp_path / "AGENTS.md").write_text("## Conventions\n- use type hints\n")
         result = _load_agents_md(str(tmp_path))
         assert "use type hints" in result
 
-    def test_returns_empty_for_blank_file(self, tmp_path):
+    def test_returns_empty_for_blank_file(self, tmp_path, monkeypatch):
+        monkeypatch.delenv("AGENT_CONVENTIONS", raising=False)
         (tmp_path / "AGENTS.md").write_text("   \n\n   ")
         result = _load_agents_md(str(tmp_path))
         assert result == ""
 
-    def test_truncates_large_file(self, tmp_path):
+    def test_truncates_large_file(self, tmp_path, monkeypatch):
+        monkeypatch.delenv("AGENT_CONVENTIONS", raising=False)
         big = "x" * (_AGENTS_MD_CAP + 500)
         (tmp_path / "AGENTS.md").write_text(big)
         result = _load_agents_md(str(tmp_path))
         assert len(result) <= _AGENTS_MD_CAP + 100  # cap + truncation note
         assert "truncated" in result
 
-    def test_small_file_not_truncated(self, tmp_path):
+    def test_small_file_not_truncated(self, tmp_path, monkeypatch):
+        monkeypatch.delenv("AGENT_CONVENTIONS", raising=False)
         content = "# AGENTS\nuse dataclasses"
         (tmp_path / "AGENTS.md").write_text(content)
         result = _load_agents_md(str(tmp_path))
         assert result == content
         assert "truncated" not in result
+
+    def test_env_var_used_when_file_absent(self, tmp_path, monkeypatch):
+        monkeypatch.setenv("AGENT_CONVENTIONS", "- no shell=True")
+        result = _load_agents_md(str(tmp_path))
+        assert "no shell=True" in result
+
+    def test_file_takes_precedence_over_env_var(self, tmp_path, monkeypatch):
+        monkeypatch.setenv("AGENT_CONVENTIONS", "from env var")
+        (tmp_path / "AGENTS.md").write_text("from file")
+        result = _load_agents_md(str(tmp_path))
+        assert result == "from file"
+
+    def test_env_var_truncated_when_large(self, tmp_path, monkeypatch):
+        monkeypatch.setenv("AGENT_CONVENTIONS", "y" * (_AGENTS_MD_CAP + 200))
+        result = _load_agents_md(str(tmp_path))
+        assert "truncated" in result
 
 
 # ---------------------------------------------------------------------------

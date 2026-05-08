@@ -271,6 +271,10 @@ class ModalSandbox:
         }
         # opencode runner budget = timeout_agent (already excludes cold-start).
         env.setdefault("OPENCODE_TIMEOUT", str(spec.timeout_agent))
+        # Caller-provided conventions — used as fallback when the target repo
+        # has no AGENTS.md.  Runners check this env var after checking the file.
+        if spec.conventions:
+            env["AGENT_CONVENTIONS"] = spec.conventions
         # Single shared app — all sandbox runs attach to the same app so
         # Modal doesn't accumulate one app per run (the original leak).
         app = modal.App.lookup("agent-container-sandbox", create_if_missing=True)
