@@ -1603,6 +1603,67 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#cost-optimisation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cost optimisation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Cost optimisation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#22-opencode-prompt-cost-is-model-size-independent-gpu-choice-affects-speed-not-tokens" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        22. opencode prompt cost is model-size-independent — GPU choice affects speed, not tokens
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23-aider-is-84-cheaper-per-prompt-than-opencode-but-the-comparison-is-asymmetric" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        23. aider is 8.4× cheaper per prompt than opencode — but the comparison is asymmetric
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#24-qwen3-thinking-tokens-add-26-cost-even-after-stripping-vllm-counts-them-regardless" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        24. Qwen3 thinking tokens add ~26% cost even after stripping — vLLM counts them regardless
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#25-the-frugal-injection-principle-injected-context-must-save-more-tokens-than-it-adds" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        25. The frugal injection principle — injected context must save more tokens than it adds
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#knowledge-injection" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2012,6 +2073,67 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#cost-optimisation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cost optimisation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Cost optimisation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#22-opencode-prompt-cost-is-model-size-independent-gpu-choice-affects-speed-not-tokens" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        22. opencode prompt cost is model-size-independent — GPU choice affects speed, not tokens
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23-aider-is-84-cheaper-per-prompt-than-opencode-but-the-comparison-is-asymmetric" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        23. aider is 8.4× cheaper per prompt than opencode — but the comparison is asymmetric
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#24-qwen3-thinking-tokens-add-26-cost-even-after-stripping-vllm-counts-them-regardless" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        24. Qwen3 thinking tokens add ~26% cost even after stripping — vLLM counts them regardless
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#25-the-frugal-injection-principle-injected-context-must-save-more-tokens-than-it-adds" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        25. The frugal injection principle — injected context must save more tokens than it adds
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#knowledge-injection" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2280,6 +2402,66 @@ before the assistant message re-enters opencode's session history. Measured resu
 Qwen3 avg prompt tokens dropped from 46,149 → 33,888 (−27%). Completion tokens are still higher
 (~1,056 vs ~117 for Coder models) because vLLM counts thinking tokens in completion regardless —
 stripping only prevents them from compounding across turns.</p>
+<hr />
+<h2 id="cost-optimisation">Cost optimisation<a class="headerlink" href="#cost-optimisation" title="Permanent link">&para;</a></h2>
+<h3 id="22-opencode-prompt-cost-is-model-size-independent-gpu-choice-affects-speed-not-tokens">22. opencode prompt cost is model-size-independent — GPU choice affects speed, not tokens<a class="headerlink" href="#22-opencode-prompt-cost-is-model-size-independent-gpu-choice-affects-speed-not-tokens" title="Permanent link">&para;</a></h3>
+<p><strong>Finding (2026-05-09 matrix):</strong> <code>qwen2.5-coder-7b</code> and <code>qwen2.5-coder-32b</code> both averaged
+~27,700 total tokens per run on opencode ($0.0277 each at $1.00/1M). The prompt is dominated
+by tool schemas and session history — both constant regardless of which model processes them.
+Upgrading from 7B to 32B does not increase token cost; it increases GPU cost (A10G → A100-80GB,
+roughly 3–4× more expensive per hour on Modal) and reduces wall-clock time for complex edits.</p>
+<p><strong>Rule:</strong> Choose model size based on task complexity and latency requirements, not token budget.
+For simple bug fixes, 7B is as cheap as 32B on the token dimension. For tasks where 32B
+produces fewer turns (better reasoning → shorter session), it can actually be <em>cheaper</em> end-to-end
+despite the higher GPU rate.</p>
+<hr />
+<h3 id="23-aider-is-84-cheaper-per-prompt-than-opencode-but-the-comparison-is-asymmetric">23. aider is 8.4× cheaper per prompt than opencode — but the comparison is asymmetric<a class="headerlink" href="#23-aider-is-84-cheaper-per-prompt-than-opencode-but-the-comparison-is-asymmetric" title="Permanent link">&para;</a></h3>
+<p><strong>Finding (2026-05-09):</strong> aider averaged 3,300 prompt tokens vs opencode's 27,573 on the same
+model, task, and endpoint (8.4× ratio). The gap has narrowed from 11.9× (baseline) via two
+proxy optimisations: tool schema description stripping (−19%) and post-edit tool filtering.</p>
+<p><strong>Why the gap exists:</strong> opencode maintains a full Responses API session — tool schemas (~500
+tokens each × 10 tools) are resent on every turn, plus accumulated conversation history.
+aider sends only the task message and changed file contents. For a 3-turn run, aider's prompt
+grows linearly with file size; opencode's grows with turns × schema size.</p>
+<p><strong>Asymmetry:</strong> the comparison is unfair for complex multi-file work. aider's smaller prompt
+comes at the cost of less tool context — it cannot browse arbitrary files, run tests mid-session,
+or react to shell output without explicit <code>--file</code> flags. opencode's overhead buys a richer
+agentic loop. Use aider for well-scoped single-file tasks; opencode for exploratory or
+multi-step work where the tool loop earns its keep.</p>
+<p><strong>Irreducible floor:</strong> the remaining ~8× gap is structural Responses API overhead. Further
+reduction requires either a streaming session format that doesn't resend schemas, or caching
+at the vLLM level (prompt prefix caching, not yet enabled).</p>
+<hr />
+<h3 id="24-qwen3-thinking-tokens-add-26-cost-even-after-stripping-vllm-counts-them-regardless">24. Qwen3 thinking tokens add ~26% cost even after stripping — vLLM counts them regardless<a class="headerlink" href="#24-qwen3-thinking-tokens-add-26-cost-even-after-stripping-vllm-counts-them-regardless" title="Permanent link">&para;</a></h3>
+<p><strong>Finding (2026-05-09):</strong> After <code>&lt;think&gt;</code> stripping, Qwen3-30B averaged 33,888 prompt tokens
+(down from 46,149, −27%) but still cost $0.0349 vs $0.0277 for Coder models — a 26% premium.</p>
+<p><strong>Why:</strong> <code>&lt;think&gt;</code> stripping prevents thinking tokens from re-entering the context window on
+subsequent turns (fixing the compounding problem). But vLLM counts thinking tokens in the
+completion regardless of what the proxy strips — the model still <em>generates</em> them and the
+endpoint bills for them. For this task Qwen3 emitted ~1,056 completion tokens vs ~117–274
+for Coder models; the difference is almost entirely thinking.</p>
+<p><strong>Rule:</strong> <code>&lt;think&gt;</code> stripping is necessary to prevent exponential prompt growth across turns,
+but it does not eliminate the per-turn thinking cost. For tasks where chain-of-thought reasoning
+does not improve output quality (simple bug fixes, mechanical refactors), Qwen2.5-Coder models
+are both cheaper and faster. Reserve Qwen3 for tasks where reasoning depth is demonstrably
+needed (algorithm design, subtle correctness bugs).</p>
+<hr />
+<h3 id="25-the-frugal-injection-principle-injected-context-must-save-more-tokens-than-it-adds">25. The frugal injection principle — injected context must save more tokens than it adds<a class="headerlink" href="#25-the-frugal-injection-principle-injected-context-must-save-more-tokens-than-it-adds" title="Permanent link">&para;</a></h3>
+<p><strong>Principle:</strong> Every token added to the task prompt is a cost. Context injection is only
+worthwhile if it eliminates more tokens than it introduces — typically by replacing exploratory
+tool calls the agent would otherwise make.</p>
+<p><strong>Examples:</strong>
+- <code>AGENTS.md</code> with repo structure + acceptance criteria: adds ~500–1,500 tokens but eliminates
+  1–3 exploratory <code>glob</code>/<code>read</code> turns (~3,000–9,000 tokens saved). Net: positive.
+- Injecting the full source file (5,000 tokens) when the agent would have read it anyway in
+  turn 1 (~500 token <code>read</code> call + ~5,000 token response): net neutral at best, negative if
+  the agent doesn't need the whole file.
+- Injecting a test command string ("run <code>pytest test_mathlib.py -q</code>") eliminates a test
+  discovery turn (~3,000 tokens). Net: strongly positive.</p>
+<p><strong>Rule:</strong> Measure before injecting. If the agent's first tool call is always <code>glob("**/*.py")</code>
+followed by <code>read("mathlib.py")</code>, those two turns (~7,000 tokens) are the target. Provide
+the file list and relevant file content upfront only if you are confident the agent will
+always need them. Speculative injection that the agent ignores is pure waste.</p>
 <hr />
 <h2 id="knowledge-injection">Knowledge injection<a class="headerlink" href="#knowledge-injection" title="Permanent link">&para;</a></h2>
 <h3 id="21-opencode_model-must-match-the-deployed-endpoint-wait_for_serve-update-env-only-updates-openai_base_url">21. OPENCODE_MODEL must match the deployed endpoint — wait_for_serve --update-env only updates OPENAI_BASE_URL<a class="headerlink" href="#21-opencode_model-must-match-the-deployed-endpoint-wait_for_serve-update-env-only-updates-openai_base_url" title="Permanent link">&para;</a></h3>
