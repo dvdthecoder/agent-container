@@ -1056,6 +1056,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../analysis/2026-05-09/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    2026-05-09
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../analysis/2026-05-08/" class="md-nav__link">
         
   
@@ -1574,6 +1602,34 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#knowledge-injection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Knowledge injection
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Knowledge injection">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-opencode_model-must-match-the-deployed-endpoint-wait_for_serve-update-env-only-updates-openai_base_url" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        21. OPENCODE_MODEL must match the deployed endpoint — wait_for_serve --update-env only updates OPENAI_BASE_URL
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1955,6 +2011,34 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#knowledge-injection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Knowledge injection
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Knowledge injection">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-opencode_model-must-match-the-deployed-endpoint-wait_for_serve-update-env-only-updates-openai_base_url" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        21. OPENCODE_MODEL must match the deployed endpoint — wait_for_serve --update-env only updates OPENAI_BASE_URL
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2191,6 +2275,25 @@ cost/quality trade-off for straightforward coding tasks.</p>
 1. Strip <code>&lt;think&gt;</code> blocks from assistant messages before returning them to opencode (proxy-level).
 2. Use <code>OPENCODE_TOOL_CHOICE=auto</code> with a model that has native thinking-budget controls.
 3. Prefer Qwen2.5-Coder models for tasks where reasoning depth is not needed.</p>
+<p><strong>Fix implemented:</strong> <code>_strip_think()</code> in the proxy strips closed and unclosed <code>&lt;think&gt;</code> blocks
+before the assistant message re-enters opencode's session history. Measured result (2026-05-09):
+Qwen3 avg prompt tokens dropped from 46,149 → 33,888 (−27%). Completion tokens are still higher
+(~1,056 vs ~117 for Coder models) because vLLM counts thinking tokens in completion regardless —
+stripping only prevents them from compounding across turns.</p>
+<hr />
+<h2 id="knowledge-injection">Knowledge injection<a class="headerlink" href="#knowledge-injection" title="Permanent link">&para;</a></h2>
+<h3 id="21-opencode_model-must-match-the-deployed-endpoint-wait_for_serve-update-env-only-updates-openai_base_url">21. OPENCODE_MODEL must match the deployed endpoint — wait_for_serve --update-env only updates OPENAI_BASE_URL<a class="headerlink" href="#21-opencode_model-must-match-the-deployed-endpoint-wait_for_serve-update-env-only-updates-openai_base_url" title="Permanent link">&para;</a></h3>
+<p><strong>Problem:</strong> After <code>python3 scripts/wait_for_serve.py --update-env</code>, <code>.env</code> has the new
+<code>OPENAI_BASE_URL</code> pointing at the newly deployed model, but <code>OPENCODE_MODEL</code> still holds the
+previous model name. The sandbox sends requests to the qwen3-30b endpoint asking for
+<code>qwen2.5-coder-32b</code>, which returns HTTP 404 (<code>The model qwen2.5-coder-32b does not exist</code>).</p>
+<p><strong>Symptom:</strong> <code>[proxy] upstream 404</code> repeated on every tool turn; all runs fail immediately.</p>
+<p><strong>Fix:</strong> Always set <code>OPENCODE_MODEL</code> explicitly in the same command that sets the endpoint,
+either via <code>sed</code> to update <code>.env</code> or by passing <code>OPENCODE_MODEL=&lt;model&gt;</code> as a shell env var
+prefix. <code>run_matrix.py</code> handles this correctly by overriding both per-model — the bug only
+surfaces when running <code>token_analysis.py</code> directly after <code>wait_for_serve</code>.</p>
+<p><strong>Rule:</strong> <code>OPENAI_BASE_URL</code> and <code>OPENCODE_MODEL</code> are a pair. Changing one without the other
+will produce 404s. Treat them as a unit.</p>
 
 
 
