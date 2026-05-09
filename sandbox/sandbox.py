@@ -165,7 +165,7 @@ class ModalSandbox:
                 agent_output, exit_code = runner.run_agent(
                     sb,
                     backend,
-                    spec.resolved_task(),
+                    spec.resolved_prompt(),
                     logger=logger,
                     timeout=agent_timeout,
                     on_log=_on_log,
@@ -181,10 +181,28 @@ class ModalSandbox:
                 # aider (and other backends) exit 0 even on model errors — an
                 # empty diff means nothing was written.  Treat as a failure so
                 # the run is not silently reported as success with no changes.
+                #
+                # #152: the end_turn race — opencode may return exit 0 before
+                # the file write from the preceding edit tool call has flushed
+                # to disk.  Retry collect_diff up to 3 times (5 s apart) before
+                # giving up, so a briefly-delayed write is not mis-classified as
+                # a no-op failure.
+                if exit_code == 0 and not diff:
+                    for _retry in range(3):
+                        time.sleep(5)
+                        diff, diff_stat = git_ops.collect_diff(sb, base_branch=spec.base_branch)
+                        if diff:
+                            print(
+                                f"[sandbox] diff appeared on retry {_retry + 1}",
+                                file=sys.stderr,
+                                flush=True,
+                            )
+                            break
+
                 if exit_code == 0 and not diff:
                     raise PhaseError(
                         "RUNNING",
-                        "agent exited 0 but made no changes (empty diff)",
+                        "agent exited 0 but made no changes (empty diff after 3 retries)",
                         time.monotonic() - start,
                     )
 

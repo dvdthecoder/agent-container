@@ -3,6 +3,52 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 
+import yaml
+
+
+def _expand_task_spec(raw: str) -> str:
+    """Expand a YAML task spec into a structured prompt string.
+
+    Recognised keys:
+      task                 (required) — the task description
+      acceptance_criteria  (optional) — how to verify success
+      constraints          (optional) — list of constraints or a single string
+      context_files        (optional) — list of relevant file paths
+
+    Returns *raw* unchanged if it is not valid YAML, if the parsed value is
+    not a dict, or if the dict has no ``task`` key.
+    """
+    try:
+        data = yaml.safe_load(raw)
+    except yaml.YAMLError:
+        return raw
+
+    if not isinstance(data, dict) or "task" not in data:
+        return raw
+
+    parts = [f"## Task\n{data['task']}"]
+
+    if data.get("acceptance_criteria"):
+        parts.append(f"## Acceptance Criteria\n{data['acceptance_criteria']}")
+
+    if data.get("constraints"):
+        constraints = data["constraints"]
+        if isinstance(constraints, list):
+            bullet = "\n".join(f"- {c}" for c in constraints)
+            parts.append(f"## Constraints\n{bullet}")
+        else:
+            parts.append(f"## Constraints\n{constraints}")
+
+    if data.get("context_files"):
+        files = data["context_files"]
+        if isinstance(files, list):
+            bullet = "\n".join(f"- {f}" for f in files)
+            parts.append(f"## Relevant Files\n{bullet}")
+        else:
+            parts.append(f"## Relevant Files\n{files}")
+
+    return "\n\n".join(parts)
+
 
 @dataclass
 class AgentTaskSpec:
@@ -63,10 +109,38 @@ class AgentTaskSpec:
         return self.timeout_coldstart + self.timeout_agent + self.timeout_tests
 
     def resolved_task(self) -> str:
-        """Return the task string, reading from file if task_file was provided."""
+        """Return the raw task string, reading from file if task_file was provided.
+
+        Use this for logging, PR titles, and other places that need a short
+        human-readable description.  For the agent prompt use resolved_prompt().
+        """
         if self.task is not None:
             return self.task
         return self.task_file.read_text(encoding="utf-8").strip()  # type: ignore[union-attr]
+
+    def resolved_prompt(self) -> str:
+        """Return the formatted agent prompt, expanding YAML task specs.
+
+        If the task string is a YAML document containing a ``task`` key, it is
+        expanded into a structured prompt with labelled sections:
+
+            ## Task
+            <task description>
+
+            ## Acceptance Criteria        (if provided)
+            <criteria>
+
+            ## Constraints                (if provided)
+            - constraint 1
+            - constraint 2
+
+            ## Relevant Files             (if provided)
+            - path/to/file.py
+
+        Plain-text tasks (no YAML, or YAML without a ``task`` key) are returned
+        unchanged so existing callers are unaffected.
+        """
+        return _expand_task_spec(self.resolved_task())
 
     def resolved_image(self, default_image: str) -> str:
         """Return the Docker image to use, falling back to SandboxConfig.default_image."""
