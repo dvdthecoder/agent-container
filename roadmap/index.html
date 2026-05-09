@@ -1728,12 +1728,12 @@ selective context injection. See <a href="../context/">Building Agent Context</a
 <tr>
 <td><a href="https://github.com/dvdthecoder/agent-container/issues/154">#154</a></td>
 <td>Phase 1: <code>AGENTS.md</code> auto-injection — read from repo root, prepend to task prompt</td>
-<td>Planned</td>
+<td>✅</td>
 </tr>
 <tr>
 <td><a href="https://github.com/dvdthecoder/agent-container/issues/154">#154</a></td>
 <td>Phase 2: Structured YAML task spec — acceptance criteria, constraints, context files</td>
-<td>Planned</td>
+<td>✅ <code>resolved_prompt()</code> expands YAML specs</td>
 </tr>
 <tr>
 <td><a href="https://github.com/dvdthecoder/agent-container/issues/154">#154</a></td>
@@ -1742,8 +1742,8 @@ selective context injection. See <a href="../context/">Building Agent Context</a
 </tr>
 <tr>
 <td><a href="https://github.com/dvdthecoder/agent-container/issues/152">#152</a></td>
-<td>Fix 32B reliability — verify diff non-empty before terminating after end_turn race</td>
-<td>Planned</td>
+<td>Fix 32B reliability — retry <code>collect_diff</code> 3× after empty diff before raising PhaseError</td>
+<td>✅</td>
 </tr>
 </tbody>
 </table>
