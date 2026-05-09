@@ -301,3 +301,30 @@ cost/quality trade-off for straightforward coding tasks.
 1. Strip `<think>` blocks from assistant messages before returning them to opencode (proxy-level).
 2. Use `OPENCODE_TOOL_CHOICE=auto` with a model that has native thinking-budget controls.
 3. Prefer Qwen2.5-Coder models for tasks where reasoning depth is not needed.
+
+**Fix implemented:** `_strip_think()` in the proxy strips closed and unclosed `<think>` blocks
+before the assistant message re-enters opencode's session history. Measured result (2026-05-09):
+Qwen3 avg prompt tokens dropped from 46,149 → 33,888 (−27%). Completion tokens are still higher
+(~1,056 vs ~117 for Coder models) because vLLM counts thinking tokens in completion regardless —
+stripping only prevents them from compounding across turns.
+
+---
+
+## Knowledge injection
+
+### 21. OPENCODE_MODEL must match the deployed endpoint — wait_for_serve --update-env only updates OPENAI_BASE_URL
+
+**Problem:** After `python3 scripts/wait_for_serve.py --update-env`, `.env` has the new
+`OPENAI_BASE_URL` pointing at the newly deployed model, but `OPENCODE_MODEL` still holds the
+previous model name. The sandbox sends requests to the qwen3-30b endpoint asking for
+`qwen2.5-coder-32b`, which returns HTTP 404 (`The model qwen2.5-coder-32b does not exist`).
+
+**Symptom:** `[proxy] upstream 404` repeated on every tool turn; all runs fail immediately.
+
+**Fix:** Always set `OPENCODE_MODEL` explicitly in the same command that sets the endpoint,
+either via `sed` to update `.env` or by passing `OPENCODE_MODEL=<model>` as a shell env var
+prefix. `run_matrix.py` handles this correctly by overriding both per-model — the bug only
+surfaces when running `token_analysis.py` directly after `wait_for_serve`.
+
+**Rule:** `OPENAI_BASE_URL` and `OPENCODE_MODEL` are a pair. Changing one without the other
+will produce 404s. Treat them as a unit.
