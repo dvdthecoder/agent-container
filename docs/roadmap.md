@@ -87,10 +87,10 @@ selective context injection. See [Building Agent Context](context.md) for the fu
 
 | Issue | Task | Status |
 |---|---|---|
-| [#154](https://github.com/dvdthecoder/agent-container/issues/154) | Phase 1: `AGENTS.md` auto-injection — read from repo root, prepend to task prompt | Planned |
-| [#154](https://github.com/dvdthecoder/agent-container/issues/154) | Phase 2: Structured YAML task spec — acceptance criteria, constraints, context files | Planned |
+| [#154](https://github.com/dvdthecoder/agent-container/issues/154) | Phase 1: `AGENTS.md` auto-injection — read from repo root, prepend to task prompt | ✅ |
+| [#154](https://github.com/dvdthecoder/agent-container/issues/154) | Phase 2: Structured YAML task spec — acceptance criteria, constraints, context files | ✅ `resolved_prompt()` expands YAML specs |
 | [#154](https://github.com/dvdthecoder/agent-container/issues/154) | Phase 3: Diff scanner — secret detection, scope guardrails, OWASP checks | Planned |
-| [#152](https://github.com/dvdthecoder/agent-container/issues/152) | Fix 32B reliability — verify diff non-empty before terminating after end_turn race | Planned |
+| [#152](https://github.com/dvdthecoder/agent-container/issues/152) | Fix 32B reliability — retry `collect_diff` 3× after empty diff before raising PhaseError | ✅ |
 
 ### Phase 7 — Production hardening
 Close the gap between the current implementation and a fully team-deployed system.
