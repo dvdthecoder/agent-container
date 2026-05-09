@@ -74,7 +74,18 @@ CREATE TABLE IF NOT EXISTS events (
     message    TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS turns (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    run_id      TEXT NOT NULL REFERENCES runs(run_id),
+    turn_num    INTEGER NOT NULL,
+    tool_calls  INTEGER NOT NULL DEFAULT 0,
+    text_chars  INTEGER NOT NULL DEFAULT 0,
+    think_chars INTEGER NOT NULL DEFAULT 0,
+    tools       TEXT NOT NULL DEFAULT '[]'
+);
+
 CREATE INDEX IF NOT EXISTS idx_events_run ON events(run_id);
+CREATE INDEX IF NOT EXISTS idx_turns_run  ON turns(run_id);
 """
 
 
@@ -117,6 +128,17 @@ class EventRow:
     message: str
 
 
+@dataclass
+class TurnRow:
+    id: int
+    run_id: str
+    turn_num: int
+    tool_calls: int
+    text_chars: int
+    think_chars: int
+    tools: str  # JSON array, e.g. '["read", "edit"]'
+
+
 # ---------------------------------------------------------------------------
 # RunLogger — write side
 # ---------------------------------------------------------------------------
@@ -143,9 +165,10 @@ class RunLogger:
         self._lock = threading.Lock()
         self._start = time.monotonic()
         self._phase = ""
+        self._turn_num = 0
 
     def _migrate(self) -> None:
-        """Add columns introduced after initial schema (idempotent)."""
+        """Add columns / tables introduced after the initial schema (idempotent)."""
         existing = {row[1] for row in self._conn.execute("PRAGMA table_info(runs)").fetchall()}
         migrations = [
             ("model", "TEXT NOT NULL DEFAULT ''"),
@@ -159,6 +182,20 @@ class RunLogger:
         for col, defn in migrations:
             if col not in existing:
                 self._conn.execute(f"ALTER TABLE runs ADD COLUMN {col} {defn}")  # noqa: S608
+
+        # Ensure the turns table exists for DBs created before this feature.
+        self._conn.executescript(
+            "CREATE TABLE IF NOT EXISTS turns ("
+            "  id INTEGER PRIMARY KEY AUTOINCREMENT,"
+            "  run_id TEXT NOT NULL REFERENCES runs(run_id),"
+            "  turn_num INTEGER NOT NULL,"
+            "  tool_calls INTEGER NOT NULL DEFAULT 0,"
+            "  text_chars INTEGER NOT NULL DEFAULT 0,"
+            "  think_chars INTEGER NOT NULL DEFAULT 0,"
+            "  tools TEXT NOT NULL DEFAULT '[]'"
+            ");"
+            "CREATE INDEX IF NOT EXISTS idx_turns_run ON turns(run_id);"
+        )
 
     # ------------------------------------------------------------------ write
 
@@ -211,6 +248,36 @@ class RunLogger:
                 "INSERT INTO events (run_id, ts, elapsed_s, phase, source, level, message)"
                 " VALUES (?,?,?,?,?,?,?)",
                 (self.run_id, now, round(elapsed, 3), ph, source, level, message),
+            )
+            self._conn.commit()
+
+    def record_turn(
+        self,
+        tool_calls: int,
+        text_chars: int,
+        think_chars: int,
+        tools: list[str],
+    ) -> None:
+        """Record one proxy turn (one model call) with its tool and thinking data.
+
+        Called by sandbox.py whenever it sees a ``[proxy] ← stream done:`` line
+        in the agent stderr.  Turn number is auto-incremented per run.
+        """
+        import json
+
+        self._turn_num += 1
+        with self._lock:
+            self._conn.execute(
+                "INSERT INTO turns (run_id, turn_num, tool_calls, text_chars, think_chars, tools)"
+                " VALUES (?,?,?,?,?,?)",
+                (
+                    self.run_id,
+                    self._turn_num,
+                    tool_calls,
+                    text_chars,
+                    think_chars,
+                    json.dumps(tools),
+                ),
             )
             self._conn.commit()
 
@@ -318,6 +385,14 @@ class RunStore:
         with self._connect() as conn:
             row = conn.execute("SELECT * FROM runs WHERE run_id=?", (run_id,)).fetchone()
         return RunRow(**dict(row)) if row else None
+
+    def turns(self, run_id: str) -> list[TurnRow]:
+        """Return all proxy turns for a run in order."""
+        with self._connect() as conn:
+            rows = conn.execute(
+                "SELECT * FROM turns WHERE run_id=? ORDER BY turn_num", (run_id,)
+            ).fetchall()
+        return [TurnRow(**dict(r)) for r in rows]
 
     def events(
         self,

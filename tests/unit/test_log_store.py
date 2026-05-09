@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import threading
 import time
 
@@ -253,6 +254,59 @@ def test_token_fields_default_to_none(logger, store):
     assert run.prompt_tokens is None
     assert run.completion_tokens is None
     assert run.total_tokens is None
+
+
+# ------------------------------------------------------------------ turns
+
+
+def test_record_turn_persisted(logger, store):
+    logger.record_turn(tool_calls=1, text_chars=128, think_chars=0, tools=["edit"])
+    turns = store.turns(logger.run_id)
+    assert len(turns) == 1
+    assert turns[0].turn_num == 1
+    assert turns[0].tool_calls == 1
+    assert turns[0].text_chars == 128
+    assert turns[0].think_chars == 0
+    assert json.loads(turns[0].tools) == ["edit"]
+
+
+def test_record_turn_increments_turn_num(logger, store):
+    logger.record_turn(tool_calls=1, text_chars=50, think_chars=0, tools=["read"])
+    logger.record_turn(tool_calls=1, text_chars=80, think_chars=2048, tools=["edit"])
+    logger.record_turn(tool_calls=0, text_chars=30, think_chars=0, tools=[])
+    turns = store.turns(logger.run_id)
+    assert [t.turn_num for t in turns] == [1, 2, 3]
+
+
+def test_record_turn_captures_think_chars(logger, store):
+    logger.record_turn(tool_calls=0, text_chars=100, think_chars=3500, tools=["bash"])
+    turns = store.turns(logger.run_id)
+    assert turns[0].think_chars == 3500
+
+
+def test_turns_empty_for_run_with_no_turns(logger, store):
+    turns = store.turns(logger.run_id)
+    assert turns == []
+
+
+def test_turns_not_mixed_across_runs(db):
+    lg1 = RunLogger.create(
+        repo="https://github.com/org/r", task="t1", backend="opencode", db_path=db
+    )
+    lg2 = RunLogger.create(repo="https://github.com/org/r", task="t2", backend="aider", db_path=db)
+    lg1.record_turn(tool_calls=1, text_chars=50, think_chars=0, tools=["edit"])
+    lg2.record_turn(tool_calls=0, text_chars=20, think_chars=0, tools=[])
+    lg1.close()
+    lg2.close()
+
+    store = RunStore(db_path=db)
+    assert len(store.turns(lg1.run_id)) == 1
+    assert len(store.turns(lg2.run_id)) == 1
+    assert store.turns(lg1.run_id)[0].tool_calls == 1
+    assert store.turns(lg2.run_id)[0].tool_calls == 0
+
+
+# ------------------------------------------------------------------ migration
 
 
 def test_migration_adds_token_columns(tmp_path):

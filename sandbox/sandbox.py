@@ -152,13 +152,38 @@ class ModalSandbox:
                 _token_usage_re = re.compile(
                     r"\[runner\] token_usage: prompt=(\d+) completion=(\d+) total=(\d+)"
                 )
+                # Parses the per-turn summary emitted by the proxy after each
+                # model call:
+                #   [proxy] ← stream done: tool_calls=1 text=128chars
+                #       think_stripped=2048chars tool_choice=required tools=['edit']
+                _proxy_turn_re = re.compile(
+                    r"\[proxy\] ← stream done:"
+                    r" tool_calls=(\d+)"
+                    r" text=(\d+)chars"
+                    r"(?:\s+think_stripped=(\d+)chars)?"
+                    r".*tools=(\[.*?\])"
+                )
 
                 def _on_log(label: str, line: str) -> None:
+                    import json as _json
+
                     _emit("log", text=line, source=label)
                     m = _token_usage_re.search(line)
                     if m:
                         try:
                             logger.set_token_usage(int(m[1]), int(m[2]), int(m[3]))
+                        except Exception:  # noqa: BLE001, S110
+                            pass
+                    mt = _proxy_turn_re.search(line)
+                    if mt:
+                        try:
+                            tools = _json.loads(mt.group(4).replace("'", '"'))
+                            logger.record_turn(
+                                tool_calls=int(mt.group(1)),
+                                text_chars=int(mt.group(2)),
+                                think_chars=int(mt.group(3) or 0),
+                                tools=tools,
+                            )
                         except Exception:  # noqa: BLE001, S110
                             pass
 
