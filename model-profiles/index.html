@@ -10,13 +10,13 @@
       
       
       
-        <link rel="canonical" href="https://dvdthecoder.github.io/agent-container/dashboard/">
+        <link rel="canonical" href="https://dvdthecoder.github.io/agent-container/model-profiles/">
       
       
-        <link rel="prev" href="../mcp/">
+        <link rel="prev" href="../models/">
       
       
-        <link rel="next" href="../logging/">
+        <link rel="next" href="../agents/">
       
       
         
@@ -27,7 +27,7 @@
     
     
       
-        <title>Dashboard - agent-container</title>
+        <title>Model Profile Guide - agent-container</title>
       
     
     
@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#dashboard" class="md-skip">
+        <a href="#model-profile-guide" class="md-skip">
           Skip to content
         </a>
       
@@ -112,7 +112,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Dashboard
+              Model Profile Guide
             
           </span>
         </div>
@@ -261,10 +261,12 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
+      <li class="md-tabs__item md-tabs__item--active">
         <a href="../quickstart/" class="md-tabs__link">
           
   
@@ -281,12 +283,10 @@
   
   
   
-    
-  
   
     
     
-      <li class="md-tabs__item md-tabs__item--active">
+      <li class="md-tabs__item">
         <a href="../agents/" class="md-tabs__link">
           
   
@@ -462,26 +462,31 @@
       
   
   
+    
   
   
+  
     
     
     
     
+      
+        
+        
       
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
             
   
   
@@ -499,7 +504,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -598,10 +603,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../model-profiles/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Model Profile Guide
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -617,6 +649,170 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#quick-selection-guide" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick selection guide
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#per-model-profiles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Per-model profiles
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Per-model profiles">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#qwen25-coder-7b-budget-tier" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        qwen2.5-coder-7b — Budget tier
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#qwen25-coder-32b-default-recommended-starting-point" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        qwen2.5-coder-32b — Default (recommended starting point)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#qwen3-30b-reasoning-tier" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        qwen3-30b — Reasoning tier
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#qwen3-coder-production-quality" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        qwen3-coder — Production quality
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#minimax-m25-maximum-context" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        minimax-m2.5 — Maximum context
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#gpu-sizing-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GPU sizing rules
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="GPU sizing rules">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dense-models-size-by-parameter-count-at-bf16" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dense models — size by parameter count at BF16
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#moe-models-size-by-total-parameter-count-not-active" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MoE models — size by total parameter count, not active
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#backend-model-cost-matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Backend × model cost matrix
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#qwen-model-naming" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Qwen model naming
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -633,31 +829,26 @@
       
   
   
-    
   
   
-  
     
     
     
     
-      
-        
-        
       
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
         
           
-          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
             
   
   
@@ -675,7 +866,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             
@@ -774,37 +965,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Dashboard
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../dashboard/" class="md-nav__link">
         
   
   
@@ -820,181 +984,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#start" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Start
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#layout" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Layout
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Layout">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#runs-tab" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Runs tab
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#tokens-tab" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Tokens tab
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#initiated_by-badge" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        initiated_by badge
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#run-phases" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Run phases
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#serve-panel" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Serve panel
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#bff-api-reference" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        BFF API reference
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="BFF API reference">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#runs" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Runs
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#tokens" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Tokens
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#serve" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Serve
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#architecture" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Architecture
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#expose-on-lan-team-network" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Expose on LAN / team network
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1519,10 +1508,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#start" class="md-nav__link">
+  <a href="#quick-selection-guide" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Start
+        Quick selection guide
       
     </span>
   </a>
@@ -1530,22 +1519,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#layout" class="md-nav__link">
+  <a href="#per-model-profiles" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Layout
+        Per-model profiles
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Layout">
+    <nav class="md-nav" aria-label="Per-model profiles">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#runs-tab" class="md-nav__link">
+  <a href="#qwen25-coder-7b-budget-tier" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Runs tab
+        qwen2.5-coder-7b — Budget tier
       
     </span>
   </a>
@@ -1553,10 +1542,43 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#tokens-tab" class="md-nav__link">
+  <a href="#qwen25-coder-32b-default-recommended-starting-point" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Tokens tab
+        qwen2.5-coder-32b — Default (recommended starting point)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#qwen3-30b-reasoning-tier" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        qwen3-30b — Reasoning tier
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#qwen3-coder-production-quality" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        qwen3-coder — Production quality
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#minimax-m25-maximum-context" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        minimax-m2.5 — Maximum context
       
     </span>
   </a>
@@ -1569,55 +1591,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#initiated_by-badge" class="md-nav__link">
+  <a href="#gpu-sizing-rules" class="md-nav__link">
     <span class="md-ellipsis">
       
-        initiated_by badge
+        GPU sizing rules
       
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#run-phases" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Run phases
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#serve-panel" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Serve panel
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#bff-api-reference" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        BFF API reference
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="BFF API reference">
+    <nav class="md-nav" aria-label="GPU sizing rules">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#runs" class="md-nav__link">
+  <a href="#dense-models-size-by-parameter-count-at-bf16" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Runs
+        Dense models — size by parameter count at BF16
       
     </span>
   </a>
@@ -1625,21 +1614,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#tokens" class="md-nav__link">
+  <a href="#moe-models-size-by-total-parameter-count-not-active" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Tokens
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#serve" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Serve
+        MoE models — size by total parameter count, not active
       
     </span>
   </a>
@@ -1652,10 +1630,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#architecture" class="md-nav__link">
+  <a href="#backend-model-cost-matrix" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Architecture
+        Backend × model cost matrix
       
     </span>
   </a>
@@ -1663,10 +1641,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#expose-on-lan-team-network" class="md-nav__link">
+  <a href="#qwen-model-naming" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Expose on LAN / team network
+        Qwen model naming
       
     </span>
   </a>
@@ -1693,415 +1671,381 @@
   
 
 
-<h1 id="dashboard">Dashboard<a class="headerlink" href="#dashboard" title="Permanent link">&para;</a></h1>
-<p>The dashboard is a live admin view of all agent runs — started from the CLI or the dashboard,
-running, completed, and failed — in one unified list.</p>
-<h2 id="start">Start<a class="headerlink" href="#start" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>make<span class="w"> </span>dashboard
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="c1"># or: uvicorn dashboard.app:app --reload --port 8000</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="c1"># → http://localhost:8000</span>
-</code></pre></div>
-<h2 id="layout">Layout<a class="headerlink" href="#layout" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>┌─────────────────────┬────────────────────────────────────────────────┐
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>│  Left sidebar       │  [ Runs ] [ Tokens ]  ← tab bar                │
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>│                     ├────────────────────────────────────────────────┤
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>│  ┌───────────────┐  │  RUNS TAB                                      │
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>│  │ Model server  │  │  ▶ ● run-20260501-123456  org/repo  aider  cli │
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>│  │ profile ▾     │  │  ▶ ● run-20260501-120000  org/repo  opencode   │
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>│  │ [Deploy]      │  │  ▼ ● run-20260501-110000  org/repo  aider      │
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>│  └───────────────┘  │    ┌─ expanded ─────────────────────────────┐  │
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>│                     │    │ branch: main  task: fix pagination...  │  │
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>│  ┌───────────────┐  │    │ 12:01:04 ▶ BOOTING                     │  │
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>│  │ New run       │  │    │ 12:01:15 ▶ RUNNING                     │  │
-<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>│  │ repo ______   │  │    │ 12:02:30 ✓ DONE  +12 −3                │  │
-<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>│  │ task ______   │  │    └────────────────────────────────────────┘  │
-<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>│  │ backend ▾     │  ├────────────────────────────────────────────────┤
-<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>│  │ [Start run]   │  │  TOKENS TAB                                    │
-<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>│  └───────────────┘  │  backend ▾  from ____  to ____  $/1M [1.00]   │
-<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>│                     │  Run ID  Repo  Backend  Prompt  Completion  …  │
-<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>│                     │  run-20… org/… opencode  12,345   1,234  …     │
-<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>└─────────────────────┴────────────────────────────────────────────────┘
-</code></pre></div>
-<p><strong>Left sidebar</strong> holds two panels:
-- <strong>Model server panel</strong> — profile/model selector and Deploy button (see <a href="#serve-panel">Serve panel</a>)
-- <strong>New run form</strong> — repo URL, task, backend, base branch, options</p>
-<p><strong>Main area</strong> has a tab bar at the top:</p>
-<h3 id="runs-tab">Runs tab<a class="headerlink" href="#runs-tab" title="Permanent link">&para;</a></h3>
-<p>Full-width scrollable list of run rows. Each row is collapsible:</p>
+<h1 id="model-profile-guide">Model Profile Guide<a class="headerlink" href="#model-profile-guide" title="Permanent link">&para;</a></h1>
+<p>When to use each model, which GPU to choose, and what each tier costs.</p>
+<p>See <a href="../models/">Model Setup</a> for deployment commands and env var configuration.</p>
+<hr />
+<h2 id="quick-selection-guide">Quick selection guide<a class="headerlink" href="#quick-selection-guide" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
-<th>State</th>
-<th>What you see</th>
+<th>Situation</th>
+<th>Recommended model</th>
+<th>Reason</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Collapsed</td>
-<td>Phase dot · run ID · repo · backend badge · <code>cli</code>/<code>dashboard</code> badge · phase label</td>
+<td>Getting started / iterating fast</td>
+<td><code>qwen2.5-coder-32b</code> (default)</td>
+<td>Reliable tool use, proven on fixture suite, low cold-start</td>
 </tr>
 <tr>
-<td>Expanded</td>
-<td>Meta bar (branch, task excerpt, PR link) + inline log stream (scrollable, 400px max)</td>
-</tr>
-</tbody>
-</table>
-<p>Click anywhere on a row summary to expand or collapse it. New runs auto-expand and stream
-logs as they arrive. Rows remain in the list after completion — collapse them to keep the view clean.</p>
-<h3 id="tokens-tab">Tokens tab<a class="headerlink" href="#tokens-tab" title="Permanent link">&para;</a></h3>
-<p>Per-run token consumption for all completed runs that have token data. Both <code>aider</code> and <code>opencode</code>
-emit token usage — <code>aider</code> by parsing its <code>Tokens: X sent, Y received.</code> line (printed to stdout
-or stderr depending on aider version); <code>opencode</code> via the Responses API proxy's <code>usage</code>
-accumulation. Both emit the same <code>[runner] token_usage:</code> line that the sandbox intercepts and
-persists to SQLite.</p>
-<p>Rows are sorted by <strong>Started</strong> descending by default — most recent run at the top.</p>
-<table>
-<thead>
-<tr>
-<th>Column</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Run ID</td>
-<td>Identifies the run</td>
+<td>Simple single-file fixes, tight budget</td>
+<td><code>qwen2.5-coder-7b</code> + <strong>aider</strong></td>
+<td>8× cheaper with aider backend; fine for well-scoped tasks</td>
 </tr>
 <tr>
-<td>Repository</td>
-<td>Short form (org/repo)</td>
+<td>Complex multi-file or exploratory tasks</td>
+<td><code>qwen2.5-coder-32b</code> + opencode</td>
+<td>Richer agentic loop; 32B handles ambiguity better than 7B</td>
 </tr>
 <tr>
-<td>Backend</td>
-<td>Badge (aider / opencode / …)</td>
-</tr>
-<tr>
-<td>Outcome</td>
-<td>success / error / failed</td>
-</tr>
-<tr>
-<td>Started</td>
-<td>Wall-clock start time (local)</td>
-</tr>
-<tr>
-<td>Finished</td>
-<td>Wall-clock finish time (local), <code>—</code> if interrupted</td>
-</tr>
-<tr>
-<td>Prompt tokens</td>
-<td>Input tokens charged</td>
-</tr>
-<tr>
-<td>Completion tokens</td>
-<td>Output tokens charged</td>
-</tr>
-<tr>
-<td>Total tokens</td>
-<td>Sum</td>
-</tr>
-<tr>
-<td>Est. cost</td>
-<td><code>total_tokens / 1M × rate</code> — rate is configurable in the toolbar</td>
-</tr>
-<tr>
-<td>Duration</td>
-<td>Wall-clock seconds for the run</td>
-</tr>
-</tbody>
-</table>
-<p><strong>Toolbar controls:</strong>
-- <strong>Backend filter</strong> — narrow to one backend for apples-to-apples comparisons
-- <strong>From / To date pickers</strong> — restrict to a date range
-- <strong>$/1M tokens</strong> — cost rate input; updating it recalculates the Est. cost column live without reloading data
-- <strong>Summary bar</strong> — shows <code>N runs · X total tokens · est. $Y</code> for the current filtered set</p>
-<p>Click any column header to sort; click again to reverse. Time columns default to descending (latest first).</p>
-<h2 id="initiated_by-badge"><code>initiated_by</code> badge<a class="headerlink" href="#initiated_by-badge" title="Permanent link">&para;</a></h2>
-<p>Every run row shows where the run was started:</p>
-<ul>
-<li><code>cli</code> — started via <code>agent-run run</code> or the Python API</li>
-<li><code>dashboard</code> — started from the new-run form in the browser</li>
-</ul>
-<p>Both sources write to the same SQLite log at <code>~/.agent-container/runs.db</code>. The list on page
-load comes from SQLite, so CLI runs appear alongside dashboard runs automatically.</p>
-<h2 id="run-phases">Run phases<a class="headerlink" href="#run-phases" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>Phase</th>
-<th>Meaning</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>WARMING</code></td>
-<td>Polling <code>GET /v1/models</code> until the inference endpoint is ready</td>
-</tr>
-<tr>
-<td><code>BOOTING</code></td>
-<td>Modal sandbox container starting</td>
-</tr>
-<tr>
-<td><code>CLONING</code></td>
-<td><code>git clone</code> running inside container</td>
-</tr>
-<tr>
-<td><code>RUNNING</code></td>
-<td>Coding agent executing</td>
-</tr>
-<tr>
-<td><code>TESTING</code></td>
-<td>Test suite auto-detected and running</td>
-</tr>
-<tr>
-<td><code>PR</code></td>
-<td>Creating branch and opening PR</td>
-</tr>
-<tr>
-<td><code>DONE</code></td>
-<td>Run complete, container destroyed</td>
-</tr>
-<tr>
-<td><code>FAILED</code></td>
-<td>Error occurred, container destroyed</td>
-</tr>
-</tbody>
-</table>
-<h2 id="serve-panel">Serve panel<a class="headerlink" href="#serve-panel" title="Permanent link">&para;</a></h2>
-<p>The serve panel in the sidebar lets you deploy or redeploy the model server without touching
-the terminal.</p>
-<p><strong>Model options (all <code>prod</code> / vLLM unless noted):</strong></p>
-<table>
-<thead>
-<tr>
-<th>Option</th>
-<th><code>SERVE_MODEL</code></th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Qwen2.5-Coder 7B · A10G</td>
-<td><code>qwen2.5-coder-7b</code></td>
-</tr>
-<tr>
-<td>Qwen2.5-Coder 32B · A100 80GB <strong>(default)</strong></td>
-<td><em>(unset)</em></td>
-</tr>
-<tr>
-<td>Qwen3 30B-A3B · A100 80GB</td>
+<td>Algorithmic depth / subtle correctness bugs</td>
 <td><code>qwen3-30b</code></td>
+<td>Reasoning model; thinking tokens add ~26% cost but improve quality on hard problems</td>
 </tr>
 <tr>
-<td>Qwen3-Coder 80B · 2×A100 80GB</td>
-<td><code>qwen3-coder</code></td>
+<td>Production output quality</td>
+<td><code>qwen3-coder</code> (80B)</td>
+<td>Largest coding-specific model; 2× A100 80GB</td>
 </tr>
 <tr>
-<td>MiniMax M2.5 · 8×A100 80GB</td>
+<td>Context-heavy tasks (1M token window)</td>
 <td><code>minimax-m2.5</code></td>
-</tr>
-<tr>
-<td>SGLang experiment · A10G</td>
-<td><code>SERVE_PROFILE=experiment</code></td>
+<td>8× A100; use only when context length is the constraint</td>
 </tr>
 </tbody>
 </table>
-<p>The status badge polls <code>GET /api/serve/status</code> every 30 seconds and shows the current Modal
-app state. Clicking <strong>Deploy</strong> calls <code>POST /api/serve/deploy</code> and triggers a background
-<code>modal deploy</code> — the button disables briefly while it starts.</p>
-<h2 id="bff-api-reference">BFF API reference<a class="headerlink" href="#bff-api-reference" title="Permanent link">&para;</a></h2>
-<p>The dashboard is a Backend-for-Frontend: all Modal and SQLite concerns stay server-side.</p>
-<h3 id="runs">Runs<a class="headerlink" href="#runs" title="Permanent link">&para;</a></h3>
+<hr />
+<h2 id="per-model-profiles">Per-model profiles<a class="headerlink" href="#per-model-profiles" title="Permanent link">&para;</a></h2>
+<h3 id="qwen25-coder-7b-budget-tier"><code>qwen2.5-coder-7b</code> — Budget tier<a class="headerlink" href="#qwen25-coder-7b-budget-tier" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
 <tr>
-<th>Method</th>
-<th>Path</th>
-<th>Description</th>
+<th></th>
+<th></th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>GET</code></td>
-<td><code>/api/runs</code></td>
-<td>List all runs from SQLite, newest first (CLI + dashboard)</td>
+<td>GPU</td>
+<td>A10G (24 GB)</td>
 </tr>
 <tr>
-<td><code>POST</code></td>
-<td><code>/api/runs</code></td>
-<td>Start a new run, returns <code>{"run_id": "..."}</code></td>
+<td>Cold start</td>
+<td>~1 min</td>
 </tr>
 <tr>
-<td><code>GET</code></td>
-<td><code>/api/runs/{id}</code></td>
-<td>Single run metadata (SQLite + live phase if active)</td>
+<td>opencode run cost</td>
+<td>~$0.028 (tokens dominated by framework overhead)</td>
 </tr>
 <tr>
-<td><code>DELETE</code></td>
-<td><code>/api/runs/{id}</code></td>
-<td>Cancel a run (best-effort)</td>
+<td>aider run cost</td>
+<td>~$0.004 (8.4× cheaper — aider sends only task + changed files)</td>
 </tr>
 <tr>
-<td><code>GET</code></td>
-<td><code>/api/runs/{id}/stream</code></td>
-<td>SSE stream of lifecycle events (dashboard runs only)</td>
-</tr>
-<tr>
-<td><code>GET</code></td>
-<td><code>/api/runs/{id}/events</code></td>
-<td>Past log events from SQLite (replay on page load)</td>
+<td>Context window</td>
+<td>32k tokens</td>
 </tr>
 </tbody>
 </table>
-<h3 id="tokens">Tokens<a class="headerlink" href="#tokens" title="Permanent link">&para;</a></h3>
+<p><strong>Use when:</strong> task is well-scoped (explicit file, explicit fix), using <strong>aider</strong> backend.
+With aider, the 7B model costs 8.4× less than opencode on the same task because aider
+sends ~3,300 prompt tokens vs opencode's ~27,600.</p>
+<p><strong>Don't use when:</strong> task requires exploring the repo, resolving ambiguity, or multi-step
+tool chains — 7B struggles with these even with opencode.</p>
+<hr />
+<h3 id="qwen25-coder-32b-default-recommended-starting-point"><code>qwen2.5-coder-32b</code> — Default (recommended starting point)<a class="headerlink" href="#qwen25-coder-32b-default-recommended-starting-point" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
 <tr>
-<th>Method</th>
-<th>Path</th>
-<th>Description</th>
+<th></th>
+<th></th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>GET</code></td>
-<td><code>/api/tokens</code></td>
-<td>Runs with token data, sorted by <code>total_tokens</code> desc (server-side)</td>
+<td>GPU</td>
+<td>A100 80GB</td>
+</tr>
+<tr>
+<td>Cold start</td>
+<td>~1–2 min</td>
+</tr>
+<tr>
+<td>opencode run cost</td>
+<td>~$0.028</td>
+</tr>
+<tr>
+<td>aider run cost</td>
+<td>~$0.003</td>
+</tr>
+<tr>
+<td>Context window</td>
+<td>32k tokens</td>
 </tr>
 </tbody>
 </table>
-<p><strong>Query parameters for <code>GET /api/tokens</code>:</strong></p>
+<p><strong>The default for a reason:</strong> Proven on fixture suite (2/2 success after #152 diff-retry fix),
+stable tool use, handles multi-turn tool chains reliably. Upgrading from 7B to 32B does not
+increase token cost — prompt tokens are dominated by framework overhead (tool schemas + session
+history), which is constant regardless of model size. The extra cost is purely GPU time
+(A10G → A100 80GB, roughly 3–4×/hr) in exchange for better output quality and fewer retries.</p>
+<p><strong>Use when:</strong> default choice for most tasks.</p>
+<hr />
+<h3 id="qwen3-30b-reasoning-tier"><code>qwen3-30b</code> — Reasoning tier<a class="headerlink" href="#qwen3-30b-reasoning-tier" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
 <tr>
-<th>Param</th>
-<th>Example</th>
-<th>Description</th>
+<th></th>
+<th></th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>backend</code></td>
-<td><code>opencode</code></td>
-<td>Filter by backend name</td>
+<td>GPU</td>
+<td>A100 80GB</td>
 </tr>
 <tr>
-<td><code>date_from</code></td>
-<td><code>2026-05-01</code></td>
-<td>Lower bound on <code>started_at</code> (inclusive)</td>
+<td>Cold start</td>
+<td>~2–3 min</td>
 </tr>
 <tr>
-<td><code>date_to</code></td>
-<td><code>2026-05-03</code></td>
-<td>Upper bound on <code>started_at</code> (inclusive)</td>
+<td>opencode run cost</td>
+<td>~$0.035 (+26% vs 32B Coder)</td>
+</tr>
+<tr>
+<td>Context window</td>
+<td>32k tokens</td>
 </tr>
 </tbody>
 </table>
-<p><strong>Response row shape:</strong></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="p">{</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="nt">&quot;run_id&quot;</span><span class="p">:</span><span class="w">            </span><span class="s2">&quot;run-20260503-120000-abc123&quot;</span><span class="p">,</span>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span><span class="nt">&quot;repo&quot;</span><span class="p">:</span><span class="w">              </span><span class="s2">&quot;https://github.com/org/repo&quot;</span><span class="p">,</span>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">  </span><span class="nt">&quot;task&quot;</span><span class="p">:</span><span class="w">              </span><span class="s2">&quot;Fix the login bug&quot;</span><span class="p">,</span>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">  </span><span class="nt">&quot;backend&quot;</span><span class="p">:</span><span class="w">           </span><span class="s2">&quot;opencode&quot;</span><span class="p">,</span>
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">  </span><span class="nt">&quot;started_at&quot;</span><span class="p">:</span><span class="w">        </span><span class="s2">&quot;2026-05-03T12:00:00+00:00&quot;</span><span class="p">,</span>
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">  </span><span class="nt">&quot;finished_at&quot;</span><span class="p">:</span><span class="w">       </span><span class="s2">&quot;2026-05-03T12:02:22+00:00&quot;</span><span class="p">,</span>
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">  </span><span class="nt">&quot;outcome&quot;</span><span class="p">:</span><span class="w">           </span><span class="s2">&quot;success&quot;</span><span class="p">,</span>
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">  </span><span class="nt">&quot;prompt_tokens&quot;</span><span class="p">:</span><span class="w">     </span><span class="mi">12345</span><span class="p">,</span>
-<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="w">  </span><span class="nt">&quot;completion_tokens&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">678</span><span class="p">,</span>
-<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">  </span><span class="nt">&quot;total_tokens&quot;</span><span class="p">:</span><span class="w">      </span><span class="mi">13023</span><span class="p">,</span>
-<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="w">  </span><span class="nt">&quot;duration_s&quot;</span><span class="p">:</span><span class="w">        </span><span class="mf">142.3</span>
-<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="p">}</span>
-</code></pre></div>
-<p><strong><code>POST /api/runs</code> body:</strong></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="p">{</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span><span class="nt">&quot;repo&quot;</span><span class="p">:</span><span class="w">            </span><span class="s2">&quot;https://github.com/org/myapp&quot;</span><span class="p">,</span>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span><span class="nt">&quot;task&quot;</span><span class="p">:</span><span class="w">            </span><span class="s2">&quot;Fix the off-by-one error in pagination&quot;</span><span class="p">,</span>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">  </span><span class="nt">&quot;backend&quot;</span><span class="p">:</span><span class="w">         </span><span class="s2">&quot;aider&quot;</span><span class="p">,</span>
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">  </span><span class="nt">&quot;base_branch&quot;</span><span class="p">:</span><span class="w">     </span><span class="s2">&quot;main&quot;</span><span class="p">,</span>
-<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">  </span><span class="nt">&quot;create_pr&quot;</span><span class="p">:</span><span class="w">       </span><span class="kc">true</span><span class="p">,</span>
-<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">  </span><span class="nt">&quot;run_tests&quot;</span><span class="p">:</span><span class="w">       </span><span class="kc">true</span><span class="p">,</span>
-<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="w">  </span><span class="nt">&quot;timeout_seconds&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">300</span>
-<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="p">}</span>
-</code></pre></div>
-<p><strong>SSE event types</strong> (from <code>GET /api/runs/{id}/stream</code>):</p>
+<p><strong>Qwen3 is a hybrid think/non-think model.</strong> It emits <code>&lt;think&gt;</code> blocks before each response.
+The proxy strips <code>&lt;think&gt;</code> content from assistant messages before they re-enter session history
+(−27% prompt tokens vs unstripped baseline), but vLLM still <strong>counts thinking tokens in
+completion</strong> — you pay for them regardless.</p>
+<p><strong>Measured overhead (2026-05-09):</strong> Qwen3-30B averaged 1,056 completion tokens vs 117 for
+Coder models on the same task. That's the irreducible cost of reasoning.</p>
+<p><strong>Use when:</strong> task involves algorithm design, subtle correctness bugs, or any case where
+reasoning depth demonstrably improves output. For mechanical tasks (rename a variable,
+fix a typo, add a test) use Coder models — they're cheaper and faster.</p>
+<p><strong>GPU sizing note:</strong> Qwen3-30B is a <strong>MoE model</strong> (3B active, 30B total). vLLM loads <strong>all</strong>
+expert weights regardless of sparsity. At BF16, 30B parameters = ~60 GB → requires A100 80GB.
+An A100-40GB OOMs during CUDA graph capture. See <a href="../lessons-learned/#18">lesson #18</a>.</p>
+<hr />
+<h3 id="qwen3-coder-production-quality"><code>qwen3-coder</code> — Production quality<a class="headerlink" href="#qwen3-coder-production-quality" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
 <tr>
-<th><code>type</code></th>
-<th>Payload fields</th>
-<th>Meaning</th>
+<th></th>
+<th></th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>phase</code></td>
-<td><code>phase: str</code></td>
-<td>Phase transition (BOOTING, CLONING, …)</td>
+<td>GPU</td>
+<td>2× A100 80GB</td>
 </tr>
 <tr>
-<td><code>log</code></td>
-<td><code>text: str</code></td>
-<td>Agent output line</td>
+<td>Cold start</td>
+<td>~3–5 min</td>
 </tr>
 <tr>
-<td><code>done</code></td>
-<td><code>success: bool</code>, <code>pr_url?</code>, <code>diff_stat?</code>, <code>error?</code></td>
-<td>Run finished</td>
+<td>Context window</td>
+<td>128k tokens</td>
 </tr>
 </tbody>
 </table>
-<h3 id="serve">Serve<a class="headerlink" href="#serve" title="Permanent link">&para;</a></h3>
+<p>80B parameter coding-specific model. Use when output quality on complex code generation
+is the primary concern and cost is secondary.</p>
+<p>The 128k context window enables whole-repository context on medium-sized codebases.</p>
+<hr />
+<h3 id="minimax-m25-maximum-context"><code>minimax-m2.5</code> — Maximum context<a class="headerlink" href="#minimax-m25-maximum-context" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
 <tr>
-<th>Method</th>
-<th>Path</th>
-<th>Description</th>
+<th></th>
+<th></th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>GET</code></td>
-<td><code>/api/serve/status</code></td>
-<td>Modal app list for <code>agent-container-serve*</code> apps</td>
+<td>GPU</td>
+<td>8× A100 80GB</td>
 </tr>
 <tr>
-<td><code>POST</code></td>
-<td><code>/api/serve/deploy</code></td>
-<td>Trigger a background <code>modal deploy</code></td>
+<td>Cold start</td>
+<td>~8–12 min</td>
+</tr>
+<tr>
+<td>Context window</td>
+<td>1M tokens</td>
 </tr>
 </tbody>
 </table>
-<p><strong><code>POST /api/serve/deploy</code> body:</strong></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="p">{</span>
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span><span class="nt">&quot;profile&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;prod&quot;</span><span class="p">,</span>
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span><span class="nt">&quot;model&quot;</span><span class="p">:</span><span class="w">   </span><span class="s2">&quot;minimax-m2.5&quot;</span>
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="p">}</span>
-</code></pre></div>
-<p><code>model</code> is optional — only used when <code>profile</code> is <code>prod</code>. Omit it to use the default
-(<code>qwen3-coder</code>).</p>
-<h2 id="architecture">Architecture<a class="headerlink" href="#architecture" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>Browser
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>  ← SSE stream   (phase changes + log lines, dashboard runs only)
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>  → REST API     (start run, list runs, cancel, serve control)
-<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>
-<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>FastAPI app (dashboard/router.py)
-<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>  RunStore        — reads SQLite at ~/.agent-container/runs.db (all runs, CLI + dashboard)
-<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>  WorkspaceStore  — in-memory SSE event buffer (active dashboard runs only)
-<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>  ModalSandbox    — fires off runs in a thread pool, pushes events to WorkspaceStore
-</code></pre></div>
-<p><code>RunStore</code> (SQLite) is the source of truth for the run list — it persists across server
-restarts and captures CLI runs. <code>WorkspaceStore</code> is a lightweight in-memory ring buffer used
-only for streaming live events to the browser; it is not persisted.</p>
-<p>Dashboard runs write to both stores with the same pre-allocated <code>run_id</code>. CLI runs only write
-to SQLite (no SSE available).</p>
-<h2 id="expose-on-lan-team-network">Expose on LAN / team network<a class="headerlink" href="#expose-on-lan-team-network" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nv">DASHBOARD_HOST</span><span class="o">=</span><span class="m">0</span>.0.0.0<span class="w">   </span><span class="c1"># default: 127.0.0.1</span>
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="nv">DASHBOARD_PORT</span><span class="o">=</span><span class="m">8080</span>
-</code></pre></div>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>The dashboard has no authentication. Run it on a trusted network or behind a reverse proxy
-with auth if exposing to a team.</p>
-</div>
+<p>Reserve for tasks where context length is the hard constraint — e.g., whole-codebase
+analysis, cross-file refactors in large repos, or multi-document synthesis. The 8× GPU
+cost is substantial; do not use for routine tasks.</p>
+<hr />
+<h2 id="gpu-sizing-rules">GPU sizing rules<a class="headerlink" href="#gpu-sizing-rules" title="Permanent link">&para;</a></h2>
+<h3 id="dense-models-size-by-parameter-count-at-bf16">Dense models — size by parameter count at BF16<a class="headerlink" href="#dense-models-size-by-parameter-count-at-bf16" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Model size</th>
+<th>Memory required</th>
+<th>Min GPU</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>7B</td>
+<td>~14 GB</td>
+<td>A10G (24 GB) ✓</td>
+</tr>
+<tr>
+<td>32B</td>
+<td>~64 GB</td>
+<td>A100 80GB ✓</td>
+</tr>
+<tr>
+<td>32B</td>
+<td>~64 GB</td>
+<td>A100 40GB ✗ (39.49 GiB available)</td>
+</tr>
+<tr>
+<td>80B</td>
+<td>~160 GB</td>
+<td>2× A100 80GB ✓</td>
+</tr>
+</tbody>
+</table>
+<h3 id="moe-models-size-by-total-parameter-count-not-active">MoE models — size by <strong>total</strong> parameter count, not active<a class="headerlink" href="#moe-models-size-by-total-parameter-count-not-active" title="Permanent link">&para;</a></h3>
+<p>vLLM loads all expert weights regardless of sparsity. Active-parameter count
+is irrelevant for GPU selection.</p>
+<table>
+<thead>
+<tr>
+<th>Model</th>
+<th>Active params</th>
+<th>Total params</th>
+<th>Memory required</th>
+<th>GPU</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Qwen3-30B-A3B</td>
+<td>3B</td>
+<td>30B</td>
+<td>~60 GB</td>
+<td>A100 80GB ✓</td>
+</tr>
+<tr>
+<td>MiniMax M2.5</td>
+<td>~45B</td>
+<td>~456B</td>
+<td>&gt;640 GB</td>
+<td>8× A100 80GB</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Rule:</strong> When in doubt, use total parameter count × 2 bytes (BF16) and add 10% overhead for
+KV cache and CUDA graphs.</p>
+<hr />
+<h2 id="backend-model-cost-matrix">Backend × model cost matrix<a class="headerlink" href="#backend-model-cost-matrix" title="Permanent link">&para;</a></h2>
+<p>Measured on the fixture task (single-file bug fix, 2026-05-09):</p>
+<table>
+<thead>
+<tr>
+<th>Model</th>
+<th>Backend</th>
+<th>Prompt tok</th>
+<th>Completion tok</th>
+<th>Est. cost</th>
+<th>Duration</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>qwen2.5-coder-7b</td>
+<td><strong>aider</strong></td>
+<td>3,300</td>
+<td>274</td>
+<td><strong>$0.0036</strong></td>
+<td>44s</td>
+</tr>
+<tr>
+<td>qwen2.5-coder-7b</td>
+<td>opencode</td>
+<td>27,573</td>
+<td>126</td>
+<td>$0.0277</td>
+<td>125s</td>
+</tr>
+<tr>
+<td>qwen2.5-coder-32b</td>
+<td>opencode</td>
+<td>27,583</td>
+<td>117</td>
+<td>$0.0277</td>
+<td>122s</td>
+</tr>
+<tr>
+<td>qwen3-30b</td>
+<td>opencode</td>
+<td>33,888</td>
+<td>1,056</td>
+<td>$0.0349</td>
+<td>127s</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Key insight:</strong> Upgrading from 7B to 32B within opencode costs the same in tokens —
+both hit ~27,600 prompt tokens because the prompt is dominated by tool schemas + session
+history, not model-specific content. The 32B runs faster on complex edits despite the
+same token count, because it produces correct output in fewer turns.</p>
+<p><strong>aider vs opencode at 7B:</strong> 8.4× prompt token reduction because aider sends only the
+task message and changed files. The trade-off: aider cannot browse arbitrary files or
+react to shell output mid-session. Use aider for well-scoped single-file tasks; opencode
+for exploratory or multi-step work. See <a href="../lessons-learned/#23">lesson #23</a>.</p>
+<hr />
+<h2 id="qwen-model-naming">Qwen model naming<a class="headerlink" href="#qwen-model-naming" title="Permanent link">&para;</a></h2>
+<p>The Qwen3 general-purpose model line does <strong>not</strong> use <code>-Instruct</code> suffixes on HuggingFace:</p>
+<table>
+<thead>
+<tr>
+<th>Model</th>
+<th>Correct HF ID</th>
+<th>Wrong</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Qwen3 8B</td>
+<td><code>Qwen/Qwen3-8B</code></td>
+<td><code>Qwen/Qwen3-8B-Instruct</code> (404)</td>
+</tr>
+<tr>
+<td>Qwen3 30B-A3B</td>
+<td><code>Qwen/Qwen3-30B-A3B</code></td>
+<td><code>Qwen/Qwen3-30B-A3B-Instruct</code> (404)</td>
+</tr>
+<tr>
+<td>Qwen3-Coder 80B</td>
+<td><code>Qwen/Qwen3-Coder-80B-Instruct</code></td>
+<td>(the Coder line keeps <code>-Instruct</code>)</td>
+</tr>
+<tr>
+<td>Qwen2.5-Coder 32B</td>
+<td><code>Qwen/Qwen2.5-Coder-32B-Instruct</code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>Always verify HuggingFace repo IDs in the browser before adding a new model family.
+See <a href="../lessons-learned/#17">lesson #17</a>.</p>
 
 
 

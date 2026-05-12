@@ -592,6 +592,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../model-profiles/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Model Profile Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1702,6 +1730,34 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#security" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Security
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Security">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#26-diff-scanning-catch-secrets-and-scope-drift-before-push" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        26. Diff scanning — catch secrets and scope drift before push
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2155,6 +2211,34 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#security" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Security
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Security">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#26-diff-scanning-catch-secrets-and-scope-drift-before-push" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        26. Diff scanning — catch secrets and scope drift before push
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2454,6 +2538,25 @@ exactly what to do from the task string — conventions were inert.</p>
 - Conventions that don't apply to the specific task</p>
 <p><strong>Rule:</strong> Ask "would the agent call glob or read N files to discover this?" If yes, inject it.
 If the task string already encodes the answer, skip it.</p>
+<hr />
+<h2 id="security">Security<a class="headerlink" href="#security" title="Permanent link">&para;</a></h2>
+<h3 id="26-diff-scanning-catch-secrets-and-scope-drift-before-push">26. Diff scanning — catch secrets and scope drift before push<a class="headerlink" href="#26-diff-scanning-catch-secrets-and-scope-drift-before-push" title="Permanent link">&para;</a></h3>
+<p><strong>Problem:</strong> Agents can accidentally include hardcoded secrets (copied from env vars or examples),
+modify files outside the intended scope, or introduce insecure patterns (eval, shell=True,
+pickle.loads) without any gate between <code>git diff</code> and <code>git push</code>.</p>
+<p><strong>Fix:</strong> SCANNING phase runs <code>scan_diff()</code> immediately after <code>collect_diff</code> (and after the
+empty-diff retry). Three rule categories:</p>
+<ol>
+<li><strong>Secrets (error, blocking)</strong> — AWS access keys, GitHub PATs, OpenAI keys, Slack tokens,
+   generic hardcoded credential assignments.  Run blocked; PhaseError raised.</li>
+<li><strong>Scope violations (warning, non-blocking)</strong> — files modified outside <code>context_files</code> declared
+   in the YAML task spec.  Logged to stderr; run continues.</li>
+<li><strong>OWASP patterns (warning, non-blocking)</strong> — eval(), shell=True, os.system(), pickle.loads(),
+   unsafe yaml.load().  High-signal but too many legitimate uses to block.</li>
+</ol>
+<p><strong>Rule:</strong> Blocking on secrets is safe (precision is high).  Blocking on OWASP is not — test
+harnesses legitimately use eval and subprocess.  Warnings give the operator visibility without
+false failures.</p>
 
 
 
