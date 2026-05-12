@@ -1056,6 +1056,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../analysis/2026-05-12/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    2026-05-12
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../analysis/2026-05-09/" class="md-nav__link">
         
   
@@ -1659,10 +1687,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#25-the-frugal-injection-principle-injected-context-must-save-more-tokens-than-it-adds" class="md-nav__link">
+  <a href="#25-the-frugal-injection-principle-conventions-only-pay-off-when-the-agent-would-otherwise-explore" class="md-nav__link">
     <span class="md-ellipsis">
       
-        25. The frugal injection principle — injected context must save more tokens than it adds
+        25. The frugal injection principle — conventions only pay off when the agent would otherwise explore
       
     </span>
   </a>
@@ -2112,10 +2140,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#25-the-frugal-injection-principle-injected-context-must-save-more-tokens-than-it-adds" class="md-nav__link">
+  <a href="#25-the-frugal-injection-principle-conventions-only-pay-off-when-the-agent-would-otherwise-explore" class="md-nav__link">
     <span class="md-ellipsis">
       
-        25. The frugal injection principle — injected context must save more tokens than it adds
+        25. The frugal injection principle — conventions only pay off when the agent would otherwise explore
       
     </span>
   </a>
@@ -2381,19 +2409,51 @@ vs ~117–274 for Coder models).</p>
 (algorithm design, subtle correctness bugs). For mechanical tasks Qwen2.5-Coder is cheaper
 and faster.</p>
 <hr />
-<h3 id="25-the-frugal-injection-principle-injected-context-must-save-more-tokens-than-it-adds">25. The frugal injection principle — injected context must save more tokens than it adds<a class="headerlink" href="#25-the-frugal-injection-principle-injected-context-must-save-more-tokens-than-it-adds" title="Permanent link">&para;</a></h3>
+<h3 id="25-the-frugal-injection-principle-conventions-only-pay-off-when-the-agent-would-otherwise-explore">25. The frugal injection principle — conventions only pay off when the agent would otherwise explore<a class="headerlink" href="#25-the-frugal-injection-principle-conventions-only-pay-off-when-the-agent-would-otherwise-explore" title="Permanent link">&para;</a></h3>
 <p><strong>Principle:</strong> Every token added to the task prompt is a cost. Context injection is only
 worthwhile if it eliminates more tokens than it introduces — by replacing exploratory tool
 calls the agent would otherwise make.</p>
-<p><strong>Examples:</strong>
-- <code>AGENTS.md</code> with repo structure + acceptance criteria: adds ~500–1,500 tokens, eliminates
-  1–3 exploratory turns (~3,000–9,000 tokens saved). Net: positive.
-- Injecting the full source file when the agent would read it in turn 1 anyway: net neutral.
-- Injecting a test command string eliminates a test-discovery turn (~3,000 tokens). Net:
-  strongly positive.</p>
-<p><strong>Rule:</strong> Measure before injecting. If the agent's first tool call is always <code>glob("**/*.py")</code>
-followed by <code>read("mathlib.py")</code>, those two turns (~7,000 tokens) are the target. Speculative
-injection the agent ignores is pure waste.</p>
+<p><strong>Measured (2026-05-12, #155):</strong> Injecting <code>AgentTaskSpec.conventions</code> (~300 tokens) against
+a 3-file repo with an explicit task added <strong>+334 prompt tokens</strong> and saved <strong>zero turns</strong>.
+Tool trace was identical with and without conventions: <code>read → edit</code>. The agent already knew
+exactly what to do from the task string — conventions were inert.</p>
+<p><strong>When conventions pay off — scales with exploratory overhead:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Scenario</th>
+<th>Without conventions</th>
+<th>Savings</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>3-file repo, explicit task</td>
+<td><code>read</code> → <code>edit</code></td>
+<td>nothing</td>
+</tr>
+<tr>
+<td>50-file repo, vague task</td>
+<td><code>glob</code> → <code>read</code> × 3–5 → <code>edit</code></td>
+<td>3–5 turns (~15–25k tokens)</td>
+</tr>
+<tr>
+<td>Any task, non-obvious test command</td>
+<td>test-discovery turn</td>
+<td>~3k tokens</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Highest-value injections (always worth it):</strong>
+- The test command (<code>pytest test_mathlib.py -q</code>) — eliminates a discovery turn every time
+- Which file to touch when the repo has 50+ files — replaces 2–4 glob/read calls
+- Acceptance criteria — helps the model recognize "done" and produce a clean <code>end_turn</code></p>
+<p><strong>Not worth injecting:</strong>
+- Repo structure when the task names the file explicitly
+- Full file content when the agent will read it in turn 1 anyway
+- Conventions that don't apply to the specific task</p>
+<p><strong>Rule:</strong> Ask "would the agent call glob or read N files to discover this?" If yes, inject it.
+If the task string already encodes the answer, skip it.</p>
 
 
 
