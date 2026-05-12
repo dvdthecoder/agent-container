@@ -16,6 +16,17 @@ OPENCODE_MODEL=qwen2.5-coder  # must match SERVED_MODEL_NAME in modal/serve.py
 
 ---
 
+!!! warning "HF_TOKEN required before deploy"
+    `modal/serve.py` reads `HF_TOKEN` from your `.env` at deploy time and bakes it into the
+    container. If the variable is missing you will see `KeyError: 'HF_TOKEN'` immediately.
+    Get a read-access token at [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens)
+    and add it to `.env` before running `modal deploy`.
+
+    Gated models (Qwen3-Coder, MiniMax M2.5) additionally require that your HuggingFace
+    account has been granted access on the model's page before the weights can be downloaded.
+
+---
+
 ## Profiles and model registry
 
 Two profiles in `modal/serve.py`, selected by `SERVE_PROFILE`:

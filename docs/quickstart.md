@@ -16,46 +16,60 @@ pip install agent-container
 modal token new   # browser prompt — saves token to ~/.modal.toml
 ```
 
-## 2. Deploy your model
+## 2. Configure `.env` before deploying
 
-Everything runs on Modal — including the model. Deploy it once and it scales to zero when idle.
-
-```bash
-modal deploy modal/serve.py                        # Qwen2.5-Coder 32B  — A100 80GB   (start here)
-SERVE_PROFILE=prod    modal deploy modal/serve.py  # Qwen3-Coder 80B   — 2×A100 80GB (production)
-SERVE_PROFILE=minimax modal deploy modal/serve.py  # MiniMax M2.5      — 8×A100 80GB (best quality)
-```
-
-Modal prints the endpoint URL after deploy — you need it in the next step:
-
-```
-✓ Created web endpoint: https://your-org--agent-container-serve.modal.run
-```
-
-## 3. Configure
+Copy the example file and fill in your tokens **before** running `modal deploy`.
+`modal/serve.py` reads `HF_TOKEN` from `.env` at deploy time — if it is missing the deploy
+fails with `KeyError: 'HF_TOKEN'`.
 
 ```bash
 cp .env.example .env
 ```
 
-Fill in four things:
+Minimum required fields:
 
 ```bash
-# Modal credentials
+# HuggingFace — read access is enough for all supported models.
+# Get a token at https://huggingface.co/settings/tokens
+HF_TOKEN=hf_...
+
+# Modal CLI credentials — get at https://modal.com/settings/tokens
 MODAL_TOKEN_ID=ak-...
 MODAL_TOKEN_SECRET=as-...
 
-# HuggingFace — needed to download model weights during deploy
-HF_TOKEN=hf_...
-
-# Your model endpoint (URL from step 2 — no /v1 suffix)
-OPENAI_BASE_URL=https://your-org--agent-container-serve.modal.run
-OPENAI_API_KEY=modal
-OPENCODE_MODEL=qwen2.5-coder   # must match SERVED_MODEL_NAME in modal/serve.py
-
-# GitHub token — Contents (read) + Pull Requests (read/write)
+# GitHub — fine-grained token: Contents (read) + Pull Requests (read/write)
 GITHUB_TOKEN=ghp_...
 ```
+
+!!! warning "HF_TOKEN must exist before `modal deploy`"
+    `modal/serve.py` bakes `HF_TOKEN` into the container secret at deploy time.
+    If it is missing you will see `KeyError: 'HF_TOKEN'` and the deploy will abort.
+    Gated models (Qwen3-Coder, MiniMax M2.5) also require that your HuggingFace
+    account has been granted access on each model's HuggingFace page before downloading.
+
+## 3. Deploy your model
+
+Everything runs on Modal — including the model. Deploy it once and it scales to zero when idle.
+
+```bash
+modal deploy modal/serve.py   # default: Qwen2.5-Coder 32B · A100 80GB
+```
+
+Modal prints the endpoint URL after deploy — copy it:
+
+```
+✓ Created web endpoint: https://your-org--agent-container-serve-qwen2-5-coder-32b-serve.modal.run
+```
+
+Add it to `.env`:
+
+```bash
+OPENAI_BASE_URL=https://your-org--agent-container-serve-qwen2-5-coder-32b-serve.modal.run
+OPENAI_API_KEY=modal
+OPENCODE_MODEL=qwen2.5-coder-32b   # must match served_name in modal/serve.py
+```
+
+See [Model Profile Guide](model-profiles.md) for other model options and GPU sizing.
 
 ## 4. Run your first task
 
@@ -116,6 +130,7 @@ make example BACKEND=opencode   # opencode backend
 
 ## Next steps
 
+- [Model Profile Guide](model-profiles.md) — when to use 7B vs 32B vs MoE, GPU sizing
 - [Model Setup](models.md) — GPU profiles, vLLM, scale-to-zero
 - [Agent Backends](agents.md) — use Claude Code or Gemini CLI instead of OpenCode
 - [MCP Integration](mcp.md) — trigger runs from inside Claude Code

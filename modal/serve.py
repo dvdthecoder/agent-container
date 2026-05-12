@@ -262,6 +262,11 @@ else:
     secrets=[
         modal.Secret.from_dict(
             {
+                # HF_TOKEN is read from .env at deploy time (loaded above).
+                # If missing, deploy fails with KeyError: 'HF_TOKEN'.
+                # Get a read-access token at huggingface.co/settings/tokens
+                # and add HF_TOKEN=hf_... to your .env before deploying.
+                # Gated models (Qwen3-Coder, MiniMax) require HF account access too.
                 "HF_TOKEN": os.environ["HF_TOKEN"],
                 # Bake SERVE_PROFILE and SERVE_MODEL into the container so
                 # module-level branches resolve correctly when the container

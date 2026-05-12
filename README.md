@@ -66,6 +66,30 @@ self-hosted backends.
 
 ---
 
+## Prerequisites
+
+Before running `modal deploy`, make sure these four things are in your `.env`:
+
+| Variable | Where to get it | Why |
+|---|---|---|
+| `HF_TOKEN` | [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens) — read access | `modal/serve.py` reads this at deploy time to download model weights |
+| `MODAL_TOKEN_ID` / `MODAL_TOKEN_SECRET` | [modal.com/settings/tokens](https://modal.com/settings/tokens) | authenticates the Modal CLI |
+| `GITHUB_TOKEN` | GitHub → Settings → Developer settings → Fine-grained tokens | opens pull requests from the sandbox |
+| `OPENAI_BASE_URL` | printed by `modal deploy` | points the sandbox at your model endpoint |
+
+```bash
+cp .env.example .env
+# fill in HF_TOKEN, MODAL_TOKEN_ID, MODAL_TOKEN_SECRET, GITHUB_TOKEN
+# then:
+modal token new          # browser login, saves to ~/.modal.toml
+modal deploy modal/serve.py   # prints OPENAI_BASE_URL — paste it into .env
+```
+
+> **If `modal deploy` fails with `KeyError: 'HF_TOKEN'`** — your `.env` is missing the token.
+> Get one at huggingface.co/settings/tokens (read scope is enough for all supported models).
+
+---
+
 ## Documentation
 
 **[dvdthecoder.github.io/agent-container](https://dvdthecoder.github.io/agent-container)**
