@@ -62,6 +62,7 @@ nav:
     - Quickstart: quickstart.md
     - Architecture: architecture.md
     - Model Setup: models.md
+    - Model Profile Guide: model-profiles.md
   - Using It:
     - Agent Backends: agents.md
     - Building Agent Context: context.md
