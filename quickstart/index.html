@@ -604,10 +604,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#2-deploy-your-model" class="md-nav__link">
+  <a href="#2-configure-env-before-deploying" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Deploy your model
+        2. Configure .env before deploying
       
     </span>
   </a>
@@ -615,10 +615,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-configure" class="md-nav__link">
+  <a href="#3-deploy-your-model" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. Configure
+        3. Deploy your model
       
     </span>
   </a>
@@ -1485,10 +1485,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#2-deploy-your-model" class="md-nav__link">
+  <a href="#2-configure-env-before-deploying" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Deploy your model
+        2. Configure .env before deploying
       
     </span>
   </a>
@@ -1496,10 +1496,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-configure" class="md-nav__link">
+  <a href="#3-deploy-your-model" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. Configure
+        3. Deploy your model
       
     </span>
   </a>
@@ -1594,73 +1594,84 @@
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pip<span class="w"> </span>install<span class="w"> </span>agent-container
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>modal<span class="w"> </span>token<span class="w"> </span>new<span class="w">   </span><span class="c1"># browser prompt — saves token to ~/.modal.toml</span>
 </code></pre></div>
-<h2 id="2-deploy-your-model">2. Deploy your model<a class="headerlink" href="#2-deploy-your-model" title="Permanent link">&para;</a></h2>
+<h2 id="2-configure-env-before-deploying">2. Configure <code>.env</code> before deploying<a class="headerlink" href="#2-configure-env-before-deploying" title="Permanent link">&para;</a></h2>
+<p>Copy the example file and fill in your tokens <strong>before</strong> running <code>modal deploy</code>.
+<code>modal/serve.py</code> reads <code>HF_TOKEN</code> from <code>.env</code> at deploy time — if it is missing the deploy
+fails with <code>KeyError: 'HF_TOKEN'</code>.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>cp<span class="w"> </span>.env.example<span class="w"> </span>.env
+</code></pre></div>
+<p>Minimum required fields:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># HuggingFace — read access is enough for all supported models.</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="c1"># Get a token at https://huggingface.co/settings/tokens</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="nv">HF_TOKEN</span><span class="o">=</span>hf_...
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="c1"># Modal CLI credentials — get at https://modal.com/settings/tokens</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="nv">MODAL_TOKEN_ID</span><span class="o">=</span>ak-...
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="nv">MODAL_TOKEN_SECRET</span><span class="o">=</span>as-...
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="c1"># GitHub — fine-grained token: Contents (read) + Pull Requests (read/write)</span>
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="nv">GITHUB_TOKEN</span><span class="o">=</span>ghp_...
+</code></pre></div>
+<div class="admonition warning">
+<p class="admonition-title">HF_TOKEN must exist before <code>modal deploy</code></p>
+<p><code>modal/serve.py</code> bakes <code>HF_TOKEN</code> into the container secret at deploy time.
+If it is missing you will see <code>KeyError: 'HF_TOKEN'</code> and the deploy will abort.
+Gated models (Qwen3-Coder, MiniMax M2.5) also require that your HuggingFace
+account has been granted access on each model's HuggingFace page before downloading.</p>
+</div>
+<h2 id="3-deploy-your-model">3. Deploy your model<a class="headerlink" href="#3-deploy-your-model" title="Permanent link">&para;</a></h2>
 <p>Everything runs on Modal — including the model. Deploy it once and it scales to zero when idle.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>modal<span class="w"> </span>deploy<span class="w"> </span>modal/serve.py<span class="w">                        </span><span class="c1"># Qwen2.5-Coder 32B  — A100 80GB   (start here)</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nv">SERVE_PROFILE</span><span class="o">=</span>prod<span class="w">    </span>modal<span class="w"> </span>deploy<span class="w"> </span>modal/serve.py<span class="w">  </span><span class="c1"># Qwen3-Coder 80B   — 2×A100 80GB (production)</span>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="nv">SERVE_PROFILE</span><span class="o">=</span>minimax<span class="w"> </span>modal<span class="w"> </span>deploy<span class="w"> </span>modal/serve.py<span class="w">  </span><span class="c1"># MiniMax M2.5      — 8×A100 80GB (best quality)</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>modal<span class="w"> </span>deploy<span class="w"> </span>modal/serve.py<span class="w">   </span><span class="c1"># default: Qwen2.5-Coder 32B · A100 80GB</span>
 </code></pre></div>
-<p>Modal prints the endpoint URL after deploy — you need it in the next step:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>✓ Created web endpoint: https://your-org--agent-container-serve.modal.run
+<p>Modal prints the endpoint URL after deploy — copy it:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>✓ Created web endpoint: https://your-org--agent-container-serve-qwen2-5-coder-32b-serve.modal.run
 </code></pre></div>
-<h2 id="3-configure">3. Configure<a class="headerlink" href="#3-configure" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>cp<span class="w"> </span>.env.example<span class="w"> </span>.env
+<p>Add it to <code>.env</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nv">OPENAI_BASE_URL</span><span class="o">=</span>https://your-org--agent-container-serve-qwen2-5-coder-32b-serve.modal.run
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="nv">OPENAI_API_KEY</span><span class="o">=</span>modal
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="nv">OPENCODE_MODEL</span><span class="o">=</span>qwen2.5-coder-32b<span class="w">   </span><span class="c1"># must match served_name in modal/serve.py</span>
 </code></pre></div>
-<p>Fill in four things:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># Modal credentials</span>
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="nv">MODAL_TOKEN_ID</span><span class="o">=</span>ak-...
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="nv">MODAL_TOKEN_SECRET</span><span class="o">=</span>as-...
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="c1"># HuggingFace — needed to download model weights during deploy</span>
-<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="nv">HF_TOKEN</span><span class="o">=</span>hf_...
-<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>
-<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="c1"># Your model endpoint (URL from step 2 — no /v1 suffix)</span>
-<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="nv">OPENAI_BASE_URL</span><span class="o">=</span>https://your-org--agent-container-serve.modal.run
-<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="nv">OPENAI_API_KEY</span><span class="o">=</span>modal
-<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="nv">OPENCODE_MODEL</span><span class="o">=</span>qwen2.5-coder<span class="w">   </span><span class="c1"># must match SERVED_MODEL_NAME in modal/serve.py</span>
-<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>
-<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="c1"># GitHub token — Contents (read) + Pull Requests (read/write)</span>
-<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="nv">GITHUB_TOKEN</span><span class="o">=</span>ghp_...
-</code></pre></div>
+<p>See <a href="../model-profiles/">Model Profile Guide</a> for other model options and GPU sizing.</p>
 <h2 id="4-run-your-first-task">4. Run your first task<a class="headerlink" href="#4-run-your-first-task" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>agent-run<span class="w"> </span>run<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span>--repo<span class="w"> </span>https://github.com/org/myapp<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span>--task<span class="w"> </span><span class="s2">&quot;Fix the off-by-one error in the pagination helper&quot;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>agent-run<span class="w"> </span>run<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span>--repo<span class="w"> </span>https://github.com/org/myapp<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span>--task<span class="w"> </span><span class="s2">&quot;Fix the off-by-one error in the pagination helper&quot;</span>
 </code></pre></div>
 <p>Output:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>[sandbox] phase=WARMING   inference endpoint ready  elapsed=87s
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>[sandbox] phase=BOOTING   starting Modal sandbox...
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>[sandbox] phase=CLONING   git clone https://github.com/org/myapp
-<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>[sandbox] phase=RUNNING   [aider] writing changes...
-<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>[sandbox] phase=TESTING   pytest — 12 passed
-<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>[sandbox] phase=PR        opening pull request...
-<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>[sandbox] container terminated
-<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>
-<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>Done in 1m 52s
-<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>PR: https://github.com/org/myapp/pull/42   +12 −3
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>[sandbox] phase=WARMING   inference endpoint ready  elapsed=87s
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>[sandbox] phase=BOOTING   starting Modal sandbox...
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>[sandbox] phase=CLONING   git clone https://github.com/org/myapp
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>[sandbox] phase=RUNNING   [aider] writing changes...
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>[sandbox] phase=TESTING   pytest — 12 passed
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>[sandbox] phase=PR        opening pull request...
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>[sandbox] container terminated
+<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>
+<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>Done in 1m 52s
+<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>PR: https://github.com/org/myapp/pull/42   +12 −3
 </code></pre></div>
 <h2 id="5-start-the-dashboard-optional">5. Start the dashboard (optional)<a class="headerlink" href="#5-start-the-dashboard-optional" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>make<span class="w"> </span>dashboard
-<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="c1"># → http://localhost:8000</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>make<span class="w"> </span>dashboard
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="c1"># → http://localhost:8000</span>
 </code></pre></div>
 <p>Live view of all running, completed, and failed agent runs — phases, log stream, PR links.</p>
 <h2 id="6-wire-up-mcp-optional">6. Wire up MCP (optional)<a class="headerlink" href="#6-wire-up-mcp-optional" title="Permanent link">&para;</a></h2>
 <p><code>.claude/settings.json</code> is already checked into the repo. Fill in your tokens and the
 <code>sandbox_run</code>, <code>sandbox_list</code>, <code>sandbox_status</code>, <code>sandbox_stop</code> tools appear automatically
 in Claude Code and Gemini CLI.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>make<span class="w"> </span>mcp<span class="w">          </span><span class="c1"># start MCP server standalone (stdio)</span>
-<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>claude<span class="w"> </span>mcp<span class="w"> </span>list<span class="w">   </span><span class="c1"># verify agent-container appears</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>make<span class="w"> </span>mcp<span class="w">          </span><span class="c1"># start MCP server standalone (stdio)</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>claude<span class="w"> </span>mcp<span class="w"> </span>list<span class="w">   </span><span class="c1"># verify agent-container appears</span>
 </code></pre></div>
 <hr />
 <h2 id="smoke-test">Smoke test<a class="headerlink" href="#smoke-test" title="Permanent link">&para;</a></h2>
 <p>Once configured, verify the full pipeline end-to-end against the fixture repo:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>make<span class="w"> </span>example<span class="w">                    </span><span class="c1"># aider backend (default)</span>
-<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>make<span class="w"> </span>example<span class="w"> </span><span class="nv">BACKEND</span><span class="o">=</span>opencode<span class="w">   </span><span class="c1"># opencode backend</span>
-<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="c1"># boots sandbox → clones fixture repo → runs agent → opens PR</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>make<span class="w"> </span>example<span class="w">                    </span><span class="c1"># aider backend (default)</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>make<span class="w"> </span>example<span class="w"> </span><span class="nv">BACKEND</span><span class="o">=</span>opencode<span class="w">   </span><span class="c1"># opencode backend</span>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="c1"># boots sandbox → clones fixture repo → runs agent → opens PR</span>
 </code></pre></div>
 <hr />
 <h2 id="next-steps">Next steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
 <ul>
+<li><a href="../model-profiles/">Model Profile Guide</a> — when to use 7B vs 32B vs MoE, GPU sizing</li>
 <li><a href="../models/">Model Setup</a> — GPU profiles, vLLM, scale-to-zero</li>
 <li><a href="../agents/">Agent Backends</a> — use Claude Code or Gemini CLI instead of OpenCode</li>
 <li><a href="../mcp/">MCP Integration</a> — trigger runs from inside Claude Code</li>

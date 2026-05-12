@@ -1596,6 +1596,16 @@ weights are cached so cold starts after the first are fast.</p>
 <p>Set <code>OPENAI_BASE_URL</code> without a trailing <code>/v1</code>. The inference server and adapter add it.</p>
 </div>
 <hr />
+<div class="admonition warning">
+<p class="admonition-title">HF_TOKEN required before deploy</p>
+<p><code>modal/serve.py</code> reads <code>HF_TOKEN</code> from your <code>.env</code> at deploy time and bakes it into the
+container. If the variable is missing you will see <code>KeyError: 'HF_TOKEN'</code> immediately.
+Get a read-access token at <a href="https://huggingface.co/settings/tokens">huggingface.co/settings/tokens</a>
+and add it to <code>.env</code> before running <code>modal deploy</code>.</p>
+<p>Gated models (Qwen3-Coder, MiniMax M2.5) additionally require that your HuggingFace
+account has been granted access on the model's page before the weights can be downloaded.</p>
+</div>
+<hr />
 <h2 id="profiles-and-model-registry">Profiles and model registry<a class="headerlink" href="#profiles-and-model-registry" title="Permanent link">&para;</a></h2>
 <p>Two profiles in <code>modal/serve.py</code>, selected by <code>SERVE_PROFILE</code>:</p>
 <ul>
