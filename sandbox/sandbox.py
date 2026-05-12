@@ -23,6 +23,7 @@ from agent import git_ops, runner, tester
 from agent.backends import get_backend
 from agent.log_store import RunLogger
 from sandbox.config import SandboxConfig
+from sandbox.diff_scanner import scan_diff
 from sandbox.result import AgentTaskResult, SuiteResult
 from sandbox.spec import AgentTaskSpec
 
@@ -230,6 +231,26 @@ class ModalSandbox:
                         "agent exited 0 but made no changes (empty diff after 3 retries)",
                         time.monotonic() - start,
                     )
+
+                # ── SCANNING phase ───────────────────────────────────────────
+                # Run diff scanner: secrets → error (blocks run), scope &
+                # OWASP → warnings (logged, non-blocking).
+                if exit_code == 0 and diff:
+                    _emit("phase", phase="SCANNING")
+                    scan_result = scan_diff(
+                        diff,
+                        context_files=spec.resolved_context_files(),
+                    )
+                    for v in scan_result.warnings:
+                        print(f"[scanner] {v}", file=sys.stderr, flush=True)
+                    if not scan_result.passed:
+                        for v in scan_result.errors:
+                            print(f"[scanner] BLOCKED: {v}", file=sys.stderr, flush=True)
+                        raise PhaseError(
+                            "SCANNING",
+                            f"diff scanner blocked: {len(scan_result.errors)} secret(s) detected",
+                            time.monotonic() - start,
+                        )
 
                 branch: str | None = None
                 pr_url: str | None = None

@@ -142,6 +142,26 @@ class AgentTaskSpec:
         """
         return _expand_task_spec(self.resolved_task())
 
+    def resolved_context_files(self) -> list[str] | None:
+        """Return the context_files list if the task is a YAML spec, else None.
+
+        Used by the diff scanner to enforce scope guardrails — files modified
+        outside this list are flagged as scope warnings.
+        """
+        raw = self.resolved_task()
+        try:
+            data = yaml.safe_load(raw)
+        except yaml.YAMLError:
+            return None
+        if not isinstance(data, dict):
+            return None
+        cf = data.get("context_files")
+        if not cf:
+            return None
+        if isinstance(cf, list):
+            return [str(f) for f in cf if f]
+        return [str(cf)]
+
     def resolved_image(self, default_image: str) -> str:
         """Return the Docker image to use, falling back to SandboxConfig.default_image."""
         return self.image or default_image

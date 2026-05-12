@@ -73,7 +73,7 @@ Fill documentation gaps and add model comparison data.
 | Issue | Task | Status |
 |---|---|---|
 | [#114](https://github.com/dvdthecoder/agent-container/issues/114) | Model × backend analysis: token/cost/quality comparison across self-hosted models | ✅ [2026-05-05](analysis/2026-05-05.md) + [2026-05-08](analysis/2026-05-08.md) + [2026-05-09](analysis/2026-05-09.md) + [2026-05-12](analysis/2026-05-12.md) |
-| [#115](https://github.com/dvdthecoder/agent-container/issues/115) | Model profile guide — when to use 7B vs 32B vs MoE, GPU sizing rules | Planned |
+| [#115](https://github.com/dvdthecoder/agent-container/issues/115) | Model profile guide — when to use 7B vs 32B vs MoE, GPU sizing rules | ✅ [model-profiles.md](model-profiles.md) |
 | [#71](https://github.com/dvdthecoder/agent-container/issues/71) | `docs/lessons-learned.md` — hard problems, gotchas, team scaling guide | ✅ 25 entries |
 | [#112](https://github.com/dvdthecoder/agent-container/issues/112) | Parse structured JSON events from opencode into SQLite (thinking token tracking) | Planned |
 | [#153](https://github.com/dvdthecoder/agent-container/issues/153) | Re-run matrix post-#150 with both backends to confirm `<think>` strip + updated opencode/aider ratio | ✅ [2026-05-09](analysis/2026-05-09.md): Qwen3 −27%, ratio 8.4×, 32B 2/2 |
@@ -90,7 +90,7 @@ selective context injection. See [Building Agent Context](context.md) for the fu
 |---|---|---|
 | [#154](https://github.com/dvdthecoder/agent-container/issues/154) | Phase 1: `AGENTS.md` auto-injection — read from repo root, prepend to task prompt | ✅ |
 | [#154](https://github.com/dvdthecoder/agent-container/issues/154) | Phase 2: Structured YAML task spec — acceptance criteria, constraints, context files | ✅ `resolved_prompt()` expands YAML specs |
-| [#154](https://github.com/dvdthecoder/agent-container/issues/154) | Phase 3: Diff scanner — secret detection, scope guardrails, OWASP checks | Planned |
+| [#154](https://github.com/dvdthecoder/agent-container/issues/154) | Phase 3: Diff scanner — secret detection, scope guardrails, OWASP checks | ✅ `scan_diff()` in `sandbox/diff_scanner.py`; SCANNING phase wired into sandbox pipeline |
 | [#152](https://github.com/dvdthecoder/agent-container/issues/152) | Fix 32B reliability — retry `collect_diff` 3× after empty diff before raising PhaseError | ✅ |
 
 ### Phase 7 — Production hardening

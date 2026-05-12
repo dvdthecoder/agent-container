@@ -374,3 +374,27 @@ exactly what to do from the task string — conventions were inert.
 
 **Rule:** Ask "would the agent call glob or read N files to discover this?" If yes, inject it.
 If the task string already encodes the answer, skip it.
+
+---
+
+## Security
+
+### 26. Diff scanning — catch secrets and scope drift before push
+
+**Problem:** Agents can accidentally include hardcoded secrets (copied from env vars or examples),
+modify files outside the intended scope, or introduce insecure patterns (eval, shell=True,
+pickle.loads) without any gate between `git diff` and `git push`.
+
+**Fix:** SCANNING phase runs `scan_diff()` immediately after `collect_diff` (and after the
+empty-diff retry). Three rule categories:
+
+1. **Secrets (error, blocking)** — AWS access keys, GitHub PATs, OpenAI keys, Slack tokens,
+   generic hardcoded credential assignments.  Run blocked; PhaseError raised.
+2. **Scope violations (warning, non-blocking)** — files modified outside `context_files` declared
+   in the YAML task spec.  Logged to stderr; run continues.
+3. **OWASP patterns (warning, non-blocking)** — eval(), shell=True, os.system(), pickle.loads(),
+   unsafe yaml.load().  High-signal but too many legitimate uses to block.
+
+**Rule:** Blocking on secrets is safe (precision is high).  Blocking on OWASP is not — test
+harnesses legitimately use eval and subprocess.  Warnings give the operator visibility without
+false failures.
