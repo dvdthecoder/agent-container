@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
@@ -98,6 +99,7 @@ def run(
 @click.option("--source", default=None, help="Filter events by source (sandbox:stderr, acp…)")
 @click.option("--db", default=None, type=click.Path(path_type=Path), help="Path to runs.db")
 @click.option("-n", "--limit", default=20, show_default=True, help="Rows to show in list view")
+@click.option("--turns", is_flag=True, default=False, help="Show per-turn proxy breakdown")
 def logs(
     run_id: str | None,
     level: str | None,
@@ -105,6 +107,7 @@ def logs(
     source: str | None,
     db: Path | None,
     limit: int,
+    turns: bool,
 ) -> None:
     """Inspect run logs stored in the local SQLite database.
 
@@ -114,6 +117,9 @@ def logs(
 
     Show all events for a run:
         agent-run logs run-20260429-143022-abc123
+
+    Show per-turn proxy breakdown (tool calls, think chars):
+        agent-run logs <run-id> --turns
 
     Filter to errors only:
         agent-run logs <run-id> --level error
@@ -158,7 +164,36 @@ def logs(
                 click.echo(f"pr       : {run.pr_url}")
             if run.sandbox_id:
                 click.echo(f"sandbox  : {run.sandbox_id}")
+            if run.think_chars:
+                click.echo(f"think    : {run.think_chars:,} chars stripped (reasoning model)")
             click.echo("")
+
+            if turns:
+                turn_rows = store.turns(run_id)
+                if not turn_rows:
+                    click.echo("No per-turn data recorded for this run.")
+                else:
+                    header = f"{'TURN':>4}  {'TOOL CALLS':>10}  {'TEXT':>8}  {'THINK':>8}  TOOLS"
+                    click.echo(header)
+                    click.echo("-" * len(header))
+                    for t in turn_rows:
+                        try:
+                            tool_list = json.loads(t.tools)
+                            if tool_list and isinstance(tool_list[0], dict):
+                                names = ", ".join(d.get("name", "?") for d in tool_list)
+                            else:
+                                names = ", ".join(str(n) for n in tool_list)
+                        except Exception:  # noqa: BLE001
+                            names = t.tools
+                        think_note = f"{t.think_chars:>8,}" if t.think_chars else f"{'—':>8}"
+                        click.echo(
+                            f"{t.turn_num:>4}  {t.tool_calls:>10}  "
+                            f"{t.text_chars:>8,}  {think_note}  {names}"
+                        )
+                    total_think = sum(t.think_chars for t in turn_rows)
+                    if total_think:
+                        click.echo(f"\n  total think chars: {total_think:,}")
+                return
 
             events = store.events(run_id, level=level, phase=phase, source=source)
             if not events:

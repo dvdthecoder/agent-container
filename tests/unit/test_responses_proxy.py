@@ -542,6 +542,80 @@ class TestStreamChatToResponses:
 
 
 # ---------------------------------------------------------------------------
+# Structured tool_call stderr emit
+# ---------------------------------------------------------------------------
+
+
+def _capture_streaming_stderr(sse_lines: list[bytes]) -> list[str]:
+    """Run _stream_chat_to_responses and return lines written to stderr."""
+    import io as _io
+    import sys
+
+    handler = _make_handler()
+    handler.send_response = MagicMock()
+    handler.send_header = MagicMock()
+    handler.end_headers = MagicMock()
+    handler.wfile = _io.BytesIO()
+
+    mock_resp = MagicMock()
+    mock_resp.__iter__ = MagicMock(return_value=iter(sse_lines))
+
+    buf = _io.StringIO()
+    original_stderr = sys.stderr
+    sys.stderr = buf
+    try:
+        handler._stream_chat_to_responses(mock_resp)
+    finally:
+        sys.stderr = original_stderr
+    return buf.getvalue().splitlines()
+
+
+class TestToolCallEmit:
+    def test_tool_call_emits_runner_tool_call_json_line(self):
+        lines = _sse_lines(
+            _delta_chunk(tool_index=0, tool_id="call_x1", tool_name="read", tool_args=""),
+            _delta_chunk(tool_index=0, tool_args='{"path":"/a.py"}'),
+        )
+        stderr_lines = _capture_streaming_stderr(lines)
+        tc_lines = [ln for ln in stderr_lines if ln.startswith("[runner] tool_call:")]
+        assert len(tc_lines) == 1
+        payload = json.loads(tc_lines[0].split("[runner] tool_call: ", 1)[1])
+        assert payload["name"] == "read"
+        assert payload["call_id"] == "call_x1"
+        assert payload["args_len"] == len('{"path":"/a.py"}')
+
+    def test_multiple_tool_calls_emit_multiple_lines(self):
+        lines = _sse_lines(
+            _delta_chunk(tool_index=0, tool_id="c1", tool_name="read", tool_args="{}"),
+            _delta_chunk(tool_index=1, tool_id="c2", tool_name="edit", tool_args="{}"),
+        )
+        stderr_lines = _capture_streaming_stderr(lines)
+        tc_lines = [ln for ln in stderr_lines if ln.startswith("[runner] tool_call:")]
+        assert len(tc_lines) == 2
+        names = {json.loads(ln.split("[runner] tool_call: ", 1)[1])["name"] for ln in tc_lines}
+        assert names == {"read", "edit"}
+
+    def test_tool_call_emitted_before_stream_done_line(self):
+        lines = _sse_lines(
+            _delta_chunk(tool_index=0, tool_id="c1", tool_name="bash", tool_args="{}"),
+        )
+        stderr_lines = _capture_streaming_stderr(lines)
+        tc_idx = next(
+            (i for i, ln in enumerate(stderr_lines) if ln.startswith("[runner] tool_call:")), -1
+        )
+        done_idx = next((i for i, ln in enumerate(stderr_lines) if "stream done:" in ln), -1)
+        assert tc_idx >= 0, "no tool_call line found"
+        assert done_idx >= 0, "no stream done line found"
+        assert tc_idx < done_idx, "tool_call must appear before stream done"
+
+    def test_no_tool_call_emit_for_text_only_turn(self):
+        lines = _sse_lines(_delta_chunk(text="Task complete."))
+        stderr_lines = _capture_streaming_stderr(lines)
+        tc_lines = [ln for ln in stderr_lines if ln.startswith("[runner] tool_call:")]
+        assert tc_lines == []
+
+
+# ---------------------------------------------------------------------------
 # Token accumulation
 # ---------------------------------------------------------------------------
 

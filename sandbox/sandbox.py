@@ -164,6 +164,14 @@ class ModalSandbox:
                     r"(?:\s+think_stripped=(\d+)chars)?"
                     r".*tools=(\[.*?\])"
                 )
+                # Parses structured per-tool-call lines emitted by the proxy
+                # BEFORE the stream-done summary:
+                #   [runner] tool_call: {"name": "edit", "call_id": "...", "args_len": 892}
+                _tool_call_re = re.compile(r"\[runner\] tool_call: (\{.*\})")
+                # Buffer of per-call dicts for the current turn; flushed when the
+                # stream-done line fires.  Defined as a mutable cell so _on_log
+                # can update it without needing nonlocal.
+                _pending_tool_calls: list[dict] = []
 
                 def _on_log(label: str, line: str) -> None:
                     import json as _json
@@ -175,10 +183,26 @@ class ModalSandbox:
                             logger.set_token_usage(int(m[1]), int(m[2]), int(m[3]))
                         except Exception:  # noqa: BLE001, S110
                             pass
+
+                    # Accumulate per-call structured events for the current turn.
+                    mc = _tool_call_re.search(line)
+                    if mc:
+                        try:
+                            _pending_tool_calls.append(_json.loads(mc.group(1)))
+                        except Exception:  # noqa: BLE001, S110
+                            pass
+
                     mt = _proxy_turn_re.search(line)
                     if mt:
                         try:
-                            tools = _json.loads(mt.group(4).replace("'", '"'))
+                            # Use the richer per-call objects when available
+                            # (proxy emits [runner] tool_call: lines before summary).
+                            # Fall back to the plain name list from the summary line.
+                            if _pending_tool_calls:
+                                tools: list = list(_pending_tool_calls)
+                                _pending_tool_calls.clear()
+                            else:
+                                tools = _json.loads(mt.group(4).replace("'", '"'))
                             logger.record_turn(
                                 tool_calls=int(mt.group(1)),
                                 text_chars=int(mt.group(2)),

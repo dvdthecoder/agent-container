@@ -60,7 +60,8 @@ CREATE TABLE IF NOT EXISTS runs (
     sandbox_id      TEXT,
     prompt_tokens   INTEGER,
     completion_tokens INTEGER,
-    total_tokens    INTEGER
+    total_tokens    INTEGER,
+    think_chars     INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS events (
@@ -114,6 +115,7 @@ class RunRow:
     prompt_tokens: int | None = None
     completion_tokens: int | None = None
     total_tokens: int | None = None
+    think_chars: int = 0  # total <think> chars stripped across all proxy turns
 
 
 @dataclass
@@ -178,6 +180,7 @@ class RunLogger:
             ("prompt_tokens", "INTEGER"),
             ("completion_tokens", "INTEGER"),
             ("total_tokens", "INTEGER"),
+            ("think_chars", "INTEGER NOT NULL DEFAULT 0"),
         ]
         for col, defn in migrations:
             if col not in existing:
@@ -256,12 +259,20 @@ class RunLogger:
         tool_calls: int,
         text_chars: int,
         think_chars: int,
-        tools: list[str],
+        tools: list,
     ) -> None:
         """Record one proxy turn (one model call) with its tool and thinking data.
 
         Called by sandbox.py whenever it sees a ``[proxy] ← stream done:`` line
         in the agent stderr.  Turn number is auto-incremented per run.
+
+        ``tools`` may be a list of plain strings (legacy) or a list of dicts
+        ``{"name": "...", "call_id": "...", "args_len": N}`` (current format emitted
+        by the proxy when structured ``[runner] tool_call:`` lines precede the
+        stream-done summary).  Both are serialised as JSON to ``turns.tools``.
+
+        ``think_chars`` is also accumulated into the run-level ``runs.think_chars``
+        column so callers can query thinking overhead without joining to ``turns``.
         """
         import json
 
@@ -279,6 +290,12 @@ class RunLogger:
                     json.dumps(tools),
                 ),
             )
+            if think_chars:
+                # Accumulate into the run-level think_chars for fast aggregate queries.
+                self._conn.execute(
+                    "UPDATE runs SET think_chars = think_chars + ? WHERE run_id = ?",
+                    (think_chars, self.run_id),
+                )
             self._conn.commit()
 
     def set_token_usage(

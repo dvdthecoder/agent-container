@@ -284,6 +284,37 @@ def test_record_turn_captures_think_chars(logger, store):
     assert turns[0].think_chars == 3500
 
 
+def test_record_turn_accumulates_think_chars_in_runs(logger, store):
+    logger.record_turn(tool_calls=1, text_chars=50, think_chars=1200, tools=["read"])
+    logger.record_turn(tool_calls=1, text_chars=80, think_chars=900, tools=["edit"])
+    logger.record_turn(tool_calls=0, text_chars=30, think_chars=0, tools=[])
+    run = store.get_run(logger.run_id)
+    assert run is not None
+    assert run.think_chars == 2100  # 1200 + 900 + 0
+
+
+def test_record_turn_zero_think_chars_not_accumulated(logger, store):
+    logger.record_turn(tool_calls=1, text_chars=50, think_chars=0, tools=["read"])
+    run = store.get_run(logger.run_id)
+    assert run is not None
+    assert run.think_chars == 0
+
+
+def test_record_turn_stores_rich_tool_objects(logger, store):
+    tools = [{"name": "edit", "call_id": "call_abc", "args_len": 892}]
+    logger.record_turn(tool_calls=1, text_chars=80, think_chars=0, tools=tools)
+    turns = store.turns(logger.run_id)
+    parsed = json.loads(turns[0].tools)
+    assert parsed[0]["name"] == "edit"
+    assert parsed[0]["args_len"] == 892
+
+
+def test_think_chars_default_zero_on_new_run(logger, store):
+    run = store.get_run(logger.run_id)
+    assert run is not None
+    assert run.think_chars == 0
+
+
 def test_turns_empty_for_run_with_no_turns(logger, store):
     turns = store.turns(logger.run_id)
     assert turns == []

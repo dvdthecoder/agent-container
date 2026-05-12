@@ -192,6 +192,33 @@ def run_events(run_id: str) -> list[dict[str, Any]]:
     ]
 
 
+@router.get("/runs/{run_id}/turns")
+def run_turns(run_id: str) -> list[dict[str, Any]]:
+    """Return per-proxy-turn breakdown for a run.
+
+    Each entry represents one model call (one round-trip through the proxy):
+      turn_num     — 1-based sequence number
+      tool_calls   — number of tool calls the model made in this turn
+      text_chars   — length of the model's text response (after think-stripping)
+      think_chars  — characters stripped from <think> blocks (Qwen3 / reasoning models)
+      tools        — list of tool call objects or plain names, JSON-encoded
+    """
+    try:
+        rows = run_store.turns(run_id)
+    except FileNotFoundError:
+        return []
+    return [
+        {
+            "turn_num": r.turn_num,
+            "tool_calls": r.tool_calls,
+            "text_chars": r.text_chars,
+            "think_chars": r.think_chars,
+            "tools": r.tools,  # JSON string — client parses
+        }
+        for r in rows
+    ]
+
+
 @router.get("/runs/{run_id}/stream")
 async def stream_run(run_id: str) -> StreamingResponse:
     ws = store.get_run(run_id)
@@ -263,6 +290,7 @@ def list_tokens(backend: str = "", date_from: str = "", date_to: str = "") -> li
                 "prompt_tokens": row.prompt_tokens or 0,
                 "completion_tokens": row.completion_tokens or 0,
                 "total_tokens": row.total_tokens or 0,
+                "think_chars": row.think_chars or 0,
                 "duration_s": row.duration_s,
             }
         )

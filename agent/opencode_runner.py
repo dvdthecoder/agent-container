@@ -558,20 +558,29 @@ class _ProxyHandler(http.server.BaseHTTPRequestHandler):
         n_text_chars = len(text)
         tool_names = [tool_calls_buf[i]["name"] for i in sorted(tool_calls_buf)]
         think_note = f" think_stripped={think_chars}chars" if think_chars else ""
+        # Emit one structured JSON line per tool call BEFORE the summary line so
+        # that sandbox.py can buffer them and attach to the turn record.
+        for i in sorted(tool_calls_buf):
+            buf = tool_calls_buf[i]
+            # args_len lets callers know payload size without storing raw arguments.
+            tc_event = {
+                "name": buf["name"],
+                "call_id": buf["id"],
+                "args_len": len(buf["arguments"]),
+            }
+            print(f"[runner] tool_call: {json.dumps(tc_event)}", file=sys.stderr)
+            # Human-readable text form kept for log readability.
+            args_preview = buf["arguments"][:300].replace("\n", " ")
+            print(
+                f"[proxy]   tool[{i}] {buf['name']}  args={args_preview}",
+                file=sys.stderr,
+            )
         print(
             f"[proxy] ← stream done: tool_calls={n_tool_calls}"
             f" text={n_text_chars}chars{think_note} tool_choice={TOOL_CHOICE}"
             f" tools={tool_names}",
             file=sys.stderr,
         )
-        for i in sorted(tool_calls_buf):
-            buf = tool_calls_buf[i]
-            # Truncate args to 300 chars to keep logs readable
-            args_preview = buf["arguments"][:300].replace("\n", " ")
-            print(
-                f"[proxy]   tool[{i}] {buf['name']}  args={args_preview}",
-                file=sys.stderr,
-            )
 
         # Build the full output array for response.completed
         output = []
