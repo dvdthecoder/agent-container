@@ -72,11 +72,12 @@ Fill documentation gaps and add model comparison data.
 
 | Issue | Task | Status |
 |---|---|---|
-| [#114](https://github.com/dvdthecoder/agent-container/issues/114) | Model × backend analysis: token/cost/quality comparison across self-hosted models | ✅ [2026-05-05](analysis/2026-05-05.md) baseline + [2026-05-08](analysis/2026-05-08.md) post-#150 + [2026-05-09](analysis/2026-05-09.md) post-think-strip |
+| [#114](https://github.com/dvdthecoder/agent-container/issues/114) | Model × backend analysis: token/cost/quality comparison across self-hosted models | ✅ [2026-05-05](analysis/2026-05-05.md) + [2026-05-08](analysis/2026-05-08.md) + [2026-05-09](analysis/2026-05-09.md) + [2026-05-12](analysis/2026-05-12.md) |
 | [#115](https://github.com/dvdthecoder/agent-container/issues/115) | Model profile guide — when to use 7B vs 32B vs MoE, GPU sizing rules | Planned |
 | [#71](https://github.com/dvdthecoder/agent-container/issues/71) | `docs/lessons-learned.md` — hard problems, gotchas, team scaling guide | ✅ 25 entries |
 | [#112](https://github.com/dvdthecoder/agent-container/issues/112) | Parse structured JSON events from opencode into SQLite (thinking token tracking) | Planned |
 | [#153](https://github.com/dvdthecoder/agent-container/issues/153) | Re-run matrix post-#150 with both backends to confirm `<think>` strip + updated opencode/aider ratio | ✅ [2026-05-09](analysis/2026-05-09.md): Qwen3 −27%, ratio 8.4×, 32B 2/2 |
+| [#155](https://github.com/dvdthecoder/agent-container/issues/155) | Measure `AgentTaskSpec.conventions` token impact vs no-conventions baseline | ✅ [2026-05-12](analysis/2026-05-12.md): +334 tok overhead, 0 turns saved — conventions inert on simple tasks |
 
 ### Phase 6 — Frugal knowledge injection
 Give agents the context they need to succeed without blowing the token budget.

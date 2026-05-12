@@ -343,19 +343,34 @@ and faster.
 
 ---
 
-### 25. The frugal injection principle — injected context must save more tokens than it adds
+### 25. The frugal injection principle — conventions only pay off when the agent would otherwise explore
 
 **Principle:** Every token added to the task prompt is a cost. Context injection is only
 worthwhile if it eliminates more tokens than it introduces — by replacing exploratory tool
 calls the agent would otherwise make.
 
-**Examples:**
-- `AGENTS.md` with repo structure + acceptance criteria: adds ~500–1,500 tokens, eliminates
-  1–3 exploratory turns (~3,000–9,000 tokens saved). Net: positive.
-- Injecting the full source file when the agent would read it in turn 1 anyway: net neutral.
-- Injecting a test command string eliminates a test-discovery turn (~3,000 tokens). Net:
-  strongly positive.
+**Measured (2026-05-12, #155):** Injecting `AgentTaskSpec.conventions` (~300 tokens) against
+a 3-file repo with an explicit task added **+334 prompt tokens** and saved **zero turns**.
+Tool trace was identical with and without conventions: `read → edit`. The agent already knew
+exactly what to do from the task string — conventions were inert.
 
-**Rule:** Measure before injecting. If the agent's first tool call is always `glob("**/*.py")`
-followed by `read("mathlib.py")`, those two turns (~7,000 tokens) are the target. Speculative
-injection the agent ignores is pure waste.
+**When conventions pay off — scales with exploratory overhead:**
+
+| Scenario | Without conventions | Savings |
+|---|---|---|
+| 3-file repo, explicit task | `read` → `edit` | nothing |
+| 50-file repo, vague task | `glob` → `read` × 3–5 → `edit` | 3–5 turns (~15–25k tokens) |
+| Any task, non-obvious test command | test-discovery turn | ~3k tokens |
+
+**Highest-value injections (always worth it):**
+- The test command (`pytest test_mathlib.py -q`) — eliminates a discovery turn every time
+- Which file to touch when the repo has 50+ files — replaces 2–4 glob/read calls
+- Acceptance criteria — helps the model recognize "done" and produce a clean `end_turn`
+
+**Not worth injecting:**
+- Repo structure when the task names the file explicitly
+- Full file content when the agent will read it in turn 1 anyway
+- Conventions that don't apply to the specific task
+
+**Rule:** Ask "would the agent call glob or read N files to discover this?" If yes, inject it.
+If the task string already encodes the answer, skip it.
