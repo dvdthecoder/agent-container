@@ -132,12 +132,15 @@ def deploy_model(model: dict, wait_timeout: float) -> None:
     )
 
 
-def run_analysis(model: dict, base_url: str, backends: str, runs: int, cost_per_1m: float) -> Path:
+def run_analysis(
+    model: dict, base_url: str, backends: str, runs: int, cost_per_1m: float, task_tier: str
+) -> Path:
     app = _app_name(model["key"])
     endpoint = _endpoint_url(app, base_url)
     sidecar = SIDECAR_DIR / f"{model['key']}.json"
 
-    print(f"\n[matrix] running analysis for {model['label']} ...", flush=True)
+    tier_label = f" (task tier: {task_tier})"
+    print(f"\n[matrix] running analysis for {model['label']}{tier_label} ...", flush=True)
     print(f"[matrix] endpoint: {endpoint}", flush=True)
 
     _run(
@@ -152,6 +155,7 @@ def run_analysis(model: dict, base_url: str, backends: str, runs: int, cost_per_
             "ANALYSIS_MODEL_LABEL": model["label"],
             "ANALYSIS_ENDPOINT": endpoint,
             "ANALYSIS_OUTPUT_JSON": str(sidecar),
+            "ANALYSIS_TASK_TIER": task_tier,
         },
     )
     return sidecar
@@ -220,6 +224,13 @@ def main() -> None:
         help="Comma-separated model keys to run (default: all). "
         "e.g. --models qwen2.5-coder-7b,qwen3-30b",
     )
+    parser.add_argument(
+        "--task-tier",
+        default=os.environ.get("ANALYSIS_TASK_TIER", "tier1"),
+        choices=["tier1", "tier2", "tier3"],
+        help="Task difficulty tier (default: tier1). "
+        "tier1=bug fix, tier2=implementation, tier3=rename.",
+    )
     args = parser.parse_args()
 
     base_url = os.environ.get("OPENAI_BASE_URL", "")
@@ -254,6 +265,7 @@ def main() -> None:
             backends=args.backends,
             runs=args.runs,
             cost_per_1m=args.cost_per_1m,
+            task_tier=args.task_tier,
         )
 
     out = combine(args.date)

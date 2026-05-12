@@ -25,6 +25,10 @@ Environment (read from .env or shell):
                           pointing at an isolated per-model app endpoint
     ANALYSIS_OUTPUT_JSON  path to write a structured JSON sidecar alongside the
                           Markdown output (used by combine_analysis.py)
+    ANALYSIS_TASK_TIER    task difficulty tier: tier1 (default), tier2, tier3
+                          tier1 — single-line bug fix (sum_to_n off-by-one)
+                          tier2 — multi-file implementation (median + variance stubs)
+                          tier3 — exploratory grep + rename (geometry calc_* → area_*)
 
 Output
 ------
@@ -35,6 +39,7 @@ Sidecar JSON (written when ANALYSIS_OUTPUT_JSON is set):
     {
       "model_label": "Qwen3 8B · A10G",
       "cost_per_1m": 1.00,
+      "task_tier": "tier1",
       "task": "...",
       "rows": [{"backend": "aider", "run": 1, "success": true, ...}, ...]
     }
@@ -63,11 +68,39 @@ from sandbox.spec import AgentTaskSpec  # noqa: E402
 
 # ── config from env ───────────────────────────────────────────────────────────
 _FIXTURE_REPO = "https://github.com/dvdthecoder/agent-container-fixture"
-_TASK = (
-    "The function sum_to_n() in mathlib.py has an off-by-one bug: "
-    "it uses range(1, n) but should use range(1, n + 1). "
-    "Fix the bug so that all tests in test_mathlib.py pass."
-)
+
+_TASKS: dict[str, str] = {
+    "tier1": (
+        "The function sum_to_n() in mathlib.py has an off-by-one bug: "
+        "it uses range(1, n) but should use range(1, n + 1). "
+        "Fix the bug so that all tests in test_mathlib.py pass."
+    ),
+    "tier2": (
+        "Implement the missing functions in statslib.py. "
+        "The functions median() and variance() currently raise NotImplementedError. "
+        "Implement them correctly so all tests in test_statslib.py pass. "
+        "Do not modify test_statslib.py."
+    ),
+    "tier3": (
+        "The tests in test_geometry.py import functions from geometry.py using new names "
+        "(area_rectangle, area_circle, perimeter_rectangle, perimeter_circle) but the "
+        "functions are currently named with the old convention "
+        "(calc_area_rect, calc_area_circle, calc_perimeter_rect, calc_perimeter_circle). "
+        "Rename the functions in geometry.py to match the expected names, "
+        "then find and update all files that call the old names "
+        "so that all tests in test_geometry.py and test_shapes.py pass."
+    ),
+}
+
+TASK_TIER: str = os.environ.get("ANALYSIS_TASK_TIER", "tier1")
+if TASK_TIER not in _TASKS:
+    print(
+        f"ERROR: ANALYSIS_TASK_TIER={TASK_TIER!r} is not valid. "
+        f"Choose from: {list(_TASKS)}",
+        file=sys.stderr,
+    )
+    sys.exit(1)
+_TASK = _TASKS[TASK_TIER]
 
 _raw_backends = os.environ.get("ANALYSIS_BACKENDS", "aider,opencode")
 BACKENDS: list[str] = [b.strip() for b in _raw_backends.split(",") if b.strip()]
@@ -128,7 +161,11 @@ def main() -> None:
 
     print(f"\n# Token Analysis — model: `{model_label}`\n", flush=True)
     print(f"Backends: {', '.join(BACKENDS)}  |  Runs per backend: {RUNS_PER_BACKEND}", flush=True)
-    print(f"Cost rate: ${COST_PER_1M:.2f} / 1M tokens  |  Create PR: {not NO_PR}\n", flush=True)
+    print(
+        f"Task tier: {TASK_TIER}  |  Cost rate: ${COST_PER_1M:.2f} / 1M tokens"
+        f"  |  Create PR: {not NO_PR}\n",
+        flush=True,
+    )
 
     rows: list[dict] = []
     run_num = 0
@@ -226,6 +263,7 @@ def main() -> None:
             "model_label": model_label,
             "model": model,
             "cost_per_1m": COST_PER_1M,
+            "task_tier": TASK_TIER,
             "task": _TASK,
             "rows": rows,
         }

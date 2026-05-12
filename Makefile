@@ -21,8 +21,10 @@ test-serve:
 # Markdown summary.  Requires OPENAI_BASE_URL and OPENCODE_MODEL to be set.
 #
 # Usage:
-#   make test-analysis                           # aider + opencode, 1 run each
-#   make test-analysis BACKENDS=opencode RUNS=3  # 3 opencode runs
+#   make test-analysis                              # aider + opencode, tier1, 1 run each
+#   make test-analysis BACKENDS=opencode RUNS=3     # 3 opencode runs
+#   make test-analysis TIER=tier2                   # harder task (implement median+variance)
+#   make test-analysis TIER=tier3                   # hardest task (exploratory rename)
 #   make test-analysis BACKENDS=aider COST_PER_1M=0.80
 #   make test-analysis > docs/analysis/$(date +%Y-%m-%d).md
 #
@@ -33,6 +35,7 @@ NO_PR        ?= 0
 MODEL_LABEL  ?=
 ENDPOINT     ?=
 OUTPUT_JSON  ?=
+TIER         ?= tier1
 
 test-analysis:
 	ANALYSIS_BACKENDS=$(BACKENDS) \
@@ -42,6 +45,7 @@ test-analysis:
 	ANALYSIS_MODEL_LABEL=$(MODEL_LABEL) \
 	ANALYSIS_ENDPOINT=$(ENDPOINT) \
 	ANALYSIS_OUTPUT_JSON=$(OUTPUT_JSON) \
+	ANALYSIS_TASK_TIER=$(TIER) \
 	python3 scripts/token_analysis.py
 
 # ── model server deployment ───────────────────────────────────────────────────
@@ -96,7 +100,8 @@ analysis-matrix:
 		--runs $(RUNS) \
 		--cost-per-1m $(COST_PER_1M) \
 		--date $(DATE) \
-		--wait-timeout $(WAIT_TIMEOUT)
+		--wait-timeout $(WAIT_TIMEOUT) \
+		--task-tier $(TIER)
 
 # ── combine analysis sidecars into a matrix page ─────────────────────────────
 # Merge all JSON sidecars in docs/analysis/data/ into one dated Markdown page.
