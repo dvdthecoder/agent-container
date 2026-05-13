@@ -184,7 +184,7 @@ def main() -> None:
                 create_pr=not NO_PR,
                 run_tests=True,
                 timeout_coldstart=300,
-                timeout_agent=600,
+                timeout_agent=300,
                 timeout_tests=120,
             )
 
