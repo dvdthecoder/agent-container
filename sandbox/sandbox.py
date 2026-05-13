@@ -225,6 +225,14 @@ class ModalSandbox:
                 if exit_code == 0 and spec.run_tests:
                     _emit("phase", phase="TESTING")
                     suite = tester.detect_and_run(sb)
+                    # #158: gate PR creation on test results — a run that breaks
+                    # tests should be marked failed, not silently opened as a PR.
+                    if suite is not None and suite.failed > 0:
+                        raise PhaseError(
+                            "TESTING",
+                            f"{suite.failed} test(s) failed ({suite.passed} passed)",
+                            time.monotonic() - start,
+                        )
 
                 diff, diff_stat = git_ops.collect_diff(sb, base_branch=spec.base_branch)
 
