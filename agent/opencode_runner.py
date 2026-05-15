@@ -411,7 +411,10 @@ class _ProxyHandler(http.server.BaseHTTPRequestHandler):
                 converted.append(_TASK_COMPLETE_TOOL)
 
             chat_req["tools"] = converted
-            chat_req["tool_choice"] = "auto" if task_done else TOOL_CHOICE
+            # "none" after task_complete forces a text-only response — the model
+            # cannot call any further tools and must write its closing summary.
+            # "auto" is not enough: the model will keep calling bash even in auto.
+            chat_req["tool_choice"] = "none" if task_done else TOOL_CHOICE
             chat_req["parallel_tool_calls"] = False
 
         for key in ("temperature", "max_tokens"):
