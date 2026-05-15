@@ -398,3 +398,97 @@ empty-diff retry). Three rule categories:
 **Rule:** Blocking on secrets is safe (precision is high).  Blocking on OWASP is not — test
 harnesses legitimately use eval and subprocess.  Warnings give the operator visibility without
 false failures.
+
+---
+
+## Analysis and benchmarking
+
+### 27. Test gating gap — test failures didn't block PR creation
+
+**Problem:** The TESTING phase ran `pytest` and stored the `SuiteResult`, but `result.success`
+was determined solely by the agent's exit code (`exit_code == 0`).  A run that produced broken
+code, opened a PR, and reported ✅ — as long as the agent process exited cleanly.
+
+Discovered during Tier 2/3 analysis runs (2026-05-13): opencode PRs #49 and #51 both contained
+broken code but were reported as successes.
+
+**Fix (#158):** After `detect_and_run()`, raise `PhaseError("TESTING", ...)` when
+`suite.failed > 0`.  `PhaseError` is caught by the existing error handler which sets
+`success=False` and skips the PR phase.  `suite=None` (no test runner detected) stays
+non-blocking.
+
+**Rule:** Store results for observability AND gate the outcome on them.  Observability without
+gating gives false confidence.
+
+---
+
+### 28. opencode multi-line edit indentation bug
+
+**Problem:** opencode's `edit` tool does a literal substring find-and-replace.  When the model
+writes a multi-line `newString`, it generates the code as standalone text with no leading
+indentation.  The edit tool prepends the original line's indentation only to the first line of
+the replacement — all subsequent lines after `\n` land at column 0.
+
+Example: replacing `    raise NotImplementedError(...)` (4-space indent inside a function) with:
+```
+newString: "values.sort()\nmid = len(values) // 2\nif ..."
+```
+Result: `values.sort()` is correctly indented, `mid = ...` and `if ...` land at module level →
+`SyntaxError: return outside function`.
+
+Reproduced consistently across multiple runs.  aider avoids this by using whole-file
+SEARCH/REPLACE blocks that include the full surrounding indented context.
+
+**Fix:** Inject an explicit editing rule into the task conventions:
+> "When replacing code inside an indented block, every line of `newString` must include the
+> correct leading spaces as they appear in the file — not as standalone code."
+
+**Rule:** opencode's edit primitive requires indentation-aware prompting.  aider's
+whole-file format is self-healing.  On tasks with multi-line replacements inside indented
+blocks, opencode needs explicit instruction or it will produce SyntaxErrors.
+
+---
+
+### 29. opencode stops early on multi-step tasks — tool_choice:auto escape
+
+**Problem:** The proxy switches `tool_choice` from `required` to `auto` after the first
+`edit`/`write` call (intended to prevent infinite bash loops).  With `auto`, the model can
+respond with text only and zero tool calls, declaring itself done.
+
+On Tier 3 (rename 4 functions across 2 files): opencode renamed one function
+(`calc_area_rect` → `area_rectangle`) then produced a 150-char text response and stopped.
+The other three renames and `shapes.py` were never touched.
+
+aider doesn't have this problem because it runs tests after every edit — test failures force
+continued iteration.  opencode relies on the model planning all steps upfront; when `auto`
+offers an exit, it takes it.
+
+**Fix:** Inject an explicit planning rule into conventions:
+> "Before making any edit, enumerate ALL changes required.  Do not produce a text response
+> until every planned edit has been applied and tests pass."
+
+**Rule:** `tool_choice:auto` is a necessary escape valve but it lets under-planning go
+undetected.  Compensate with explicit "plan first, complete all steps" instructions.
+opencode on multi-step tasks without these instructions will under-deliver reliably.
+
+---
+
+### 30. Cross-tier test pollution — pytest discovers all test files
+
+**Problem:** The fixture repo has test files for all three tiers.  Running `pytest` with no
+arguments discovers all of them.  Tier 2/3 stubs (`NotImplementedError`) and old naming
+(`calc_*`) cause `test_statslib.py`, `test_geometry.py`, `test_shapes.py` to fail on import,
+blocking Tier 1 runs even when the Tier 1 fix is correct.
+
+Exposed after #158 (test gating): a correct Tier 1 fix was reported ❌ because unrelated
+Tier 2/3 tests failed.
+
+**Fix:** `AgentTaskSpec.test_command` — explicit test command overrides auto-detection.
+`token_analysis.py` passes the tier-specific file(s):
+- `tier1` → `pytest test_mathlib.py`
+- `tier2` → `pytest test_statslib.py`
+- `tier3` → `pytest test_geometry.py test_shapes.py`
+
+**Rule:** When a repo has intentionally broken stubs or incomplete files (multi-tier fixture,
+feature branches, scaffolding), always scope the test command explicitly.  Auto-detection
+is for greenfield repos where all test files are expected to pass.
