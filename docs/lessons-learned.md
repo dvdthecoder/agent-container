@@ -492,3 +492,40 @@ Tier 2/3 tests failed.
 **Rule:** When a repo has intentionally broken stubs or incomplete files (multi-tier fixture,
 feature branches, scaffolding), always scope the test command explicitly.  Auto-detection
 is for greenfield repos where all test files are expected to pass.
+
+---
+
+### 31. opencode edit tool fails on function bodies — use write instead
+
+**Problem:** opencode's `edit` tool asks the model to provide `oldString` (the exact text to
+replace) and `newString` (the replacement).  For implementing a stub function the `oldString`
+is typically just the single `raise NotImplementedError(...)` line — with no surrounding
+function signature context.  The model must then generate the entire multi-line function body
+as the `newString` value inside a JSON string, where:
+
+- Every `\n` must be encoded as a literal backslash-n inside the JSON string.
+- Every line of indentation must be produced as explicit spaces (4 per level) with no
+  surrounding context to anchor the model's whitespace.
+- Any truncation or omission (e.g. forgetting the final `return sorted_vals[mid]`) is silent —
+  the proxy accepts a truncated newString and the file ends up with an incomplete body.
+
+Observed failure mode across T2 runs (89k token run):
+
+1. Model calls `edit(oldString="raise NotImplementedError(...)", newString="    sorted_vals…\n  ")` — correct start, truncated end (missing `return sorted_vals[mid]`).
+2. Tests fail (function returns `None` for odd-length lists).
+3. Model panics and re-edits with wrong indentation, making things worse.
+4. Token count mushrooms across retries.
+
+**Root cause of the aider vs opencode performance gap on T2/T3:** aider uses a SEARCH/REPLACE
+block format — the model generates the complete function (signature + docstring + body) as a
+natural code block.  This gives the model full context, avoids JSON encoding, and eliminates
+the indentation problem entirely.  Same model, same endpoint — aider succeeds because the
+editing *format* is better suited to code generation.
+
+**Fix:** AGENTS.md updated to instruct the model: for stub implementation tasks use `write` to
+rewrite the complete file, not `edit` to replace individual lines.  `write` has the same
+structural advantage as aider's SEARCH/REPLACE — the model generates the full file content
+naturally, with correct indentation and no risk of truncating the body mid-line.
+
+For small targeted changes (single identifier rename, one-line fix) `edit` is still better —
+but the `oldString` should include the full function signature for reliable matching.
