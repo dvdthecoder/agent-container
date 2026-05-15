@@ -284,14 +284,39 @@ def _convert_input_items(items: list) -> list:
     return messages
 
 
-# Tools kept after an edit/write call has appeared in context.
-# Once a change is made the model only needs verification tools — there is no
-# reason to resend edit/write/patch/list/search schemas on every subsequent turn.
-_POST_EDIT_TOOLS: frozenset[str] = frozenset({"bash", "read", "grep", "glob"})
+# Tools kept after task_complete has been called.
+# Only bash/read/grep/glob are needed for post-completion verification turns.
+_POST_COMPLETE_TOOLS: frozenset[str] = frozenset({"bash", "read", "grep", "glob"})
 
-# Minimum number of incremental edit/patch calls before the proxy switches to
-# tool_choice=auto.  write calls are handled separately (see _past_edit_threshold).
-_MIN_EDITS_BEFORE_AUTO: int = int(os.environ.get("OPENCODE_MIN_EDITS_BEFORE_AUTO", "3"))
+# Injected into every tool list so the model has an explicit signal to call
+# when the task is fully done and tests pass.  The proxy watches for this in
+# conversation history and switches to tool_choice=auto when it appears,
+# allowing the model to send a final text summary and end the session cleanly.
+# Using an explicit signal instead of heuristic edit-count thresholds means
+# the proxy is task-agnostic: it works for any real coding task regardless of
+# how many files are touched or which tools are used.
+_TASK_COMPLETE_TOOL: dict = {
+    "type": "function",
+    "function": {
+        "name": "task_complete",
+        "description": (
+            "Call this tool ONLY when the task is fully done: all required changes "
+            "have been applied, the tests pass, and no further edits are needed. "
+            "Do NOT call this tool if tests are still failing or if any planned "
+            "change has not yet been made."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "summary": {
+                    "type": "string",
+                    "description": "Brief summary of what was changed and the test result.",
+                }
+            },
+            "required": ["summary"],
+        },
+    },
+}
 
 # ---------------------------------------------------------------------------
 # Proxy handler
@@ -352,81 +377,41 @@ class _ProxyHandler(http.server.BaseHTTPRequestHandler):
         # vLLM handles these correctly with --enable-auto-tool-choice.
         #
         # tool_choice strategy:
-        #   "required" on the FIRST model turn (no tool results in context yet) —
-        #   forces the model to start coding immediately rather than replying with
-        #   conversational text and producing an empty diff.
-        #   "auto" on all subsequent turns (tool results present) — lets the model
-        #   return a final text response to end the session instead of looping
-        #   forever calling bash.
-        #   Override the first-turn value via OPENCODE_TOOL_CHOICE=auto if needed.
+        #   Always "required" — the model must call a tool on every turn.
+        #   The ONLY way out is to call task_complete(), which the proxy injects
+        #   into every tool list.  Once task_complete appears in history the proxy
+        #   switches to "auto", letting the model send a closing text response.
+        #
+        #   This is task-agnostic: no heuristics, no edit counts, no guessing.
+        #   The model signals completion explicitly; the proxy just listens.
         #
         # parallel_tool_calls=False forces one tool call per turn so the model
         # sees the result of `read` before generating the `edit` oldString.
-        # Without this the model calls read+edit simultaneously and uses prior
-        # knowledge (often wrong) for oldString rather than the actual file content.
         if req.get("tools"):
-            # Switch to tool_choice=auto only AFTER _MIN_EDITS_BEFORE_AUTO
-            # edit/write/patch calls have appeared in conversation history.
-            #   - Before threshold: "required" forces the model to keep calling
-            #     tools (read → edit → edit → ...) instead of replying with prose.
-            #   - After threshold: "auto" lets the model return a final text
-            #     response to end the session once all edits are done.
             raw_input_list = raw_input if isinstance(raw_input, list) else []
-            write_count = sum(
-                1
+
+            # Check whether task_complete has been called in history.
+            task_done = any(
+                isinstance(item, dict)
+                and item.get("type") == "function_call"
+                and item.get("name") == "task_complete"
                 for item in raw_input_list
-                if (
-                    isinstance(item, dict)
-                    and item.get("type") == "function_call"
-                    and item.get("name") == "write"
-                )
             )
-            edit_patch_count = sum(
-                1
-                for item in raw_input_list
-                if (
-                    isinstance(item, dict)
-                    and item.get("type") == "function_call"
-                    and item.get("name") in ("edit", "patch")
-                )
-            )
-            bash_count = sum(
-                1
-                for item in raw_input_list
-                if (
-                    isinstance(item, dict)
-                    and item.get("type") == "function_call"
-                    and item.get("name") == "bash"
-                )
-            )
-            # Switch to auto when the model has done enough substantive work:
-            #
-            #   write >= 1          — a full-file write means the implementation is
-            #                         complete in one shot (aider-style).  Allow the
-            #                         model to stop immediately.
-            #
-            #   edit_patch >= MIN   — enough incremental edits for multi-step tasks
-            #                         (old edit-based T2/T3 where the model edits one
-            #                         function at a time).
-            #
-            #   edit_patch >= 1     — at least one targeted edit AND the model has
-            # AND bash >= 1           already run a verification bash call (e.g.
-            #                         pytest).  Covers T1 (single-line fix + test).
-            past_edit_threshold = (
-                write_count >= 1
-                or edit_patch_count >= _MIN_EDITS_BEFORE_AUTO
-                or (edit_patch_count >= 1 and bash_count >= 1)
-            )
+
             converted = _convert_tools(req["tools"])
-            if past_edit_threshold:
-                # Post-edit: drop all tools except verification tools.
-                # This saves ~6 × ~400 tokens per post-edit turn.
+            if task_done:
+                # Post-completion: narrow tool list to save tokens on the
+                # final summary turn (the model only needs read/bash to verify).
                 converted = [
-                    t for t in converted if t.get("function", {}).get("name") in _POST_EDIT_TOOLS
+                    t for t in converted
+                    if t.get("function", {}).get("name") in _POST_COMPLETE_TOOLS
                 ]
+            else:
+                # Always inject task_complete so the model can signal done.
+                converted.append(_TASK_COMPLETE_TOOL)
+
             chat_req["tools"] = converted
-            effective_tool_choice = "auto" if past_edit_threshold else TOOL_CHOICE
-            chat_req["tool_choice"] = effective_tool_choice
+            chat_req["tool_choice"] = "auto" if task_done else TOOL_CHOICE
             chat_req["parallel_tool_calls"] = False
 
         for key in ("temperature", "max_tokens"):
