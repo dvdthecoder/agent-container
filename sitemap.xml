@@ -84,4 +84,24 @@
          <loc>https://dvdthecoder.github.io/agent-container/analysis/2026-05-12/</loc>
          <lastmod>2026-05-15</lastmod>
     </url>
+    <url>
+         <loc>https://dvdthecoder.github.io/agent-container/lessons/aider/</loc>
+         <lastmod>2026-05-15</lastmod>
+    </url>
+    <url>
+         <loc>https://dvdthecoder.github.io/agent-container/lessons/deployment-modal/</loc>
+         <lastmod>2026-05-15</lastmod>
+    </url>
+    <url>
+         <loc>https://dvdthecoder.github.io/agent-container/lessons/opencode-proxy/</loc>
+         <lastmod>2026-05-15</lastmod>
+    </url>
+    <url>
+         <loc>https://dvdthecoder.github.io/agent-container/lessons/pipeline-reliability/</loc>
+         <lastmod>2026-05-15</lastmod>
+    </url>
+    <url>
+         <loc>https://dvdthecoder.github.io/agent-container/lessons/token-cost/</loc>
+         <lastmod>2026-05-15</lastmod>
+    </url>
 </urlset>

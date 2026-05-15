@@ -16,6 +16,8 @@
         <link rel="prev" href="../analysis/2026-05-05/">
       
       
+        <link rel="next" href="../lessons/deployment-modal/">
+      
       
         
       
@@ -1112,6 +1114,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../analysis/2026-05-15.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    2026-05-15
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../analysis/2026-05-09/" class="md-nav__link">
         
   
@@ -1320,22 +1350,22 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#infrastructure" class="md-nav__link">
+  <a href="#pages" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Infrastructure
+        Pages
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Infrastructure">
+    <nav class="md-nav" aria-label="Pages">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-vllm-cold-start-404s-during-boot" class="md-nav__link">
+  <a href="#deployment-modal" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. vLLM cold start — 404s during boot
+        Deployment &amp; Modal
       
     </span>
   </a>
@@ -1343,60 +1373,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-sandbox-not-terminating-terminate-is-fire-and-forget" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2. Sandbox not terminating — terminate() is fire-and-forget
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-hanging-cli-after-agent-timeout" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3. Hanging CLI after agent timeout
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#4-runner-script-changes-not-picked-up-modal-image-cache" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        4. Runner script changes not picked up — Modal image cache
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#aider-backend" class="md-nav__link">
     <span class="md-ellipsis">
       
-        aider backend
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="aider backend">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#5-aiders-openai-api-base-flag-mangles-the-url" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        5. aider's --openai-api-base flag mangles the URL
+        aider Backend
       
     </span>
   </a>
@@ -1404,10 +1384,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#6-model-asking-clarifying-questions-instead-of-writing-code" class="md-nav__link">
+  <a href="#opencode-proxy" class="md-nav__link">
     <span class="md-ellipsis">
       
-        6. Model asking clarifying questions instead of writing code
+        opencode &amp; Proxy
       
     </span>
   </a>
@@ -1415,10 +1395,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#7-__pycache__-polluting-pr-diffs" class="md-nav__link">
+  <a href="#token-cost-efficiency" class="md-nav__link">
     <span class="md-ellipsis">
       
-        7. __pycache__ polluting PR diffs
+        Token Cost &amp; Efficiency
       
     </span>
   </a>
@@ -1426,421 +1406,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#8-aider-token-line-appears-on-stdout-not-stderr" class="md-nav__link">
+  <a href="#pipeline-reliability" class="md-nav__link">
     <span class="md-ellipsis">
       
-        8. aider token line appears on stdout, not stderr
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#opencode-backend" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        opencode backend
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="opencode backend">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#9-opencode-calls-responses-api-vllm-doesnt-implement-it" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        9. opencode calls Responses API — vLLM doesn't implement it
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#10-proxy-crashes-on-usage-only-sse-chunks" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        10. Proxy crashes on usage-only SSE chunks
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#11-token-usage-only-emitted-on-success-path" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        11. Token usage only emitted on success path
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#pr-creation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        PR creation
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="PR creation">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#12-pr-failures-were-completely-silent" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        12. PR failures were completely silent
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#sglang" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        SGLang
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="SGLang">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#13-sglang-v047-tool-calling-crashes" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        13. SGLang v0.4.7 tool-calling crashes
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#token-tracking" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Token tracking
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Token tracking">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#14-aider-abbreviates-token-counts-27k-not-2841" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        14. aider abbreviates token counts (2.7k not 2,841)
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#modal-deployment" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Modal deployment
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Modal deployment">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#15-serve_model-not-baked-into-container-wrong-model-loads-every-time" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        15. SERVE_MODEL not baked into container — wrong model loads every time
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#16-vllm-pin-cascade-dont-pin-reactively" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        16. vLLM pin cascade — don't pin reactively
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#17-qwen3-general-models-dont-use-the-instruct-suffix" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        17. Qwen3 general models don't use the -Instruct suffix
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#18-qwen3-30b-a3b-needs-a100-80gb-not-a100-40gb" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        18. Qwen3-30B-A3B needs A100-80GB, not A100-40GB
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#19-opencode-end_turn-race-file-write-not-flushed-before-diff-collection" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        19. opencode end_turn race — file write not flushed before diff collection
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#20-qwen3-thinking-tokens-inflate-prompt-context-on-subsequent-turns" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        20. Qwen3 thinking tokens inflate prompt context on subsequent turns
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#21-opencode_model-must-be-updated-together-with-openai_base_url" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        21. OPENCODE_MODEL must be updated together with OPENAI_BASE_URL
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#cost-optimisation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Cost optimisation
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Cost optimisation">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#22-opencode-prompt-cost-is-model-size-independent-gpu-choice-affects-speed-not-tokens" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        22. opencode prompt cost is model-size-independent — GPU choice affects speed, not tokens
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#23-aider-is-84-cheaper-per-prompt-than-opencode-but-the-comparison-is-asymmetric" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        23. aider is 8.4× cheaper per prompt than opencode — but the comparison is asymmetric
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#24-qwen3-thinking-tokens-add-26-cost-even-after-stripping-vllm-counts-them-regardless" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        24. Qwen3 thinking tokens add ~26% cost even after stripping — vLLM counts them regardless
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#25-the-frugal-injection-principle-conventions-only-pay-off-when-the-agent-would-otherwise-explore" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        25. The frugal injection principle — conventions only pay off when the agent would otherwise explore
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#security" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Security
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Security">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#26-diff-scanning-catch-secrets-and-scope-drift-before-push" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        26. Diff scanning — catch secrets and scope drift before push
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#analysis-and-benchmarking" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Analysis and benchmarking
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Analysis and benchmarking">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#27-test-gating-gap-test-failures-didnt-block-pr-creation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        27. Test gating gap — test failures didn't block PR creation
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#28-opencode-multi-line-edit-indentation-bug" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        28. opencode multi-line edit indentation bug
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#29-opencode-stops-early-on-multi-step-tasks-tool_choiceauto-escape" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        29. opencode stops early on multi-step tasks — tool_choice:auto escape
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#30-cross-tier-test-pollution-pytest-discovers-all-test-files" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        30. Cross-tier test pollution — pytest discovers all test files
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#31-opencode-edit-tool-fails-on-function-bodies-use-write-instead" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        31. opencode edit tool fails on function bodies — use write instead
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#32-tool_choice-heuristics-dont-scale-use-an-explicit-done-signal" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        32. tool_choice heuristics don't scale — use an explicit done signal
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#33-tool_choiceauto-does-not-stop-a-looping-model-use-none" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        33. tool_choice=auto does not stop a looping model — use none
+        Pipeline Reliability
       
     </span>
   </a>
@@ -1856,6 +1425,146 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../lessons/deployment-modal/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Deployment & Modal
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../lessons/aider/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    aider Backend
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../lessons/opencode-proxy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    opencode & Proxy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../lessons/token-cost/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Token Cost & Efficiency
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../lessons/pipeline-reliability/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline Reliability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -1895,22 +1604,22 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#infrastructure" class="md-nav__link">
+  <a href="#pages" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Infrastructure
+        Pages
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Infrastructure">
+    <nav class="md-nav" aria-label="Pages">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-vllm-cold-start-404s-during-boot" class="md-nav__link">
+  <a href="#deployment-modal" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. vLLM cold start — 404s during boot
+        Deployment &amp; Modal
       
     </span>
   </a>
@@ -1918,60 +1627,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-sandbox-not-terminating-terminate-is-fire-and-forget" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2. Sandbox not terminating — terminate() is fire-and-forget
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-hanging-cli-after-agent-timeout" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3. Hanging CLI after agent timeout
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#4-runner-script-changes-not-picked-up-modal-image-cache" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        4. Runner script changes not picked up — Modal image cache
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#aider-backend" class="md-nav__link">
     <span class="md-ellipsis">
       
-        aider backend
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="aider backend">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#5-aiders-openai-api-base-flag-mangles-the-url" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        5. aider's --openai-api-base flag mangles the URL
+        aider Backend
       
     </span>
   </a>
@@ -1979,10 +1638,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#6-model-asking-clarifying-questions-instead-of-writing-code" class="md-nav__link">
+  <a href="#opencode-proxy" class="md-nav__link">
     <span class="md-ellipsis">
       
-        6. Model asking clarifying questions instead of writing code
+        opencode &amp; Proxy
       
     </span>
   </a>
@@ -1990,10 +1649,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#7-__pycache__-polluting-pr-diffs" class="md-nav__link">
+  <a href="#token-cost-efficiency" class="md-nav__link">
     <span class="md-ellipsis">
       
-        7. __pycache__ polluting PR diffs
+        Token Cost &amp; Efficiency
       
     </span>
   </a>
@@ -2001,421 +1660,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#8-aider-token-line-appears-on-stdout-not-stderr" class="md-nav__link">
+  <a href="#pipeline-reliability" class="md-nav__link">
     <span class="md-ellipsis">
       
-        8. aider token line appears on stdout, not stderr
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#opencode-backend" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        opencode backend
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="opencode backend">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#9-opencode-calls-responses-api-vllm-doesnt-implement-it" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        9. opencode calls Responses API — vLLM doesn't implement it
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#10-proxy-crashes-on-usage-only-sse-chunks" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        10. Proxy crashes on usage-only SSE chunks
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#11-token-usage-only-emitted-on-success-path" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        11. Token usage only emitted on success path
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#pr-creation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        PR creation
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="PR creation">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#12-pr-failures-were-completely-silent" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        12. PR failures were completely silent
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#sglang" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        SGLang
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="SGLang">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#13-sglang-v047-tool-calling-crashes" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        13. SGLang v0.4.7 tool-calling crashes
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#token-tracking" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Token tracking
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Token tracking">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#14-aider-abbreviates-token-counts-27k-not-2841" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        14. aider abbreviates token counts (2.7k not 2,841)
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#modal-deployment" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Modal deployment
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Modal deployment">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#15-serve_model-not-baked-into-container-wrong-model-loads-every-time" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        15. SERVE_MODEL not baked into container — wrong model loads every time
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#16-vllm-pin-cascade-dont-pin-reactively" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        16. vLLM pin cascade — don't pin reactively
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#17-qwen3-general-models-dont-use-the-instruct-suffix" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        17. Qwen3 general models don't use the -Instruct suffix
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#18-qwen3-30b-a3b-needs-a100-80gb-not-a100-40gb" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        18. Qwen3-30B-A3B needs A100-80GB, not A100-40GB
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#19-opencode-end_turn-race-file-write-not-flushed-before-diff-collection" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        19. opencode end_turn race — file write not flushed before diff collection
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#20-qwen3-thinking-tokens-inflate-prompt-context-on-subsequent-turns" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        20. Qwen3 thinking tokens inflate prompt context on subsequent turns
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#21-opencode_model-must-be-updated-together-with-openai_base_url" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        21. OPENCODE_MODEL must be updated together with OPENAI_BASE_URL
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#cost-optimisation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Cost optimisation
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Cost optimisation">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#22-opencode-prompt-cost-is-model-size-independent-gpu-choice-affects-speed-not-tokens" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        22. opencode prompt cost is model-size-independent — GPU choice affects speed, not tokens
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#23-aider-is-84-cheaper-per-prompt-than-opencode-but-the-comparison-is-asymmetric" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        23. aider is 8.4× cheaper per prompt than opencode — but the comparison is asymmetric
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#24-qwen3-thinking-tokens-add-26-cost-even-after-stripping-vllm-counts-them-regardless" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        24. Qwen3 thinking tokens add ~26% cost even after stripping — vLLM counts them regardless
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#25-the-frugal-injection-principle-conventions-only-pay-off-when-the-agent-would-otherwise-explore" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        25. The frugal injection principle — conventions only pay off when the agent would otherwise explore
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#security" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Security
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Security">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#26-diff-scanning-catch-secrets-and-scope-drift-before-push" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        26. Diff scanning — catch secrets and scope drift before push
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#analysis-and-benchmarking" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Analysis and benchmarking
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Analysis and benchmarking">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#27-test-gating-gap-test-failures-didnt-block-pr-creation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        27. Test gating gap — test failures didn't block PR creation
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#28-opencode-multi-line-edit-indentation-bug" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        28. opencode multi-line edit indentation bug
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#29-opencode-stops-early-on-multi-step-tasks-tool_choiceauto-escape" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        29. opencode stops early on multi-step tasks — tool_choice:auto escape
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#30-cross-tier-test-pollution-pytest-discovers-all-test-files" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        30. Cross-tier test pollution — pytest discovers all test files
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#31-opencode-edit-tool-fails-on-function-bodies-use-write-instead" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        31. opencode edit tool fails on function bodies — use write instead
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#32-tool_choice-heuristics-dont-scale-use-an-explicit-done-signal" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        32. tool_choice heuristics don't scale — use an explicit done signal
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#33-tool_choiceauto-does-not-stop-a-looping-model-use-none" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        33. tool_choice=auto does not stop a looping model — use none
+        Pipeline Reliability
       
     </span>
   </a>
@@ -2452,438 +1700,28 @@
 resolved them. Each entry is a real production bug that caused silent failures or wasted GPU
 time before it was fixed.</p>
 <hr />
-<h2 id="infrastructure">Infrastructure<a class="headerlink" href="#infrastructure" title="Permanent link">&para;</a></h2>
-<h3 id="1-vllm-cold-start-404s-during-boot">1. vLLM cold start — 404s during boot<a class="headerlink" href="#1-vllm-cold-start-404s-during-boot" title="Permanent link">&para;</a></h3>
-<p><strong>Problem:</strong> vLLM on an A10G takes ~75s for CUDA graph compilation. During this window all
-routes return 404 including <code>/v1/chat/completions</code>. The agent would start, hit 404s, and
-silently fail or loop until timeout.</p>
-<p><strong>Fix:</strong> WARMING phase polls <code>GET /v1/models</code> before the sandbox is even created. No container
-is wasted on a cold server.</p>
-<hr />
-<h3 id="2-sandbox-not-terminating-terminate-is-fire-and-forget">2. Sandbox not terminating — <code>terminate()</code> is fire-and-forget<a class="headerlink" href="#2-sandbox-not-terminating-terminate-is-fire-and-forget" title="Permanent link">&para;</a></h3>
-<p><strong>Problem:</strong> <code>modal.Sandbox.terminate()</code> defaults to <code>wait=False</code>. The container kept running
-in Modal's dashboard long after the CLI exited — visible as "still running" and billing GPU time.</p>
-<p><strong>Fix:</strong> Changed to <code>terminate(wait=True)</code>. <code>[sandbox] container terminated</code> in the logs means
-the container is actually gone.</p>
-<hr />
-<h3 id="3-hanging-cli-after-agent-timeout">3. Hanging CLI after agent timeout<a class="headerlink" href="#3-hanging-cli-after-agent-timeout" title="Permanent link">&para;</a></h3>
-<p><strong>Problem:</strong> On timeout, <code>run_agent</code> called <code>sb.terminate()</code> then returned. <code>sandbox.py</code> then
-called <code>collect_diff(sb)</code> — <code>sb.exec()</code> on a terminated container blocks indefinitely.</p>
-<p><strong>Fix:</strong> <code>run_agent</code> raises <code>TimeoutError</code> on timeout instead of returning. This skips
-<code>collect_diff</code> entirely and returns a failure result immediately.</p>
-<hr />
-<h3 id="4-runner-script-changes-not-picked-up-modal-image-cache">4. Runner script changes not picked up — Modal image cache<a class="headerlink" href="#4-runner-script-changes-not-picked-up-modal-image-cache" title="Permanent link">&para;</a></h3>
-<p><strong>Problem:</strong> <code>add_local_file(..., copy=True)</code> bakes files into the Modal image layer at build
-time. Code fixes to <code>aider_runner.py</code> and <code>opencode_runner.py</code> ran against stale containers
-for 30+ minutes after merge.</p>
-<p><strong>Fix:</strong> Removed <code>copy=True</code> (reverted to default <code>copy=False</code>). Runner scripts are uploaded
-fresh from local disk on every sandbox start. The expensive layers (pip, nodejs, opencode
-install) remain cached.</p>
-<hr />
-<h2 id="aider-backend">aider backend<a class="headerlink" href="#aider-backend" title="Permanent link">&para;</a></h2>
-<h3 id="5-aiders-openai-api-base-flag-mangles-the-url">5. aider's <code>--openai-api-base</code> flag mangles the URL<a class="headerlink" href="#5-aiders-openai-api-base-flag-mangles-the-url" title="Permanent link">&para;</a></h3>
-<p><strong>Problem:</strong> aider sets <code>OPENAI_API_BASE</code> from <code>--openai-api-base</code>. litellm reads
-<code>OPENAI_API_BASE</code> and strips the <code>/v1</code> suffix, resulting in requests to <code>/chat/completions</code> — a
-404 on every call.</p>
-<p><strong>Fix:</strong> Use <code>OPENAI_BASE_URL</code> (not <code>OPENAI_API_BASE</code>). The <code>/v1</code> suffix is guaranteed by
-<code>SandboxConfig.env_for_backend("aider")</code> before the container starts.</p>
-<hr />
-<h3 id="6-model-asking-clarifying-questions-instead-of-writing-code">6. Model asking clarifying questions instead of writing code<a class="headerlink" href="#6-model-asking-clarifying-questions-instead-of-writing-code" title="Permanent link">&para;</a></h3>
-<p><strong>Problem:</strong> <code>--map-tokens 0</code> disabled the repo map. Without any file context the model replied
-with questions ("where should I add this?") instead of editing files — empty diff, false failure.</p>
-<p><strong>Fix:</strong> Changed to <code>--map-tokens 1024</code>. Gives the model a concise file list and function
-signatures without the full multi-minute scan.</p>
-<hr />
-<h3 id="7-__pycache__-polluting-pr-diffs">7. <code>__pycache__</code> polluting PR diffs<a class="headerlink" href="#7-__pycache__-polluting-pr-diffs" title="Permanent link">&para;</a></h3>
-<p><strong>Problem:</strong> The TESTING phase runs pytest which compiles <code>.pyc</code> files. These appeared in
-<code>collect_diff</code> as the only changes — masking whether the agent wrote any real code.</p>
-<p><strong>Fix:</strong> After cloning, <code>git_ops.clone()</code> writes common build artifact patterns to
-<code>.git/info/exclude</code> — local-only, never committed, keeps diffs clean.</p>
-<hr />
-<h3 id="8-aider-token-line-appears-on-stdout-not-stderr">8. aider token line appears on stdout, not stderr<a class="headerlink" href="#8-aider-token-line-appears-on-stdout-not-stderr" title="Permanent link">&para;</a></h3>
-<p><strong>Problem:</strong> Older aider printed <code>Tokens: X sent, Y received.</code> to stderr. Current versions
-print it to stdout. <code>aider_runner.py</code> only scanned <code>is_stderr=True</code>, so every run logged
-<code>prompt=0 completion=0 total=0</code>.</p>
-<p><strong>Fix:</strong> Scan both stdout and stderr for the token pattern.</p>
-<hr />
-<h2 id="opencode-backend">opencode backend<a class="headerlink" href="#opencode-backend" title="Permanent link">&para;</a></h2>
-<h3 id="9-opencode-calls-responses-api-vllm-doesnt-implement-it">9. opencode calls Responses API — vLLM doesn't implement it<a class="headerlink" href="#9-opencode-calls-responses-api-vllm-doesnt-implement-it" title="Permanent link">&para;</a></h3>
-<p><strong>Problem:</strong> opencode v1.14+ calls <code>POST /v1/responses</code> (OpenAI Responses API). No self-hosted
-server implements this. Every request returned 404.</p>
-<p><strong>Fix:</strong> <code>opencode_runner.py</code> starts a thin in-process HTTP proxy on <code>localhost:8080</code> that
-translates Responses API to Chat Completions. Three behaviours were required beyond basic translation:</p>
-<ol>
-<li>
-<p><strong>Full SSE event sequence.</strong> The proxy emits <code>response.output_item.added</code>,
-   <code>response.function_call_arguments.done</code>, and <code>response.output_item.done</code> before
-   <code>response.completed</code> for every tool call. Without these, opencode's loop does not detect
-   the tool call and the session ends with no changes.</p>
-</li>
-<li>
-<p><strong><code>parallel_tool_calls: false</code>.</strong> Without this the model calls <code>read</code> and <code>edit</code> in the
-   same response, generating <code>oldString</code> from prior knowledge. The edit fails silently.</p>
-</li>
-<li>
-<p><strong>Adaptive <code>tool_choice</code>.</strong> <code>tool_choice: "required"</code> on the first turn forces a tool call.
-   After an <code>edit</code>/<code>write</code> appears in history, the proxy switches to <code>"auto"</code> so the model can
-   return a final text response and end the session.</p>
-</li>
-</ol>
-<hr />
-<h3 id="10-proxy-crashes-on-usage-only-sse-chunks">10. Proxy crashes on usage-only SSE chunks<a class="headerlink" href="#10-proxy-crashes-on-usage-only-sse-chunks" title="Permanent link">&para;</a></h3>
-<p><strong>Problem:</strong> vLLM sends a final chunk with <code>"choices": []</code> and <code>"usage": {...}</code> when
-<code>stream_options.include_usage=true</code>. <code>chunk.get("choices", [{}])[0]</code> returns <code>[][0]</code> because
-<code>get()</code> returns the real empty list, not the default — <code>IndexError</code> → 502 back to opencode →
-empty diff → run marked failed.</p>
-<p><strong>Fix:</strong> <code>(chunk.get("choices") or [{}])[0]</code> — empty list is falsy, so the default fires.</p>
-<hr />
-<h3 id="11-token-usage-only-emitted-on-success-path">11. Token usage only emitted on success path<a class="headerlink" href="#11-token-usage-only-emitted-on-success-path" title="Permanent link">&para;</a></h3>
-<p><strong>Problem:</strong> <code>[runner] token_usage:</code> was only printed when <code>stop_reason == "session_completed"</code>.
-opencode always exits via the <code>end_turn</code> grace-period path — that path had no emit, so every
-opencode run had <code>total_tokens=NULL</code> in SQLite.</p>
-<p><strong>Fix:</strong> Extracted <code>_emit_token_usage()</code> helper called on all three exit paths: unexpected
-stop, <code>end_turn</code> + grace period, and deadline-loop timeout.</p>
-<hr />
-<h2 id="pr-creation">PR creation<a class="headerlink" href="#pr-creation" title="Permanent link">&para;</a></h2>
-<h3 id="12-pr-failures-were-completely-silent">12. PR failures were completely silent<a class="headerlink" href="#12-pr-failures-were-completely-silent" title="Permanent link">&para;</a></h3>
-<p><strong>Problem:</strong> Four silent failure modes in <code>push_and_pr</code>:
-1. Unsupported host → <code>return (br, None)</code> with no log
-2. Missing token → <code>return (br, None)</code> with no log
-3. <code>_git()</code> read stderr after <code>wait()</code> — Modal drains streams on <code>wait()</code>, so error messages
-   were always empty strings
-4. <code>curl -f</code> suppressed the response body on API errors; <code>data.get(url_field)</code> returned
-   <code>None</code> silently instead of raising</p>
-<p><strong>Fix:</strong> All four paths now log or raise with the actual failure reason. Missing token prints
-which env var to set. API errors surface the GitHub error message.</p>
-<hr />
-<h2 id="sglang">SGLang<a class="headerlink" href="#sglang" title="Permanent link">&para;</a></h2>
-<h3 id="13-sglang-v047-tool-calling-crashes">13. SGLang v0.4.7 tool-calling crashes<a class="headerlink" href="#13-sglang-v047-tool-calling-crashes" title="Permanent link">&para;</a></h3>
-<p><strong>Problem:</strong> SGLang v0.4.7 had multiple blocking bugs: <code>--enable-auto-tool-choice</code> did not
-exist, <code>--tool-call-parser qwen25</code> crashed the server on the first request with tool schemas,
-and streaming with tools hung indefinitely. The original proxy had 389 lines of model-specific
-workarounds (Qwen-native text injection, text-level <code>&lt;tool_call&gt;</code> parsing).</p>
-<p><strong>Phase 1 fix:</strong> Switched primary inference to vLLM. All SGLang workarounds removed — proxy
-became a clean format adapter (170 lines added, 389 removed).</p>
-<p><strong>Phase 3 re-validation:</strong> SGLang re-tested with Qwen2.5-Coder 32B on A100 80GB:
-- <code>qwen</code> and <code>qwen25</code> parsers still hang on first request with tool schemas
-- <code>hermes</code> parser works — first tool call returned in 3s, full run in 29s
-- Requires <code>nvidia/cuda:12.4.1-devel-ubuntu22.04</code> base image and <code>libnuma1</code> (JIT kernel
-  compilation at model-load time fails in debian-slim)</p>
-<p><strong>Conclusion:</strong> SGLang is viable with <code>hermes</code>. vLLM remains the default (works out-of-the-box).
-Both run simultaneously as separate Modal apps.</p>
-<hr />
-<h2 id="token-tracking">Token tracking<a class="headerlink" href="#token-tracking" title="Permanent link">&para;</a></h2>
-<h3 id="14-aider-abbreviates-token-counts-27k-not-2841">14. aider abbreviates token counts (<code>2.7k</code> not <code>2,841</code>)<a class="headerlink" href="#14-aider-abbreviates-token-counts-27k-not-2841" title="Permanent link">&para;</a></h3>
-<p><strong>Problem:</strong> The token regex expected <code>[\d,]+</code> (integers with commas). Current aider prints
-abbreviated counts: <code>2.7k sent, 109 received.</code> The regex matched nothing → <code>prompt=0</code>.</p>
-<p><strong>Fix:</strong> Updated regex to <code>[\d,.]+[kKmM]?</code> and added <code>_parse_tok()</code> that handles plain ints,
-comma-separated, <code>k</code>/<code>K</code>, and <code>m</code>/<code>M</code> suffixes.</p>
-<hr />
-<h2 id="modal-deployment">Modal deployment<a class="headerlink" href="#modal-deployment" title="Permanent link">&para;</a></h2>
-<h3 id="15-serve_model-not-baked-into-container-wrong-model-loads-every-time">15. SERVE_MODEL not baked into container — wrong model loads every time<a class="headerlink" href="#15-serve_model-not-baked-into-container-wrong-model-loads-every-time" title="Permanent link">&para;</a></h3>
-<p><strong>Problem:</strong> <code>SERVE_MODEL</code> is read at module level in <code>modal/serve.py</code>. <code>SERVE_PROFILE</code> was
-baked into the Modal secret but <code>SERVE_MODEL</code> was not. Every deployment — including isolated
-per-model apps — always loaded <code>qwen2.5-coder-32b</code> regardless of which model was passed at
-deploy time.</p>
-<p><strong>Fix:</strong> Bake <code>SERVE_MODEL</code> into the Modal secret alongside <code>SERVE_PROFILE</code>.</p>
-<p><strong>Rule:</strong> Any env var read at module level that controls runtime behaviour must be baked into
-the container secret — not just passed at deploy time.</p>
-<hr />
-<h3 id="16-vllm-pin-cascade-dont-pin-reactively">16. vLLM pin cascade — don't pin reactively<a class="headerlink" href="#16-vllm-pin-cascade-dont-pin-reactively" title="Permanent link">&para;</a></h3>
-<p><strong>Problem:</strong> Two crashes surfaced as version conflicts but were caused by the wrong model
-loading (the #15 bug). When the container loaded <code>qwen2.5-coder-32b</code> on an A10G instead of
-<code>qwen3-8b</code>, the tokenizer init failed. First instinct: pin <code>vllm==0.8.5</code> → then
-<code>AttributeError: Qwen2Tokenizer has no attribute all_special_tokens_extended</code> →
-pin <code>transformers==4.46.3</code> → conflicts because vLLM 0.8.5 requires <code>transformers&gt;=4.51.1</code>.</p>
-<p><strong>Fix:</strong> Remove all version pins and fix the root cause (#15). With the correct model loading,
-the latest <code>vllm</code> + <code>transformers</code> work without conflicts.</p>
-<p><strong>Rule:</strong> Don't pin vLLM reactively to silence a crash. Check which model is actually loading
-first (<code>grep "Starting to load model"</code> in container logs). An OOM or tokenizer error on the
-wrong model is a config bug, not a version bug.</p>
-<hr />
-<h3 id="17-qwen3-general-models-dont-use-the-instruct-suffix">17. Qwen3 general models don't use the -Instruct suffix<a class="headerlink" href="#17-qwen3-general-models-dont-use-the-instruct-suffix" title="Permanent link">&para;</a></h3>
-<p><strong>Problem:</strong> <code>Qwen/Qwen3-8B-Instruct</code> and <code>Qwen/Qwen3-30B-A3B-Instruct</code> return 404 on
-HuggingFace. Qwen3 general-purpose models are released as hybrid think/non-think checkpoints
-without a separate instruct variant — the base repo is the instruction-tuned model.</p>
-<p><strong>Fix:</strong> Drop the <code>-Instruct</code> suffix: <code>Qwen/Qwen3-8B</code>, <code>Qwen/Qwen3-30B-A3B</code>.</p>
-<p><strong>Rule:</strong> The Qwen3-Coder line (<code>Qwen/Qwen3-Coder-80B-Instruct</code>) does keep <code>-Instruct</code>.
-Verify HF repo IDs in the browser before adding a new model family.</p>
-<hr />
-<h3 id="18-qwen3-30b-a3b-needs-a100-80gb-not-a100-40gb">18. Qwen3-30B-A3B needs A100-80GB, not A100-40GB<a class="headerlink" href="#18-qwen3-30b-a3b-needs-a100-80gb-not-a100-40gb" title="Permanent link">&para;</a></h3>
-<p><strong>Problem:</strong> Qwen3-30B-A3B is a MoE model. vLLM loads all expert weights regardless of
-sparsity. At BF16, 30B parameters = ~60 GB — does not fit on an A100-40GB (39.49 GiB).
-Container OOMed during CUDA graph capture.</p>
-<p><strong>Fix:</strong> Changed GPU to <code>A100-80GB</code>.</p>
-<p><strong>Rule:</strong> Size the GPU on <strong>total</strong> parameter count for MoE models, not active parameter count.</p>
-<hr />
-<h3 id="19-opencode-end_turn-race-file-write-not-flushed-before-diff-collection">19. opencode <code>end_turn</code> race — file write not flushed before diff collection<a class="headerlink" href="#19-opencode-end_turn-race-file-write-not-flushed-before-diff-collection" title="Permanent link">&para;</a></h3>
-<p><strong>Problem:</strong> opencode occasionally returns <code>stopReason='end_turn'</code> before the file write
-from the preceding <code>edit</code> tool call is flushed to disk. Runner terminates the sandbox,
-<code>collect_diff</code> finds an empty diff — even though the proxy confirmed the <code>edit</code> was received.
-Observed as ~33% flake rate on <code>qwen2.5-coder-32b</code> / opencode.</p>
-<p><strong>Root cause:</strong> <code>end_turn</code> is a session-level signal that the model finished responding —
-it does not guarantee all tool-call side effects are durably committed.</p>
-<p><strong>Fix (2026-05-09, #152):</strong> After the runner exits 0 with an empty diff, <code>collect_diff</code> is
-retried up to 3× with 5s delays before raising <code>PhaseError</code>. A briefly-delayed write is
-no longer mis-classified as a no-op failure.</p>
-<hr />
-<h3 id="20-qwen3-thinking-tokens-inflate-prompt-context-on-subsequent-turns">20. Qwen3 thinking tokens inflate prompt context on subsequent turns<a class="headerlink" href="#20-qwen3-thinking-tokens-inflate-prompt-context-on-subsequent-turns" title="Permanent link">&para;</a></h3>
-<p><strong>Problem:</strong> Qwen3 emits <code>&lt;think&gt;</code> blocks (~1,300–2,400 tokens per response) that accumulate
-in the conversation history and are resent as context on every turn. For a 3-turn run:</p>
-<ul>
-<li>Baseline (Coder models): ~26k prompt tokens</li>
-<li>Qwen3 with thinking: ~46k prompt tokens (+77%)</li>
-</ul>
-<p><strong>Fix:</strong> <code>_strip_think()</code> in the proxy strips <code>&lt;think&gt;</code> blocks before the assistant message
-re-enters opencode's session history. Measured result (2026-05-09): avg prompt tokens dropped
-from 46,149 → 33,888 (−27%). Completion tokens remain higher (~1,056 vs ~117 for Coder
-models) because vLLM counts thinking in completion regardless — stripping only prevents
-compounding across turns.</p>
-<hr />
-<h3 id="21-opencode_model-must-be-updated-together-with-openai_base_url">21. OPENCODE_MODEL must be updated together with OPENAI_BASE_URL<a class="headerlink" href="#21-opencode_model-must-be-updated-together-with-openai_base_url" title="Permanent link">&para;</a></h3>
-<p><strong>Problem:</strong> <code>wait_for_serve --update-env</code> updates <code>OPENAI_BASE_URL</code> in <code>.env</code> but not
-<code>OPENCODE_MODEL</code>. Sending requests to the qwen3-30b endpoint asking for <code>qwen2.5-coder-32b</code>
-returns HTTP 404 on every tool turn.</p>
-<p><strong>Fix:</strong> Always set <code>OPENCODE_MODEL</code> explicitly alongside the endpoint — either via <code>sed</code>
-or as a shell env var prefix. <code>run_matrix.py</code> handles this correctly; the bug only surfaces
-when running <code>token_analysis.py</code> directly after <code>wait_for_serve</code>.</p>
-<p><strong>Rule:</strong> <code>OPENAI_BASE_URL</code> and <code>OPENCODE_MODEL</code> are a pair. Treat them as a unit.</p>
-<hr />
-<h2 id="cost-optimisation">Cost optimisation<a class="headerlink" href="#cost-optimisation" title="Permanent link">&para;</a></h2>
-<h3 id="22-opencode-prompt-cost-is-model-size-independent-gpu-choice-affects-speed-not-tokens">22. opencode prompt cost is model-size-independent — GPU choice affects speed, not tokens<a class="headerlink" href="#22-opencode-prompt-cost-is-model-size-independent-gpu-choice-affects-speed-not-tokens" title="Permanent link">&para;</a></h3>
-<p><strong>Finding (2026-05-09):</strong> <code>qwen2.5-coder-7b</code> and <code>qwen2.5-coder-32b</code> both averaged ~27,700
-total tokens per run on opencode ($0.0277 each at $1.00/1M). The prompt is dominated by tool
-schemas and session history — both constant regardless of model size. Upgrading from 7B to
-32B does not increase token cost; it increases GPU cost (A10G → A100-80GB, roughly 3–4×/hr)
-and reduces wall-clock time for complex edits.</p>
-<p><strong>Rule:</strong> Choose model size based on task complexity and latency, not token budget. For tasks
-where 32B produces fewer turns, it can be cheaper end-to-end despite the higher GPU rate.</p>
-<hr />
-<h3 id="23-aider-is-84-cheaper-per-prompt-than-opencode-but-the-comparison-is-asymmetric">23. aider is 8.4× cheaper per prompt than opencode — but the comparison is asymmetric<a class="headerlink" href="#23-aider-is-84-cheaper-per-prompt-than-opencode-but-the-comparison-is-asymmetric" title="Permanent link">&para;</a></h3>
-<p><strong>Finding (2026-05-09):</strong> aider averaged 3,300 prompt tokens vs opencode's 27,573 on the same
-model/task/endpoint (8.4× ratio). Gap narrowed from 11.9× (baseline) via description
-stripping (−19%) and post-edit tool filtering.</p>
-<p><strong>Why the gap exists:</strong> opencode resends all 10 tool schemas (~500 tokens each) on every turn
-plus accumulated conversation history. aider sends only the task message and changed files.</p>
-<p><strong>Asymmetry:</strong> aider's smaller prompt comes at the cost of a less capable tool loop — it
-cannot browse arbitrary files or react to shell output mid-session. opencode's overhead buys
-a richer agentic loop. Use aider for well-scoped single-file tasks; opencode for exploratory
-or multi-step work.</p>
-<p><strong>Irreducible floor:</strong> the remaining ~8× gap is structural Responses API overhead. Further
-reduction requires prompt prefix caching at the vLLM level (not yet enabled).</p>
-<hr />
-<h3 id="24-qwen3-thinking-tokens-add-26-cost-even-after-stripping-vllm-counts-them-regardless">24. Qwen3 thinking tokens add ~26% cost even after stripping — vLLM counts them regardless<a class="headerlink" href="#24-qwen3-thinking-tokens-add-26-cost-even-after-stripping-vllm-counts-them-regardless" title="Permanent link">&para;</a></h3>
-<p><strong>Finding (2026-05-09):</strong> After <code>&lt;think&gt;</code> stripping, Qwen3-30B still cost $0.0349 vs $0.0277
-for Coder models (+26%). vLLM counts thinking tokens in completion regardless of proxy
-stripping — the model generates them and the endpoint bills for them (~1,056 completion tokens
-vs ~117–274 for Coder models).</p>
-<p><strong>Rule:</strong> Reserve Qwen3 for tasks where reasoning depth demonstrably improves output quality
-(algorithm design, subtle correctness bugs). For mechanical tasks Qwen2.5-Coder is cheaper
-and faster.</p>
-<hr />
-<h3 id="25-the-frugal-injection-principle-conventions-only-pay-off-when-the-agent-would-otherwise-explore">25. The frugal injection principle — conventions only pay off when the agent would otherwise explore<a class="headerlink" href="#25-the-frugal-injection-principle-conventions-only-pay-off-when-the-agent-would-otherwise-explore" title="Permanent link">&para;</a></h3>
-<p><strong>Principle:</strong> Every token added to the task prompt is a cost. Context injection is only
-worthwhile if it eliminates more tokens than it introduces — by replacing exploratory tool
-calls the agent would otherwise make.</p>
-<p><strong>Measured (2026-05-12, #155):</strong> Injecting <code>AgentTaskSpec.conventions</code> (~300 tokens) against
-a 3-file repo with an explicit task added <strong>+334 prompt tokens</strong> and saved <strong>zero turns</strong>.
-Tool trace was identical with and without conventions: <code>read → edit</code>. The agent already knew
-exactly what to do from the task string — conventions were inert.</p>
-<p><strong>When conventions pay off — scales with exploratory overhead:</strong></p>
-<table>
-<thead>
-<tr>
-<th>Scenario</th>
-<th>Without conventions</th>
-<th>Savings</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>3-file repo, explicit task</td>
-<td><code>read</code> → <code>edit</code></td>
-<td>nothing</td>
-</tr>
-<tr>
-<td>50-file repo, vague task</td>
-<td><code>glob</code> → <code>read</code> × 3–5 → <code>edit</code></td>
-<td>3–5 turns (~15–25k tokens)</td>
-</tr>
-<tr>
-<td>Any task, non-obvious test command</td>
-<td>test-discovery turn</td>
-<td>~3k tokens</td>
-</tr>
-</tbody>
-</table>
-<p><strong>Highest-value injections (always worth it):</strong>
-- The test command (<code>pytest test_mathlib.py -q</code>) — eliminates a discovery turn every time
-- Which file to touch when the repo has 50+ files — replaces 2–4 glob/read calls
-- Acceptance criteria — helps the model recognize "done" and produce a clean <code>end_turn</code></p>
-<p><strong>Not worth injecting:</strong>
-- Repo structure when the task names the file explicitly
-- Full file content when the agent will read it in turn 1 anyway
-- Conventions that don't apply to the specific task</p>
-<p><strong>Rule:</strong> Ask "would the agent call glob or read N files to discover this?" If yes, inject it.
-If the task string already encodes the answer, skip it.</p>
-<hr />
-<h2 id="security">Security<a class="headerlink" href="#security" title="Permanent link">&para;</a></h2>
-<h3 id="26-diff-scanning-catch-secrets-and-scope-drift-before-push">26. Diff scanning — catch secrets and scope drift before push<a class="headerlink" href="#26-diff-scanning-catch-secrets-and-scope-drift-before-push" title="Permanent link">&para;</a></h3>
-<p><strong>Problem:</strong> Agents can accidentally include hardcoded secrets (copied from env vars or examples),
-modify files outside the intended scope, or introduce insecure patterns (eval, shell=True,
-pickle.loads) without any gate between <code>git diff</code> and <code>git push</code>.</p>
-<p><strong>Fix:</strong> SCANNING phase runs <code>scan_diff()</code> immediately after <code>collect_diff</code> (and after the
-empty-diff retry). Three rule categories:</p>
-<ol>
-<li><strong>Secrets (error, blocking)</strong> — AWS access keys, GitHub PATs, OpenAI keys, Slack tokens,
-   generic hardcoded credential assignments.  Run blocked; PhaseError raised.</li>
-<li><strong>Scope violations (warning, non-blocking)</strong> — files modified outside <code>context_files</code> declared
-   in the YAML task spec.  Logged to stderr; run continues.</li>
-<li><strong>OWASP patterns (warning, non-blocking)</strong> — eval(), shell=True, os.system(), pickle.loads(),
-   unsafe yaml.load().  High-signal but too many legitimate uses to block.</li>
-</ol>
-<p><strong>Rule:</strong> Blocking on secrets is safe (precision is high).  Blocking on OWASP is not — test
-harnesses legitimately use eval and subprocess.  Warnings give the operator visibility without
-false failures.</p>
-<hr />
-<h2 id="analysis-and-benchmarking">Analysis and benchmarking<a class="headerlink" href="#analysis-and-benchmarking" title="Permanent link">&para;</a></h2>
-<h3 id="27-test-gating-gap-test-failures-didnt-block-pr-creation">27. Test gating gap — test failures didn't block PR creation<a class="headerlink" href="#27-test-gating-gap-test-failures-didnt-block-pr-creation" title="Permanent link">&para;</a></h3>
-<p><strong>Problem:</strong> The TESTING phase ran <code>pytest</code> and stored the <code>SuiteResult</code>, but <code>result.success</code>
-was determined solely by the agent's exit code (<code>exit_code == 0</code>).  A run that produced broken
-code, opened a PR, and reported ✅ — as long as the agent process exited cleanly.</p>
-<p>Discovered during Tier 2/3 analysis runs (2026-05-13): opencode PRs #49 and #51 both contained
-broken code but were reported as successes.</p>
-<p><strong>Fix (#158):</strong> After <code>detect_and_run()</code>, raise <code>PhaseError("TESTING", ...)</code> when
-<code>suite.failed &gt; 0</code>.  <code>PhaseError</code> is caught by the existing error handler which sets
-<code>success=False</code> and skips the PR phase.  <code>suite=None</code> (no test runner detected) stays
-non-blocking.</p>
-<p><strong>Rule:</strong> Store results for observability AND gate the outcome on them.  Observability without
-gating gives false confidence.</p>
-<hr />
-<h3 id="28-opencode-multi-line-edit-indentation-bug">28. opencode multi-line edit indentation bug<a class="headerlink" href="#28-opencode-multi-line-edit-indentation-bug" title="Permanent link">&para;</a></h3>
-<p><strong>Problem:</strong> opencode's <code>edit</code> tool does a literal substring find-and-replace.  When the model
-writes a multi-line <code>newString</code>, it generates the code as standalone text with no leading
-indentation.  The edit tool prepends the original line's indentation only to the first line of
-the replacement — all subsequent lines after <code>\n</code> land at column 0.</p>
-<p>Example: replacing <code>raise NotImplementedError(...)</code> (4-space indent inside a function) with:
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>newString: &quot;values.sort()\nmid = len(values) // 2\nif ...&quot;
-</code></pre></div>
-Result: <code>values.sort()</code> is correctly indented, <code>mid = ...</code> and <code>if ...</code> land at module level →
-<code>SyntaxError: return outside function</code>.</p>
-<p>Reproduced consistently across multiple runs.  aider avoids this by using whole-file
-SEARCH/REPLACE blocks that include the full surrounding indented context.</p>
-<p><strong>Fix:</strong> Inject an explicit editing rule into the task conventions:</p>
-<blockquote>
-<p>"When replacing code inside an indented block, every line of <code>newString</code> must include the
-correct leading spaces as they appear in the file — not as standalone code."</p>
-</blockquote>
-<p><strong>Rule:</strong> opencode's edit primitive requires indentation-aware prompting.  aider's
-whole-file format is self-healing.  On tasks with multi-line replacements inside indented
-blocks, opencode needs explicit instruction or it will produce SyntaxErrors.</p>
-<hr />
-<h3 id="29-opencode-stops-early-on-multi-step-tasks-tool_choiceauto-escape">29. opencode stops early on multi-step tasks — tool_choice:auto escape<a class="headerlink" href="#29-opencode-stops-early-on-multi-step-tasks-tool_choiceauto-escape" title="Permanent link">&para;</a></h3>
-<p><strong>Problem:</strong> The proxy switches <code>tool_choice</code> from <code>required</code> to <code>auto</code> after the first
-<code>edit</code>/<code>write</code> call (intended to prevent infinite bash loops).  With <code>auto</code>, the model can
-respond with text only and zero tool calls, declaring itself done.</p>
-<p>On Tier 3 (rename 4 functions across 2 files): opencode renamed one function
-(<code>calc_area_rect</code> → <code>area_rectangle</code>) then produced a 150-char text response and stopped.
-The other three renames and <code>shapes.py</code> were never touched.</p>
-<p>aider doesn't have this problem because it runs tests after every edit — test failures force
-continued iteration.  opencode relies on the model planning all steps upfront; when <code>auto</code>
-offers an exit, it takes it.</p>
-<p><strong>Fix:</strong> Inject an explicit planning rule into conventions:</p>
-<blockquote>
-<p>"Before making any edit, enumerate ALL changes required.  Do not produce a text response
-until every planned edit has been applied and tests pass."</p>
-</blockquote>
-<p><strong>Rule:</strong> <code>tool_choice:auto</code> is a necessary escape valve but it lets under-planning go
-undetected.  Compensate with explicit "plan first, complete all steps" instructions.
-opencode on multi-step tasks without these instructions will under-deliver reliably.</p>
-<hr />
-<h3 id="30-cross-tier-test-pollution-pytest-discovers-all-test-files">30. Cross-tier test pollution — pytest discovers all test files<a class="headerlink" href="#30-cross-tier-test-pollution-pytest-discovers-all-test-files" title="Permanent link">&para;</a></h3>
-<p><strong>Problem:</strong> The fixture repo has test files for all three tiers.  Running <code>pytest</code> with no
-arguments discovers all of them.  Tier 2/3 stubs (<code>NotImplementedError</code>) and old naming
-(<code>calc_*</code>) cause <code>test_statslib.py</code>, <code>test_geometry.py</code>, <code>test_shapes.py</code> to fail on import,
-blocking Tier 1 runs even when the Tier 1 fix is correct.</p>
-<p>Exposed after #158 (test gating): a correct Tier 1 fix was reported ❌ because unrelated
-Tier 2/3 tests failed.</p>
-<p><strong>Fix:</strong> <code>AgentTaskSpec.test_command</code> — explicit test command overrides auto-detection.
-<code>token_analysis.py</code> passes the tier-specific file(s):
-- <code>tier1</code> → <code>pytest test_mathlib.py</code>
-- <code>tier2</code> → <code>pytest test_statslib.py</code>
-- <code>tier3</code> → <code>pytest test_geometry.py test_shapes.py</code></p>
-<p><strong>Rule:</strong> When a repo has intentionally broken stubs or incomplete files (multi-tier fixture,
-feature branches, scaffolding), always scope the test command explicitly.  Auto-detection
-is for greenfield repos where all test files are expected to pass.</p>
-<hr />
-<h3 id="31-opencode-edit-tool-fails-on-function-bodies-use-write-instead">31. opencode edit tool fails on function bodies — use write instead<a class="headerlink" href="#31-opencode-edit-tool-fails-on-function-bodies-use-write-instead" title="Permanent link">&para;</a></h3>
-<p><strong>Problem:</strong> opencode's <code>edit</code> tool asks the model to provide <code>oldString</code> (the exact text to
-replace) and <code>newString</code> (the replacement).  For implementing a stub function the <code>oldString</code>
-is typically just the single <code>raise NotImplementedError(...)</code> line — with no surrounding
-function signature context.  The model must then generate the entire multi-line function body
-as the <code>newString</code> value inside a JSON string, where:</p>
-<ul>
-<li>Every <code>\n</code> must be encoded as a literal backslash-n inside the JSON string.</li>
-<li>Every line of indentation must be produced as explicit spaces (4 per level) with no
-  surrounding context to anchor the model's whitespace.</li>
-<li>Any truncation or omission (e.g. forgetting the final <code>return sorted_vals[mid]</code>) is silent —
-  the proxy accepts a truncated newString and the file ends up with an incomplete body.</li>
-</ul>
-<p>Observed failure mode across T2 runs (89k token run):</p>
-<ol>
-<li>Model calls <code>edit(oldString="raise NotImplementedError(...)", newString="    sorted_vals…\n  ")</code> — correct start, truncated end (missing <code>return sorted_vals[mid]</code>).</li>
-<li>Tests fail (function returns <code>None</code> for odd-length lists).</li>
-<li>Model panics and re-edits with wrong indentation, making things worse.</li>
-<li>Token count mushrooms across retries.</li>
-</ol>
-<p><strong>Root cause of the aider vs opencode performance gap on T2/T3:</strong> aider uses a SEARCH/REPLACE
-block format — the model generates the complete function (signature + docstring + body) as a
-natural code block.  This gives the model full context, avoids JSON encoding, and eliminates
-the indentation problem entirely.  Same model, same endpoint — aider succeeds because the
-editing <em>format</em> is better suited to code generation.</p>
-<p><strong>Fix:</strong> AGENTS.md updated to instruct the model: for stub implementation tasks use <code>write</code> to
-rewrite the complete file, not <code>edit</code> to replace individual lines.  <code>write</code> has the same
-structural advantage as aider's SEARCH/REPLACE — the model generates the full file content
-naturally, with correct indentation and no risk of truncating the body mid-line.</p>
-<p>For small targeted changes (single identifier rename, one-line fix) <code>edit</code> is still better —
-but the <code>oldString</code> should include the full function signature for reliable matching.</p>
-<hr />
-<h3 id="32-tool_choice-heuristics-dont-scale-use-an-explicit-done-signal">32. tool_choice heuristics don't scale — use an explicit done signal<a class="headerlink" href="#32-tool_choice-heuristics-dont-scale-use-an-explicit-done-signal" title="Permanent link">&para;</a></h3>
-<p><strong>Problem:</strong> The proxy manipulated <code>tool_choice</code> based on counts of edit/write/bash calls to
-decide when the model was "done" and could exit with a text response.  Every tier required its
-own tuned threshold, and any change to agent behaviour (e.g. switching from <code>edit</code> to <code>write</code>)
-broke the heuristic and caused either early exits or infinite loops:</p>
-<ul>
-<li>threshold = 1 edit → model exits after first edit, never writes second function</li>
-<li>threshold = 3 edits → model uses <code>write</code> (1 call), threshold never reached, infinite <code>git push</code> loop</li>
-<li>threshold: <code>write &gt;= 1</code> → exits after first <code>write</code>, misses second file in T3</li>
-<li>all variants break for real tasks with arbitrary file counts</li>
-</ul>
-<p><strong>Root cause:</strong> Proxy-side heuristics try to infer task completion from side effects (which
-tools were called, how many times).  Only the model knows when the task is actually done.</p>
-<p><strong>Fix:</strong> Inject a <code>task_complete(summary)</code> tool into every tool list.  Keep
-<code>tool_choice=required</code> forever — the model cannot escape with prose.  When <code>task_complete</code>
-appears in history, switch to <code>tool_choice=none</code> (not <code>auto</code> — <code>auto</code> still allows tool
-calls).  Session ends with a forced text-only response.</p>
-<p><strong>Implementation detail:</strong> opencode cannot execute unknown tools.  It stores them in
-conversation history as <code>name='invalid'</code>.  The proxy detects completion by checking for
-<code>name in ("task_complete", "invalid")</code> — not just <code>"task_complete"</code>.</p>
-<p><strong>Rule:</strong> Give the model an explicit exit mechanism rather than inferring completion.
-Any heuristic that counts tool calls is fragile and task-specific.</p>
-<hr />
-<h3 id="33-tool_choiceauto-does-not-stop-a-looping-model-use-none">33. <code>tool_choice=auto</code> does not stop a looping model — use <code>none</code><a class="headerlink" href="#33-tool_choiceauto-does-not-stop-a-looping-model-use-none" title="Permanent link">&para;</a></h3>
-<p><strong>Problem:</strong> After detecting task completion, the proxy switched to <code>tool_choice=auto</code>.  The
-assumption was that <code>auto</code> would let the model choose to stop.  Instead the model — which had
-been in a <code>required</code> loop calling <code>git push</code> — continued calling <code>bash</code> on every turn even in
-<code>auto</code> mode.  The loop continued until the agent timeout killed the sandbox.</p>
-<p><strong>Root cause:</strong> <code>tool_choice=auto</code> means "the model MAY call a tool."  It does not stop a
-model that is already in a repetitive calling pattern.  A 32B model trained to call tools
-will default to calling tools even when permitted not to.</p>
-<p><strong>Fix:</strong> Use <code>tool_choice=none</code> after the done signal.  <code>none</code> is the Chat Completions API
-value that explicitly prohibits any tool call on that turn, forcing the model to generate
-a plain-text response.  This is the only reliable way to break a looping model and extract
-a closing summary.</p>
-<p><strong>Rule:</strong> To stop a model that is looping: <code>tool_choice=none</code>, not <code>auto</code>.</p>
+<h2 id="pages">Pages<a class="headerlink" href="#pages" title="Permanent link">&para;</a></h2>
+<h3 id="deployment-modal"><a href="../lessons/deployment-modal/">Deployment &amp; Modal</a><a class="headerlink" href="#deployment-modal" title="Permanent link">&para;</a></h3>
+<p>Getting the stack running on Modal — vLLM cold start, sandbox lifecycle, Modal image cache,
+SERVE_MODEL baking, vLLM version pinning, Qwen3 model IDs, GPU sizing for MoE models, SGLang.
+9 lessons — #1, 2, 3, 4, 13, 15, 16, 17, 18</p>
+<h3 id="aider-backend"><a href="../lessons/aider/">aider Backend</a><a class="headerlink" href="#aider-backend" title="Permanent link">&para;</a></h3>
+<p>aider-specific configuration and output parsing — API URL mangling, repo map, pycache in
+diffs, token count stdout vs stderr.
+4 lessons — #5, 6, 7, 8</p>
+<h3 id="opencode-proxy"><a href="../lessons/opencode-proxy/">opencode &amp; Proxy</a><a class="headerlink" href="#opencode-proxy" title="Permanent link">&para;</a></h3>
+<p>Running opencode against vLLM via the in-process proxy — Responses API translation, SSE
+event sequence, <code>end_turn</code> race, <code>tool_choice</code> lifecycle, <code>task_complete</code> explicit signal,
+edit vs write for function bodies, stopping a looping model.
+10 lessons — #9, 10, 11, 19, 21, 28, 29, 31, 32, 33</p>
+<h3 id="token-cost-efficiency"><a href="../lessons/token-cost/">Token Cost &amp; Efficiency</a><a class="headerlink" href="#token-cost-efficiency" title="Permanent link">&para;</a></h3>
+<p>Measuring and reducing token spend — aider abbreviated counts, Qwen3 thinking token
+inflation, opencode cost model, aider/opencode structural gap, frugal injection principle.
+6 lessons — #14, 20, 22, 23, 24, 25</p>
+<h3 id="pipeline-reliability"><a href="../lessons/pipeline-reliability/">Pipeline Reliability</a><a class="headerlink" href="#pipeline-reliability" title="Permanent link">&para;</a></h3>
+<p>Correctness gates between agent execution and recorded results — silent PR failures, diff
+scanning (secrets, scope, OWASP), test gating, cross-tier test pollution.
+4 lessons — #12, 26, 27, 30</p>
 
 
 
