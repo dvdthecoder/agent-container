@@ -224,7 +224,7 @@ class ModalSandbox:
                 suite: SuiteResult | None = None
                 if exit_code == 0 and spec.run_tests:
                     _emit("phase", phase="TESTING")
-                    suite = tester.detect_and_run(sb)
+                    suite = tester.detect_and_run(sb, test_command=spec.test_command)
                     # #158: gate PR creation on test results — a run that breaks
                     # tests should be marked failed, not silently opened as a PR.
                     if suite is not None and suite.failed > 0:

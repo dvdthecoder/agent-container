@@ -69,6 +69,12 @@ from sandbox.spec import AgentTaskSpec  # noqa: E402
 # ── config from env ───────────────────────────────────────────────────────────
 _FIXTURE_REPO = "https://github.com/dvdthecoder/agent-container-fixture"
 
+_TEST_COMMANDS: dict[str, list[str]] = {
+    "tier1": ["python3", "-m", "pytest", "test_mathlib.py", "--tb=short", "-q"],
+    "tier2": ["python3", "-m", "pytest", "test_statslib.py", "--tb=short", "-q"],
+    "tier3": ["python3", "-m", "pytest", "test_geometry.py", "test_shapes.py", "--tb=short", "-q"],
+}
+
 _TASKS: dict[str, str] = {
     "tier1": (
         "The function sum_to_n() in mathlib.py has an off-by-one bug: "
@@ -183,6 +189,7 @@ def main() -> None:
                 base_branch="main",
                 create_pr=not NO_PR,
                 run_tests=True,
+                test_command=_TEST_COMMANDS[TASK_TIER],
                 timeout_coldstart=600,
                 timeout_agent=300,
                 timeout_tests=120,

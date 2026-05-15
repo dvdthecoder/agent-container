@@ -40,12 +40,16 @@ _RUN_COMMANDS: dict[str, list[str]] = {
 def detect_and_run(
     sb: modal.Sandbox,
     workdir: str = "/workspace",
+    test_command: list[str] | None = None,
 ) -> SuiteResult | None:
     """Detect the test runner in *workdir* and run the suite.
 
+    If *test_command* is given it is used as-is, skipping auto-detection.
     Returns a :class:`~sandbox.result.SuiteResult` on success or failure, or
-    ``None`` if no test runner configuration was found.
+    ``None`` if no test runner configuration was found (auto-detect only).
     """
+    if test_command:
+        return _run_tests(sb, runner_name="pytest", workdir=workdir, cmd=test_command)
     runner_name = _detect_runner(sb, workdir)
     if runner_name is None:
         return None
@@ -76,9 +80,10 @@ def _run_tests(
     sb: modal.Sandbox,
     runner_name: str,
     workdir: str,
+    cmd: list[str] | None = None,
 ) -> SuiteResult:
     """Run the test suite and return a structured result."""
-    cmd = _RUN_COMMANDS[runner_name]
+    cmd = cmd or _RUN_COMMANDS[runner_name]
     proc = sb.exec(*cmd, workdir=workdir)
     output = proc.stdout.read()
     proc.wait()

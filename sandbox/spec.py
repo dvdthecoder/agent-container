@@ -71,6 +71,7 @@ class AgentTaskSpec:
     memory: int = 1024  # MB of RAM for the sandbox (Modal default 128 MB causes OOM)
     create_pr: bool = True
     run_tests: bool = True  # auto-detect and run the project test suite
+    test_command: list[str] | None = None  # override test command (e.g. ["pytest", "test_foo.py"])
     backend: str = "opencode"  # opencode | claude | gemini
     initiated_by: str = "cli"  # cli | dashboard
     run_id: str | None = None  # pre-allocated run ID (dashboard sets this)
