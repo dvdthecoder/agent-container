@@ -289,6 +289,13 @@ def _convert_input_items(items: list) -> list:
 # reason to resend edit/write/patch/list/search schemas on every subsequent turn.
 _POST_EDIT_TOOLS: frozenset[str] = frozenset({"bash", "read", "grep", "glob"})
 
+# Minimum number of edit/write/patch calls that must appear in conversation
+# history before the proxy switches to tool_choice=auto.  Keeping it "required"
+# for several turns forces the model to complete all planned edits on multi-step
+# tasks (T2: median+variance = 2 edits; T3: rename + caller updates = 3+ edits)
+# before being allowed to escape with a plain text response.
+_MIN_EDITS_BEFORE_AUTO: int = int(os.environ.get("OPENCODE_MIN_EDITS_BEFORE_AUTO", "3"))
+
 # ---------------------------------------------------------------------------
 # Proxy handler
 # ---------------------------------------------------------------------------
@@ -361,28 +368,36 @@ class _ProxyHandler(http.server.BaseHTTPRequestHandler):
         # Without this the model calls read+edit simultaneously and uses prior
         # knowledge (often wrong) for oldString rather than the actual file content.
         if req.get("tools"):
-            # Switch to tool_choice=auto only AFTER an edit/write call has
-            # already appeared in the conversation history.  This ensures:
-            #   - Before edit: "required" forces the model to call read then edit
-            #     (not just reply with text describing the change).
-            #   - After edit: "auto" lets the model return a final text response
-            #     to end the session instead of looping forever on bash calls.
+            # Switch to tool_choice=auto only AFTER _MIN_EDITS_BEFORE_AUTO
+            # edit/write/patch calls have appeared in conversation history.
+            #   - Before threshold: "required" forces the model to keep calling
+            #     tools (read → edit → edit → ...) instead of replying with prose.
+            #   - After threshold: "auto" lets the model return a final text
+            #     response to end the session once all edits are done.
             raw_input_list = raw_input if isinstance(raw_input, list) else []
-            has_edit_call = any(
-                isinstance(item, dict)
-                and item.get("type") == "function_call"
-                and item.get("name") in ("edit", "write", "patch")
+            edit_call_count = sum(
+                1
                 for item in raw_input_list
+                if (
+                    isinstance(item, dict)
+                    and item.get("type") == "function_call"
+                    and item.get("name") in ("edit", "write", "patch")
+                )
             )
+            # Switch to auto only after enough edits have been made.
+            # _MIN_EDITS_BEFORE_AUTO defaults to 3 so multi-step tasks (T2:
+            # median+variance, T3: rename+callers) can complete all edits before
+            # the model is allowed to escape with a text-only response.
+            past_edit_threshold = edit_call_count >= _MIN_EDITS_BEFORE_AUTO
             converted = _convert_tools(req["tools"])
-            if has_edit_call:
+            if past_edit_threshold:
                 # Post-edit: drop all tools except verification tools.
                 # This saves ~6 × ~400 tokens per post-edit turn.
                 converted = [
                     t for t in converted if t.get("function", {}).get("name") in _POST_EDIT_TOOLS
                 ]
             chat_req["tools"] = converted
-            effective_tool_choice = "auto" if has_edit_call else TOOL_CHOICE
+            effective_tool_choice = "auto" if past_edit_threshold else TOOL_CHOICE
             chat_req["tool_choice"] = effective_tool_choice
             chat_req["parallel_tool_calls"] = False
 
