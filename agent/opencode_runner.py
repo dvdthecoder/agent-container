@@ -379,8 +379,9 @@ class _ProxyHandler(http.server.BaseHTTPRequestHandler):
         # tool_choice strategy:
         #   Always "required" — the model must call a tool on every turn.
         #   The ONLY way out is to call task_complete(), which the proxy injects
-        #   into every tool list.  Once task_complete appears in history the proxy
-        #   switches to "auto", letting the model send a closing text response.
+        #   into every tool list.  Once task_complete appears in history (opencode
+        #   stores it as name='invalid' because it cannot execute unknown tools)
+        #   the proxy switches to "none", forcing a text-only closing response.
         #
         #   This is task-agnostic: no heuristics, no edit counts, no guessing.
         #   The model signals completion explicitly; the proxy just listens.
@@ -611,7 +612,7 @@ class _ProxyHandler(http.server.BaseHTTPRequestHandler):
             )
         print(
             f"[proxy] ← stream done: tool_calls={n_tool_calls}"
-            f" text={n_text_chars}chars{think_note} tool_choice={TOOL_CHOICE}"
+            f" text={n_text_chars}chars{think_note}"
             f" tools={tool_names}",
             file=sys.stderr,
         )

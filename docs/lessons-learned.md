@@ -529,3 +529,52 @@ naturally, with correct indentation and no risk of truncating the body mid-line.
 
 For small targeted changes (single identifier rename, one-line fix) `edit` is still better —
 but the `oldString` should include the full function signature for reliable matching.
+
+---
+
+### 32. tool_choice heuristics don't scale — use an explicit done signal
+
+**Problem:** The proxy manipulated `tool_choice` based on counts of edit/write/bash calls to
+decide when the model was "done" and could exit with a text response.  Every tier required its
+own tuned threshold, and any change to agent behaviour (e.g. switching from `edit` to `write`)
+broke the heuristic and caused either early exits or infinite loops:
+
+- threshold = 1 edit → model exits after first edit, never writes second function
+- threshold = 3 edits → model uses `write` (1 call), threshold never reached, infinite `git push` loop
+- threshold: `write >= 1` → exits after first `write`, misses second file in T3
+- all variants break for real tasks with arbitrary file counts
+
+**Root cause:** Proxy-side heuristics try to infer task completion from side effects (which
+tools were called, how many times).  Only the model knows when the task is actually done.
+
+**Fix:** Inject a `task_complete(summary)` tool into every tool list.  Keep
+`tool_choice=required` forever — the model cannot escape with prose.  When `task_complete`
+appears in history, switch to `tool_choice=none` (not `auto` — `auto` still allows tool
+calls).  Session ends with a forced text-only response.
+
+**Implementation detail:** opencode cannot execute unknown tools.  It stores them in
+conversation history as `name='invalid'`.  The proxy detects completion by checking for
+`name in ("task_complete", "invalid")` — not just `"task_complete"`.
+
+**Rule:** Give the model an explicit exit mechanism rather than inferring completion.
+Any heuristic that counts tool calls is fragile and task-specific.
+
+---
+
+### 33. `tool_choice=auto` does not stop a looping model — use `none`
+
+**Problem:** After detecting task completion, the proxy switched to `tool_choice=auto`.  The
+assumption was that `auto` would let the model choose to stop.  Instead the model — which had
+been in a `required` loop calling `git push` — continued calling `bash` on every turn even in
+`auto` mode.  The loop continued until the agent timeout killed the sandbox.
+
+**Root cause:** `tool_choice=auto` means "the model MAY call a tool."  It does not stop a
+model that is already in a repetitive calling pattern.  A 32B model trained to call tools
+will default to calling tools even when permitted not to.
+
+**Fix:** Use `tool_choice=none` after the done signal.  `none` is the Chat Completions API
+value that explicitly prohibits any tool call on that turn, forcing the model to generate
+a plain-text response.  This is the only reliable way to break a looping model and extract
+a closing summary.
+
+**Rule:** To stop a model that is looping: `tool_choice=none`, not `auto`.
