@@ -40,5 +40,6 @@ make combine-analysis DATE=$(date +%Y-%m-%d)
 
 ## Analysis pages
 
+- [2026-05-15](2026-05-15.md) — T1/T2/T3 × 2 backends × qwen2.5-coder-32b; first cross-tier comparison; opencode/aider ratio grows 5.4× → 15.5× → 19.7× with task complexity; task_complete proxy fix; edit vs write discovery
 - [2026-05-08](2026-05-08.md) — 3 models × opencode × 3 runs; first post-#150 run; Coder models −19% prompt tokens (32k→26k); Qwen3 +44% from thinking token context inflation; 7B 3/3, 32B 1/3, Qwen3 3/3
 - [2026-05-05](2026-05-05.md) — 3 models × 2 backends × 3 runs; baseline; 17/18 pass; opencode/aider gap 11.9×; cold-start bias visible in run 1 durations
