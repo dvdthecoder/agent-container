@@ -77,11 +77,17 @@ nav:
   - Analysis:
     - Overview: analysis/index.md
     - 2026-05-12: analysis/2026-05-12.md
+    - 2026-05-15: analysis/2026-05-15.md
     - 2026-05-09: analysis/2026-05-09.md
     - 2026-05-08: analysis/2026-05-08.md
     - 2026-05-05: analysis/2026-05-05.md
   - Reference:
     - Lessons Learned: lessons-learned.md
+    - Deployment & Modal: lessons/deployment-modal.md
+    - aider Backend: lessons/aider.md
+    - opencode & Proxy: lessons/opencode-proxy.md
+    - Token Cost & Efficiency: lessons/token-cost.md
+    - Pipeline Reliability: lessons/pipeline-reliability.md
 
 plugins:
   - search
