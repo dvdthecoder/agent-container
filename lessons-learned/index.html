@@ -1758,6 +1758,100 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#analysis-and-benchmarking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Analysis and benchmarking
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Analysis and benchmarking">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#27-test-gating-gap-test-failures-didnt-block-pr-creation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        27. Test gating gap — test failures didn't block PR creation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#28-opencode-multi-line-edit-indentation-bug" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        28. opencode multi-line edit indentation bug
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#29-opencode-stops-early-on-multi-step-tasks-tool_choiceauto-escape" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        29. opencode stops early on multi-step tasks — tool_choice:auto escape
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#30-cross-tier-test-pollution-pytest-discovers-all-test-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        30. Cross-tier test pollution — pytest discovers all test files
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#31-opencode-edit-tool-fails-on-function-bodies-use-write-instead" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        31. opencode edit tool fails on function bodies — use write instead
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-tool_choice-heuristics-dont-scale-use-an-explicit-done-signal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        32. tool_choice heuristics don't scale — use an explicit done signal
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-tool_choiceauto-does-not-stop-a-looping-model-use-none" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        33. tool_choice=auto does not stop a looping model — use none
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2239,6 +2333,100 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#analysis-and-benchmarking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Analysis and benchmarking
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Analysis and benchmarking">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#27-test-gating-gap-test-failures-didnt-block-pr-creation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        27. Test gating gap — test failures didn't block PR creation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#28-opencode-multi-line-edit-indentation-bug" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        28. opencode multi-line edit indentation bug
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#29-opencode-stops-early-on-multi-step-tasks-tool_choiceauto-escape" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        29. opencode stops early on multi-step tasks — tool_choice:auto escape
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#30-cross-tier-test-pollution-pytest-discovers-all-test-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        30. Cross-tier test pollution — pytest discovers all test files
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#31-opencode-edit-tool-fails-on-function-bodies-use-write-instead" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        31. opencode edit tool fails on function bodies — use write instead
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-tool_choice-heuristics-dont-scale-use-an-explicit-done-signal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        32. tool_choice heuristics don't scale — use an explicit done signal
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-tool_choiceauto-does-not-stop-a-looping-model-use-none" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        33. tool_choice=auto does not stop a looping model — use none
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2557,6 +2745,145 @@ empty-diff retry). Three rule categories:</p>
 <p><strong>Rule:</strong> Blocking on secrets is safe (precision is high).  Blocking on OWASP is not — test
 harnesses legitimately use eval and subprocess.  Warnings give the operator visibility without
 false failures.</p>
+<hr />
+<h2 id="analysis-and-benchmarking">Analysis and benchmarking<a class="headerlink" href="#analysis-and-benchmarking" title="Permanent link">&para;</a></h2>
+<h3 id="27-test-gating-gap-test-failures-didnt-block-pr-creation">27. Test gating gap — test failures didn't block PR creation<a class="headerlink" href="#27-test-gating-gap-test-failures-didnt-block-pr-creation" title="Permanent link">&para;</a></h3>
+<p><strong>Problem:</strong> The TESTING phase ran <code>pytest</code> and stored the <code>SuiteResult</code>, but <code>result.success</code>
+was determined solely by the agent's exit code (<code>exit_code == 0</code>).  A run that produced broken
+code, opened a PR, and reported ✅ — as long as the agent process exited cleanly.</p>
+<p>Discovered during Tier 2/3 analysis runs (2026-05-13): opencode PRs #49 and #51 both contained
+broken code but were reported as successes.</p>
+<p><strong>Fix (#158):</strong> After <code>detect_and_run()</code>, raise <code>PhaseError("TESTING", ...)</code> when
+<code>suite.failed &gt; 0</code>.  <code>PhaseError</code> is caught by the existing error handler which sets
+<code>success=False</code> and skips the PR phase.  <code>suite=None</code> (no test runner detected) stays
+non-blocking.</p>
+<p><strong>Rule:</strong> Store results for observability AND gate the outcome on them.  Observability without
+gating gives false confidence.</p>
+<hr />
+<h3 id="28-opencode-multi-line-edit-indentation-bug">28. opencode multi-line edit indentation bug<a class="headerlink" href="#28-opencode-multi-line-edit-indentation-bug" title="Permanent link">&para;</a></h3>
+<p><strong>Problem:</strong> opencode's <code>edit</code> tool does a literal substring find-and-replace.  When the model
+writes a multi-line <code>newString</code>, it generates the code as standalone text with no leading
+indentation.  The edit tool prepends the original line's indentation only to the first line of
+the replacement — all subsequent lines after <code>\n</code> land at column 0.</p>
+<p>Example: replacing <code>raise NotImplementedError(...)</code> (4-space indent inside a function) with:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>newString: &quot;values.sort()\nmid = len(values) // 2\nif ...&quot;
+</code></pre></div>
+Result: <code>values.sort()</code> is correctly indented, <code>mid = ...</code> and <code>if ...</code> land at module level →
+<code>SyntaxError: return outside function</code>.</p>
+<p>Reproduced consistently across multiple runs.  aider avoids this by using whole-file
+SEARCH/REPLACE blocks that include the full surrounding indented context.</p>
+<p><strong>Fix:</strong> Inject an explicit editing rule into the task conventions:</p>
+<blockquote>
+<p>"When replacing code inside an indented block, every line of <code>newString</code> must include the
+correct leading spaces as they appear in the file — not as standalone code."</p>
+</blockquote>
+<p><strong>Rule:</strong> opencode's edit primitive requires indentation-aware prompting.  aider's
+whole-file format is self-healing.  On tasks with multi-line replacements inside indented
+blocks, opencode needs explicit instruction or it will produce SyntaxErrors.</p>
+<hr />
+<h3 id="29-opencode-stops-early-on-multi-step-tasks-tool_choiceauto-escape">29. opencode stops early on multi-step tasks — tool_choice:auto escape<a class="headerlink" href="#29-opencode-stops-early-on-multi-step-tasks-tool_choiceauto-escape" title="Permanent link">&para;</a></h3>
+<p><strong>Problem:</strong> The proxy switches <code>tool_choice</code> from <code>required</code> to <code>auto</code> after the first
+<code>edit</code>/<code>write</code> call (intended to prevent infinite bash loops).  With <code>auto</code>, the model can
+respond with text only and zero tool calls, declaring itself done.</p>
+<p>On Tier 3 (rename 4 functions across 2 files): opencode renamed one function
+(<code>calc_area_rect</code> → <code>area_rectangle</code>) then produced a 150-char text response and stopped.
+The other three renames and <code>shapes.py</code> were never touched.</p>
+<p>aider doesn't have this problem because it runs tests after every edit — test failures force
+continued iteration.  opencode relies on the model planning all steps upfront; when <code>auto</code>
+offers an exit, it takes it.</p>
+<p><strong>Fix:</strong> Inject an explicit planning rule into conventions:</p>
+<blockquote>
+<p>"Before making any edit, enumerate ALL changes required.  Do not produce a text response
+until every planned edit has been applied and tests pass."</p>
+</blockquote>
+<p><strong>Rule:</strong> <code>tool_choice:auto</code> is a necessary escape valve but it lets under-planning go
+undetected.  Compensate with explicit "plan first, complete all steps" instructions.
+opencode on multi-step tasks without these instructions will under-deliver reliably.</p>
+<hr />
+<h3 id="30-cross-tier-test-pollution-pytest-discovers-all-test-files">30. Cross-tier test pollution — pytest discovers all test files<a class="headerlink" href="#30-cross-tier-test-pollution-pytest-discovers-all-test-files" title="Permanent link">&para;</a></h3>
+<p><strong>Problem:</strong> The fixture repo has test files for all three tiers.  Running <code>pytest</code> with no
+arguments discovers all of them.  Tier 2/3 stubs (<code>NotImplementedError</code>) and old naming
+(<code>calc_*</code>) cause <code>test_statslib.py</code>, <code>test_geometry.py</code>, <code>test_shapes.py</code> to fail on import,
+blocking Tier 1 runs even when the Tier 1 fix is correct.</p>
+<p>Exposed after #158 (test gating): a correct Tier 1 fix was reported ❌ because unrelated
+Tier 2/3 tests failed.</p>
+<p><strong>Fix:</strong> <code>AgentTaskSpec.test_command</code> — explicit test command overrides auto-detection.
+<code>token_analysis.py</code> passes the tier-specific file(s):
+- <code>tier1</code> → <code>pytest test_mathlib.py</code>
+- <code>tier2</code> → <code>pytest test_statslib.py</code>
+- <code>tier3</code> → <code>pytest test_geometry.py test_shapes.py</code></p>
+<p><strong>Rule:</strong> When a repo has intentionally broken stubs or incomplete files (multi-tier fixture,
+feature branches, scaffolding), always scope the test command explicitly.  Auto-detection
+is for greenfield repos where all test files are expected to pass.</p>
+<hr />
+<h3 id="31-opencode-edit-tool-fails-on-function-bodies-use-write-instead">31. opencode edit tool fails on function bodies — use write instead<a class="headerlink" href="#31-opencode-edit-tool-fails-on-function-bodies-use-write-instead" title="Permanent link">&para;</a></h3>
+<p><strong>Problem:</strong> opencode's <code>edit</code> tool asks the model to provide <code>oldString</code> (the exact text to
+replace) and <code>newString</code> (the replacement).  For implementing a stub function the <code>oldString</code>
+is typically just the single <code>raise NotImplementedError(...)</code> line — with no surrounding
+function signature context.  The model must then generate the entire multi-line function body
+as the <code>newString</code> value inside a JSON string, where:</p>
+<ul>
+<li>Every <code>\n</code> must be encoded as a literal backslash-n inside the JSON string.</li>
+<li>Every line of indentation must be produced as explicit spaces (4 per level) with no
+  surrounding context to anchor the model's whitespace.</li>
+<li>Any truncation or omission (e.g. forgetting the final <code>return sorted_vals[mid]</code>) is silent —
+  the proxy accepts a truncated newString and the file ends up with an incomplete body.</li>
+</ul>
+<p>Observed failure mode across T2 runs (89k token run):</p>
+<ol>
+<li>Model calls <code>edit(oldString="raise NotImplementedError(...)", newString="    sorted_vals…\n  ")</code> — correct start, truncated end (missing <code>return sorted_vals[mid]</code>).</li>
+<li>Tests fail (function returns <code>None</code> for odd-length lists).</li>
+<li>Model panics and re-edits with wrong indentation, making things worse.</li>
+<li>Token count mushrooms across retries.</li>
+</ol>
+<p><strong>Root cause of the aider vs opencode performance gap on T2/T3:</strong> aider uses a SEARCH/REPLACE
+block format — the model generates the complete function (signature + docstring + body) as a
+natural code block.  This gives the model full context, avoids JSON encoding, and eliminates
+the indentation problem entirely.  Same model, same endpoint — aider succeeds because the
+editing <em>format</em> is better suited to code generation.</p>
+<p><strong>Fix:</strong> AGENTS.md updated to instruct the model: for stub implementation tasks use <code>write</code> to
+rewrite the complete file, not <code>edit</code> to replace individual lines.  <code>write</code> has the same
+structural advantage as aider's SEARCH/REPLACE — the model generates the full file content
+naturally, with correct indentation and no risk of truncating the body mid-line.</p>
+<p>For small targeted changes (single identifier rename, one-line fix) <code>edit</code> is still better —
+but the <code>oldString</code> should include the full function signature for reliable matching.</p>
+<hr />
+<h3 id="32-tool_choice-heuristics-dont-scale-use-an-explicit-done-signal">32. tool_choice heuristics don't scale — use an explicit done signal<a class="headerlink" href="#32-tool_choice-heuristics-dont-scale-use-an-explicit-done-signal" title="Permanent link">&para;</a></h3>
+<p><strong>Problem:</strong> The proxy manipulated <code>tool_choice</code> based on counts of edit/write/bash calls to
+decide when the model was "done" and could exit with a text response.  Every tier required its
+own tuned threshold, and any change to agent behaviour (e.g. switching from <code>edit</code> to <code>write</code>)
+broke the heuristic and caused either early exits or infinite loops:</p>
+<ul>
+<li>threshold = 1 edit → model exits after first edit, never writes second function</li>
+<li>threshold = 3 edits → model uses <code>write</code> (1 call), threshold never reached, infinite <code>git push</code> loop</li>
+<li>threshold: <code>write &gt;= 1</code> → exits after first <code>write</code>, misses second file in T3</li>
+<li>all variants break for real tasks with arbitrary file counts</li>
+</ul>
+<p><strong>Root cause:</strong> Proxy-side heuristics try to infer task completion from side effects (which
+tools were called, how many times).  Only the model knows when the task is actually done.</p>
+<p><strong>Fix:</strong> Inject a <code>task_complete(summary)</code> tool into every tool list.  Keep
+<code>tool_choice=required</code> forever — the model cannot escape with prose.  When <code>task_complete</code>
+appears in history, switch to <code>tool_choice=none</code> (not <code>auto</code> — <code>auto</code> still allows tool
+calls).  Session ends with a forced text-only response.</p>
+<p><strong>Implementation detail:</strong> opencode cannot execute unknown tools.  It stores them in
+conversation history as <code>name='invalid'</code>.  The proxy detects completion by checking for
+<code>name in ("task_complete", "invalid")</code> — not just <code>"task_complete"</code>.</p>
+<p><strong>Rule:</strong> Give the model an explicit exit mechanism rather than inferring completion.
+Any heuristic that counts tool calls is fragile and task-specific.</p>
+<hr />
+<h3 id="33-tool_choiceauto-does-not-stop-a-looping-model-use-none">33. <code>tool_choice=auto</code> does not stop a looping model — use <code>none</code><a class="headerlink" href="#33-tool_choiceauto-does-not-stop-a-looping-model-use-none" title="Permanent link">&para;</a></h3>
+<p><strong>Problem:</strong> After detecting task completion, the proxy switched to <code>tool_choice=auto</code>.  The
+assumption was that <code>auto</code> would let the model choose to stop.  Instead the model — which had
+been in a <code>required</code> loop calling <code>git push</code> — continued calling <code>bash</code> on every turn even in
+<code>auto</code> mode.  The loop continued until the agent timeout killed the sandbox.</p>
+<p><strong>Root cause:</strong> <code>tool_choice=auto</code> means "the model MAY call a tool."  It does not stop a
+model that is already in a repetitive calling pattern.  A 32B model trained to call tools
+will default to calling tools even when permitted not to.</p>
+<p><strong>Fix:</strong> Use <code>tool_choice=none</code> after the done signal.  <code>none</code> is the Chat Completions API
+value that explicitly prohibits any tool call on that turn, forcing the model to generate
+a plain-text response.  This is the only reliable way to break a looping model and extract
+a closing summary.</p>
+<p><strong>Rule:</strong> To stop a model that is looping: <code>tool_choice=none</code>, not <code>auto</code>.</p>
 
 
 
