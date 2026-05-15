@@ -10,13 +10,13 @@
       
       
       
-        <link rel="canonical" href="https://dvdthecoder.github.io/agent-container/lessons/opencode-proxy/">
+        <link rel="canonical" href="https://dvdthecoder.github.io/agent-container/analysis/2026-05-15/">
       
       
-        <link rel="prev" href="../aider/">
+        <link rel="prev" href="../">
       
       
-        <link rel="next" href="../token-cost/">
+        <link rel="next" href="../2026-05-12/">
       
       
         
@@ -27,7 +27,7 @@
     
     
       
-        <title>opencode & Proxy - agent-container</title>
+        <title>2026-05-15 - agent-container</title>
       
     
     
@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#opencode-proxy" class="md-skip">
+        <a href="#token-analysis-2026-05-15" class="md-skip">
           Skip to content
         </a>
       
@@ -112,7 +112,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              opencode & Proxy
+              2026-05-15
             
           </span>
         </div>
@@ -321,11 +321,13 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
-        <a href="../../analysis/" class="md-tabs__link">
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../" class="md-tabs__link">
           
   
   
@@ -341,12 +343,10 @@
   
   
   
-    
-  
   
     
     
-      <li class="md-tabs__item md-tabs__item--active">
+      <li class="md-tabs__item">
         <a href="../../lessons-learned/" class="md-tabs__link">
           
   
@@ -1003,26 +1003,31 @@
       
   
   
+    
   
   
+  
     
     
     
     
+      
+        
+        
       
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" checked>
         
           
-          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
             
   
   
@@ -1040,7 +1045,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_6">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1058,7 +1063,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../analysis/" class="md-nav__link">
+      <a href="../" class="md-nav__link">
         
   
   
@@ -1083,10 +1088,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../analysis/2026-05-15/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    2026-05-15
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -1102,6 +1134,253 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#results-canonical-runs-post-proxy-fixes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Results — canonical runs (post-proxy-fixes)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cross-tier-token-comparison" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cross-tier token comparison
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-the-ratio-grows-structural-token-accounting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why the ratio grows: structural token accounting
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Why the ratio grows: structural token accounting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#aider-chat-completions-searchreplace" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        aider (Chat Completions, SEARCH/REPLACE)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#opencode-responses-api-tool-calls" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        opencode (Responses API, tool calls)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-ratio-diverges-because-both-effects-compound" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The ratio diverges because both effects compound
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#t3-opencode-tool-call-trace" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        T3 opencode tool call trace
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-it-took-to-get-opencode-working-on-t2t3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What it took to get opencode working on T2/T3
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="What it took to get opencode working on T2/T3">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-problem-heuristic-tool_choice-switching" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The problem: heuristic tool_choice switching
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-fix-task_complete-explicit-signal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The fix: task_complete explicit signal
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#t2-proxy-failure-history" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        T2 proxy failure history
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-edit-vs-write-discovery" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The edit vs write discovery
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#key-findings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key findings
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Key findings">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-both-backends-solve-all-three-tiers-at-32b" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Both backends solve all three tiers at 32B
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-opencode-token-cost-grows-superlinearly-with-task-complexity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. opencode token cost grows superlinearly with task complexity
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-framework-matters-more-than-model-for-token-cost" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Framework matters more than model for token cost
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-tool_choice-manipulation-is-a-proxy-antipattern" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Tool_choice manipulation is a proxy antipattern
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-aider-duration-anomaly-on-t1-219s-vs-122s-for-opencode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. aider duration anomaly on T1 (219s vs 122s for opencode)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Next steps
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1114,7 +1393,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../analysis/2026-05-12/" class="md-nav__link">
+      <a href="../2026-05-12/" class="md-nav__link">
         
   
   
@@ -1142,7 +1421,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../analysis/2026-05-09/" class="md-nav__link">
+      <a href="../2026-05-09/" class="md-nav__link">
         
   
   
@@ -1170,7 +1449,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../analysis/2026-05-08/" class="md-nav__link">
+      <a href="../2026-05-08/" class="md-nav__link">
         
   
   
@@ -1198,7 +1477,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../analysis/2026-05-05/" class="md-nav__link">
+      <a href="../2026-05-05/" class="md-nav__link">
         
   
   
@@ -1230,31 +1509,26 @@
       
   
   
-    
   
   
-  
     
     
     
     
-      
-        
-        
       
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
         
           
-          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
             
   
   
@@ -1272,7 +1546,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_7">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1318,7 +1592,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../deployment-modal/" class="md-nav__link">
+      <a href="../../lessons/deployment-modal/" class="md-nav__link">
         
   
   
@@ -1346,7 +1620,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../aider/" class="md-nav__link">
+      <a href="../../lessons/aider/" class="md-nav__link">
         
   
   
@@ -1371,37 +1645,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    opencode & Proxy
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../lessons/opencode-proxy/" class="md-nav__link">
         
   
   
@@ -1417,136 +1664,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#9-opencode-calls-responses-api-vllm-doesnt-implement-it" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        9. opencode calls Responses API — vLLM doesn't implement it
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#10-proxy-crashes-on-usage-only-sse-chunks" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        10. Proxy crashes on usage-only SSE chunks
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#11-token-usage-only-emitted-on-success-path" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        11. Token usage only emitted on success path
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#19-opencode-end_turn-race-file-write-not-flushed-before-diff-collection" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        19. opencode end_turn race — file write not flushed before diff collection
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#21-opencode_model-must-be-updated-together-with-openai_base_url" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        21. OPENCODE_MODEL must be updated together with OPENAI_BASE_URL
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#28-opencode-multi-line-edit-indentation-bug" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        28. opencode multi-line edit indentation bug
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#29-opencode-stops-early-on-multi-step-tasks-tool_choiceauto-escape" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        29. opencode stops early on multi-step tasks — tool_choice:auto escape
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#31-opencode-edit-tool-fails-on-function-bodies-use-write-instead" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        31. opencode edit tool fails on function bodies — use write instead
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#32-tool_choice-heuristics-dont-scale-use-an-explicit-done-signal" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        32. tool_choice heuristics don't scale — use an explicit done signal
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#33-tool_choiceauto-does-not-stop-a-looping-model-use-none" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        33. tool_choice=auto does not stop a looping model — use none
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1559,7 +1676,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../token-cost/" class="md-nav__link">
+      <a href="../../lessons/token-cost/" class="md-nav__link">
         
   
   
@@ -1587,7 +1704,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../pipeline-reliability/" class="md-nav__link">
+      <a href="../../lessons/pipeline-reliability/" class="md-nav__link">
         
   
   
@@ -1642,10 +1759,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#9-opencode-calls-responses-api-vllm-doesnt-implement-it" class="md-nav__link">
+  <a href="#results-canonical-runs-post-proxy-fixes" class="md-nav__link">
     <span class="md-ellipsis">
       
-        9. opencode calls Responses API — vLLM doesn't implement it
+        Results — canonical runs (post-proxy-fixes)
       
     </span>
   </a>
@@ -1653,10 +1770,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#10-proxy-crashes-on-usage-only-sse-chunks" class="md-nav__link">
+  <a href="#cross-tier-token-comparison" class="md-nav__link">
     <span class="md-ellipsis">
       
-        10. Proxy crashes on usage-only SSE chunks
+        Cross-tier token comparison
       
     </span>
   </a>
@@ -1664,10 +1781,60 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#11-token-usage-only-emitted-on-success-path" class="md-nav__link">
+  <a href="#why-the-ratio-grows-structural-token-accounting" class="md-nav__link">
     <span class="md-ellipsis">
       
-        11. Token usage only emitted on success path
+        Why the ratio grows: structural token accounting
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Why the ratio grows: structural token accounting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#aider-chat-completions-searchreplace" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        aider (Chat Completions, SEARCH/REPLACE)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#opencode-responses-api-tool-calls" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        opencode (Responses API, tool calls)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-ratio-diverges-because-both-effects-compound" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The ratio diverges because both effects compound
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#t3-opencode-tool-call-trace" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        T3 opencode tool call trace
       
     </span>
   </a>
@@ -1675,10 +1842,60 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#19-opencode-end_turn-race-file-write-not-flushed-before-diff-collection" class="md-nav__link">
+  <a href="#what-it-took-to-get-opencode-working-on-t2t3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        19. opencode end_turn race — file write not flushed before diff collection
+        What it took to get opencode working on T2/T3
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="What it took to get opencode working on T2/T3">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-problem-heuristic-tool_choice-switching" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The problem: heuristic tool_choice switching
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-fix-task_complete-explicit-signal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The fix: task_complete explicit signal
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#t2-proxy-failure-history" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        T2 proxy failure history
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-edit-vs-write-discovery" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The edit vs write discovery
       
     </span>
   </a>
@@ -1686,65 +1903,82 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#21-opencode_model-must-be-updated-together-with-openai_base_url" class="md-nav__link">
+  <a href="#key-findings" class="md-nav__link">
     <span class="md-ellipsis">
       
-        21. OPENCODE_MODEL must be updated together with OPENAI_BASE_URL
+        Key findings
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Key findings">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-both-backends-solve-all-three-tiers-at-32b" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Both backends solve all three tiers at 32B
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#28-opencode-multi-line-edit-indentation-bug" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#2-opencode-token-cost-grows-superlinearly-with-task-complexity" class="md-nav__link">
     <span class="md-ellipsis">
       
-        28. opencode multi-line edit indentation bug
+        2. opencode token cost grows superlinearly with task complexity
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#29-opencode-stops-early-on-multi-step-tasks-tool_choiceauto-escape" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#3-framework-matters-more-than-model-for-token-cost" class="md-nav__link">
     <span class="md-ellipsis">
       
-        29. opencode stops early on multi-step tasks — tool_choice:auto escape
+        3. Framework matters more than model for token cost
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#31-opencode-edit-tool-fails-on-function-bodies-use-write-instead" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#4-tool_choice-manipulation-is-a-proxy-antipattern" class="md-nav__link">
     <span class="md-ellipsis">
       
-        31. opencode edit tool fails on function bodies — use write instead
+        4. Tool_choice manipulation is a proxy antipattern
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#32-tool_choice-heuristics-dont-scale-use-an-explicit-done-signal" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#5-aider-duration-anomaly-on-t1-219s-vs-122s-for-opencode" class="md-nav__link">
     <span class="md-ellipsis">
       
-        32. tool_choice heuristics don't scale — use an explicit done signal
+        5. aider duration anomaly on T1 (219s vs 122s for opencode)
       
     </span>
   </a>
   
 </li>
+        
+      </ul>
+    </nav>
+  
+</li>
       
         <li class="md-nav__item">
-  <a href="#33-tool_choiceauto-does-not-stop-a-looping-model-use-none" class="md-nav__link">
+  <a href="#next-steps" class="md-nav__link">
     <span class="md-ellipsis">
       
-        33. tool_choice=auto does not stop a looping model — use none
+        Next steps
       
     </span>
   </a>
@@ -1771,175 +2005,333 @@
   
 
 
-<h1 id="opencode-proxy">opencode &amp; Proxy<a class="headerlink" href="#opencode-proxy" title="Permanent link">&para;</a></h1>
-<p>Lessons from running opencode against a self-hosted vLLM endpoint via the in-process proxy.
-The proxy translates the OpenAI Responses API to Chat Completions and manages session lifecycle.</p>
+<h1 id="token-analysis-2026-05-15">Token Analysis — 2026-05-15<a class="headerlink" href="#token-analysis-2026-05-15" title="Permanent link">&para;</a></h1>
+<p><strong>Task:</strong> #157 — Multi-tier benchmark: T1 (bug fix), T2 (implement stubs), T3 (multi-file rename).
+First full cross-tier comparison with both backends, plus a complete overhaul of the
+opencode proxy <code>tool_choice</code> logic that was required before T2/T3 opencode results were valid.</p>
+<p><strong>Model:</strong> <code>qwen2.5-coder-32b</code> · A10G<br />
+<strong>Backends:</strong> aider, opencode<br />
+<strong>Repo:</strong> <code>dvdthecoder/agent-container-fixture</code></p>
 <hr />
-<h2 id="9-opencode-calls-responses-api-vllm-doesnt-implement-it">9. opencode calls Responses API — vLLM doesn't implement it<a class="headerlink" href="#9-opencode-calls-responses-api-vllm-doesnt-implement-it" title="Permanent link">&para;</a></h2>
-<p><strong>Problem:</strong> opencode v1.14+ calls <code>POST /v1/responses</code> (OpenAI Responses API). No self-hosted
-server implements this. Every request returned 404.</p>
-<p><strong>Fix:</strong> <code>opencode_runner.py</code> starts a thin in-process HTTP proxy on <code>localhost:8080</code> that
-translates Responses API to Chat Completions. Three behaviours were required beyond basic translation:</p>
-<ol>
-<li>
-<p><strong>Full SSE event sequence.</strong> The proxy emits <code>response.output_item.added</code>,
-   <code>response.function_call_arguments.done</code>, and <code>response.output_item.done</code> before
-   <code>response.completed</code> for every tool call. Without these, opencode's loop does not detect
-   the tool call and the session ends with no changes.</p>
-</li>
-<li>
-<p><strong><code>parallel_tool_calls: false</code>.</strong> Without this the model calls <code>read</code> and <code>edit</code> in the
-   same response, generating <code>oldString</code> from prior knowledge. The edit fails silently.</p>
-</li>
-<li>
-<p><strong>Adaptive <code>tool_choice</code>.</strong> <code>tool_choice: "required"</code> on the first turn forces a tool call.
-   After an <code>edit</code>/<code>write</code> appears in history, the proxy switches to <code>"auto"</code> so the model can
-   return a final text response and end the session.</p>
-</li>
-</ol>
+<h2 id="results-canonical-runs-post-proxy-fixes">Results — canonical runs (post-proxy-fixes)<a class="headerlink" href="#results-canonical-runs-post-proxy-fixes" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Tier</th>
+<th>Backend</th>
+<th>Success</th>
+<th>Prompt tok</th>
+<th>Completion tok</th>
+<th>Total tok</th>
+<th>Duration</th>
+<th>PR</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>T1 — bug fix</td>
+<td>aider</td>
+<td>✅</td>
+<td>5,500</td>
+<td>117</td>
+<td><strong>5,617</strong></td>
+<td>219s</td>
+<td>—</td>
+</tr>
+<tr>
+<td>T1 — bug fix</td>
+<td>opencode</td>
+<td>✅</td>
+<td>30,402</td>
+<td>117</td>
+<td><strong>30,519</strong></td>
+<td>122s</td>
+<td>—</td>
+</tr>
+<tr>
+<td>T2 — implement</td>
+<td>aider</td>
+<td>✅</td>
+<td>5,500</td>
+<td>372</td>
+<td><strong>5,872</strong></td>
+<td>62s</td>
+<td><a href="https://github.com/dvdthecoder/agent-container-fixture/pull/48">#48</a></td>
+</tr>
+<tr>
+<td>T2 — implement</td>
+<td>opencode</td>
+<td>✅</td>
+<td>90,495</td>
+<td>497</td>
+<td><strong>90,992</strong></td>
+<td>142s</td>
+<td><a href="https://github.com/dvdthecoder/agent-container-fixture/pull/56">#56</a></td>
+</tr>
+<tr>
+<td>T3 — rename</td>
+<td>aider</td>
+<td>✅</td>
+<td>11,800</td>
+<td>555</td>
+<td><strong>12,355</strong></td>
+<td>76s</td>
+<td><a href="https://github.com/dvdthecoder/agent-container-fixture/pull/50">#50</a></td>
+</tr>
+<tr>
+<td>T3 — rename</td>
+<td>opencode</td>
+<td>✅</td>
+<td>241,298</td>
+<td>1,795</td>
+<td><strong>243,093</strong></td>
+<td>366s</td>
+<td><a href="https://github.com/dvdthecoder/agent-container-fixture/pull/57">#57</a></td>
+</tr>
+</tbody>
+</table>
 <hr />
-<h2 id="10-proxy-crashes-on-usage-only-sse-chunks">10. Proxy crashes on usage-only SSE chunks<a class="headerlink" href="#10-proxy-crashes-on-usage-only-sse-chunks" title="Permanent link">&para;</a></h2>
-<p><strong>Problem:</strong> vLLM sends a final chunk with <code>"choices": []</code> and <code>"usage": {...}</code> when
-<code>stream_options.include_usage=true</code>. <code>chunk.get("choices", [{}])[0]</code> returns <code>[][0]</code> because
-<code>get()</code> returns the real empty list, not the default — <code>IndexError</code> → 502 back to opencode →
-empty diff → run marked failed.</p>
-<p><strong>Fix:</strong> <code>(chunk.get("choices") or [{}])[0]</code> — empty list is falsy, so the default fires.</p>
+<h2 id="cross-tier-token-comparison">Cross-tier token comparison<a class="headerlink" href="#cross-tier-token-comparison" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Tier</th>
+<th>aider</th>
+<th>opencode</th>
+<th>ratio</th>
+<th>aider dur</th>
+<th>opencode dur</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>T1 (single-line fix)</td>
+<td>5,617</td>
+<td>30,519</td>
+<td><strong>5.4×</strong></td>
+<td>219s</td>
+<td>122s</td>
+</tr>
+<tr>
+<td>T2 (implement 2 fns)</td>
+<td>5,872</td>
+<td>90,992</td>
+<td><strong>15.5×</strong></td>
+<td>62s</td>
+<td>142s</td>
+</tr>
+<tr>
+<td>T3 (rename + callers)</td>
+<td>12,355</td>
+<td>243,093</td>
+<td><strong>19.7×</strong></td>
+<td>76s</td>
+<td>366s</td>
+</tr>
+</tbody>
+</table>
+<p>The opencode/aider ratio <strong>grows with task complexity</strong>, not linearly but quadratically.
+This is a structural property of the frameworks, explained below.</p>
 <hr />
-<h2 id="11-token-usage-only-emitted-on-success-path">11. Token usage only emitted on success path<a class="headerlink" href="#11-token-usage-only-emitted-on-success-path" title="Permanent link">&para;</a></h2>
-<p><strong>Problem:</strong> <code>[runner] token_usage:</code> was only printed when <code>stop_reason == "session_completed"</code>.
-opencode always exits via the <code>end_turn</code> grace-period path — that path had no emit, so every
-opencode run had <code>total_tokens=NULL</code> in SQLite.</p>
-<p><strong>Fix:</strong> Extracted <code>_emit_token_usage()</code> helper called on all three exit paths: unexpected
-stop, <code>end_turn</code> + grace period, and deadline-loop timeout.</p>
-<hr />
-<h2 id="19-opencode-end_turn-race-file-write-not-flushed-before-diff-collection">19. opencode <code>end_turn</code> race — file write not flushed before diff collection<a class="headerlink" href="#19-opencode-end_turn-race-file-write-not-flushed-before-diff-collection" title="Permanent link">&para;</a></h2>
-<p><strong>Problem:</strong> opencode occasionally returns <code>stopReason='end_turn'</code> before the file write
-from the preceding <code>edit</code> tool call is flushed to disk. Runner terminates the sandbox,
-<code>collect_diff</code> finds an empty diff — even though the proxy confirmed the <code>edit</code> was received.
-Observed as ~33% flake rate on <code>qwen2.5-coder-32b</code> / opencode.</p>
-<p><strong>Root cause:</strong> <code>end_turn</code> is a session-level signal that the model finished responding —
-it does not guarantee all tool-call side effects are durably committed.</p>
-<p><strong>Fix (2026-05-09, #152):</strong> After the runner exits 0 with an empty diff, <code>collect_diff</code> is
-retried up to 3× with 5s delays before raising <code>PhaseError</code>. A briefly-delayed write is
-no longer mis-classified as a no-op failure.</p>
-<hr />
-<h2 id="21-opencode_model-must-be-updated-together-with-openai_base_url">21. OPENCODE_MODEL must be updated together with OPENAI_BASE_URL<a class="headerlink" href="#21-opencode_model-must-be-updated-together-with-openai_base_url" title="Permanent link">&para;</a></h2>
-<p><strong>Problem:</strong> <code>wait_for_serve --update-env</code> updates <code>OPENAI_BASE_URL</code> in <code>.env</code> but not
-<code>OPENCODE_MODEL</code>. Sending requests to the qwen3-30b endpoint asking for <code>qwen2.5-coder-32b</code>
-returns HTTP 404 on every tool turn.</p>
-<p><strong>Fix:</strong> Always set <code>OPENCODE_MODEL</code> explicitly alongside the endpoint — either via <code>sed</code>
-or as a shell env var prefix. <code>run_matrix.py</code> handles this correctly; the bug only surfaces
-when running <code>token_analysis.py</code> directly after <code>wait_for_serve</code>.</p>
-<p><strong>Rule:</strong> <code>OPENAI_BASE_URL</code> and <code>OPENCODE_MODEL</code> are a pair. Treat them as a unit.</p>
-<hr />
-<h2 id="28-opencode-multi-line-edit-indentation-bug">28. opencode multi-line edit indentation bug<a class="headerlink" href="#28-opencode-multi-line-edit-indentation-bug" title="Permanent link">&para;</a></h2>
-<p><strong>Problem:</strong> opencode's <code>edit</code> tool does a literal substring find-and-replace.  When the model
-writes a multi-line <code>newString</code>, it generates the code as standalone text with no leading
-indentation.  The edit tool prepends the original line's indentation only to the first line of
-the replacement — all subsequent lines after <code>\n</code> land at column 0.</p>
-<p>Example: replacing <code>raise NotImplementedError(...)</code> (4-space indent inside a function) with:
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>newString: &quot;values.sort()\nmid = len(values) // 2\nif ...&quot;
+<h2 id="why-the-ratio-grows-structural-token-accounting">Why the ratio grows: structural token accounting<a class="headerlink" href="#why-the-ratio-grows-structural-token-accounting" title="Permanent link">&para;</a></h2>
+<h3 id="aider-chat-completions-searchreplace">aider (Chat Completions, SEARCH/REPLACE)<a class="headerlink" href="#aider-chat-completions-searchreplace" title="Permanent link">&para;</a></h3>
+<p>aider sends a <strong>fixed-size context per request</strong>: repo map (~1k tokens) + file content + task.
+The prompt is roughly constant across turns because aider re-sends only the files being edited.
+Token cost grows with <strong>diff size</strong> (how much code is changed), not turn count.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>T1: repo map + mathlib.py           → ~5.6k tokens total
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>T2: repo map + statslib.py          → ~5.9k tokens (slightly larger file)
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>T3: repo map + geometry.py + shapes → ~12.4k tokens (two files, both changed)
 </code></pre></div>
-Result: <code>values.sort()</code> is correctly indented, <code>mid = ...</code> and <code>if ...</code> land at module level →
-<code>SyntaxError: return outside function</code>.</p>
-<p>Reproduced consistently across multiple runs.  aider avoids this by using whole-file
-SEARCH/REPLACE blocks that include the full surrounding indented context.</p>
-<p><strong>Fix:</strong> Inject an explicit editing rule into the task conventions:</p>
-<blockquote>
-<p>"When replacing code inside an indented block, every line of <code>newString</code> must include the
-correct leading spaces as they appear in the file — not as standalone code."</p>
-</blockquote>
-<p><strong>Rule:</strong> opencode's edit primitive requires indentation-aware prompting.  aider's
-whole-file format is self-healing.  On tasks with multi-line replacements inside indented
-blocks, opencode needs explicit instruction or it will produce SyntaxErrors.</p>
+<h3 id="opencode-responses-api-tool-calls">opencode (Responses API, tool calls)<a class="headerlink" href="#opencode-responses-api-tool-calls" title="Permanent link">&para;</a></h3>
+<p>opencode accumulates <strong>full conversation history</strong> on every turn. Each turn sends:
+- All previous turns' tool calls and results (grows linearly with turns)
+- All 11 tool schemas (~33KB, repeated on every request)
+- The task and AGENTS.md content</p>
+<p>Token cost grows with <strong>turns × context size</strong>, which compounds:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>T1: 4 turns  × ~7.5k ctx/turn   → ~30k tokens
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>T2: 8 turns  × ~11k ctx/turn    → ~91k tokens
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>T3: 13 turns × ~18k ctx/turn    → ~243k tokens
+</code></pre></div>
+<p>The context grows because each tool result (file read, bash output, edit confirmation)
+is appended to history and re-sent on subsequent turns. T3's test failures and fix cycle
+added 2 extra bash+edit rounds, pushing turn count to 13 and context to 18k per request.</p>
+<h3 id="the-ratio-diverges-because-both-effects-compound">The ratio diverges because both effects compound<a class="headerlink" href="#the-ratio-diverges-because-both-effects-compound" title="Permanent link">&para;</a></h3>
+<p>As task complexity increases: aider grows linearly (more files), opencode grows superlinearly
+(more turns × larger context per turn). At T3, opencode is spending ~241k/243k tokens on
+<strong>prompt</strong> (context re-transmission) and only ~1.8k on actual model output.</p>
 <hr />
-<h2 id="29-opencode-stops-early-on-multi-step-tasks-tool_choiceauto-escape">29. opencode stops early on multi-step tasks — tool_choice:auto escape<a class="headerlink" href="#29-opencode-stops-early-on-multi-step-tasks-tool_choiceauto-escape" title="Permanent link">&para;</a></h2>
-<p><strong>Problem:</strong> The proxy switches <code>tool_choice</code> from <code>required</code> to <code>auto</code> after the first
-<code>edit</code>/<code>write</code> call (intended to prevent infinite bash loops).  With <code>auto</code>, the model can
-respond with text only and zero tool calls, declaring itself done.</p>
-<p>On Tier 3 (rename 4 functions across 2 files): opencode renamed one function
-(<code>calc_area_rect</code> → <code>area_rectangle</code>) then produced a 150-char text response and stopped.
-The other three renames and <code>shapes.py</code> were never touched.</p>
-<p>aider doesn't have this problem because it runs tests after every edit — test failures force
-continued iteration.  opencode relies on the model planning all steps upfront; when <code>auto</code>
-offers an exit, it takes it.</p>
-<p><strong>Fix:</strong> Inject an explicit planning rule into conventions:</p>
-<blockquote>
-<p>"Before making any edit, enumerate ALL changes required.  Do not produce a text response
-until every planned edit has been applied and tests pass."</p>
-</blockquote>
-<p><strong>Rule:</strong> <code>tool_choice:auto</code> is a necessary escape valve but it lets under-planning go
-undetected.  Compensate with explicit "plan first, complete all steps" instructions.
-opencode on multi-step tasks without these instructions will under-deliver reliably.</p>
+<h2 id="t3-opencode-tool-call-trace">T3 opencode tool call trace<a class="headerlink" href="#t3-opencode-tool-call-trace" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>read test_geometry.py      → understand expected names
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>read geometry.py           → see old names (calc_area_rect, etc.)
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>read shapes.py             → find all callers and imports
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>edit geometry.py ×4        → rename each function
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>edit shapes.py             → fix import line
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>read geometry.py           → verify renames
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>read shapes.py             → verify import
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>edit shapes.py ×2          → fix remaining call sites missed by import edit
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>bash: pytest               → 1 test still failing
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>edit shapes.py             → fix last call site
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>bash: pytest               → all 9 tests pass
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>task_complete              → signal done
+</code></pre></div>
+<p>13 tool calls. The model correctly identified all files, renamed all 4 functions, and
+found every call site across shapes.py — including call sites that weren't in the import
+line. The first test run exposed 1 missed call site; model found and fixed it in one retry.</p>
 <hr />
-<h2 id="31-opencode-edit-tool-fails-on-function-bodies-use-write-instead">31. opencode edit tool fails on function bodies — use write instead<a class="headerlink" href="#31-opencode-edit-tool-fails-on-function-bodies-use-write-instead" title="Permanent link">&para;</a></h2>
-<p><strong>Problem:</strong> opencode's <code>edit</code> tool asks the model to provide <code>oldString</code> (the exact text to
-replace) and <code>newString</code> (the replacement).  For implementing a stub function the <code>oldString</code>
-is typically just the single <code>raise NotImplementedError(...)</code> line — with no surrounding
-function signature context.  The model must then generate the entire multi-line function body
-as the <code>newString</code> value inside a JSON string, where:</p>
+<h2 id="what-it-took-to-get-opencode-working-on-t2t3">What it took to get opencode working on T2/T3<a class="headerlink" href="#what-it-took-to-get-opencode-working-on-t2t3" title="Permanent link">&para;</a></h2>
+<p>This session required a full proxy rewrite before valid T2/T3 opencode results were possible.
+The proxy had accumulated fragile heuristics that broke as task complexity increased.</p>
+<h3 id="the-problem-heuristic-tool_choice-switching">The problem: heuristic <code>tool_choice</code> switching<a class="headerlink" href="#the-problem-heuristic-tool_choice-switching" title="Permanent link">&para;</a></h3>
+<p>The proxy was inferring "is the model done?" by counting tool calls:</p>
+<table>
+<thead>
+<tr>
+<th>Attempt</th>
+<th>Logic</th>
+<th>Failure mode</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Original</td>
+<td>switch to <code>auto</code> after 1 edit</td>
+<td>model exits after median, never writes variance</td>
+</tr>
+<tr>
+<td>threshold=3</td>
+<td>stay <code>required</code> until 3 edits</td>
+<td>model used <code>write</code> (1 call) → infinite <code>git push</code> loop</td>
+</tr>
+<tr>
+<td><code>write≥1 OR edit+bash≥1</code></td>
+<td>split by tool type</td>
+<td>still broke for different task shapes</td>
+</tr>
+</tbody>
+</table>
+<p>All variants were <strong>task-specific</strong> — tuned for the current tier structure, not general coding tasks.</p>
+<h3 id="the-fix-task_complete-explicit-signal">The fix: <code>task_complete</code> explicit signal<a class="headerlink" href="#the-fix-task_complete-explicit-signal" title="Permanent link">&para;</a></h3>
+<p>The proxy now injects a <code>task_complete(summary)</code> tool into every request. The model calls it
+when done. No counting, no guessing.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>tool_choice = &quot;required&quot;  always
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>                  ↓
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>model calls task_complete()
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>                  ↓
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>tool_choice = &quot;none&quot;       → model writes closing text → session ends
+</code></pre></div>
+<p><strong>Implementation detail:</strong> opencode cannot execute unknown tools. It stores them in conversation
+history as <code>name='invalid'</code>. The proxy detects completion by checking for
+<code>name in ("task_complete", "invalid")</code>.</p>
+<p><strong>Why <code>none</code> not <code>auto</code>:</strong> <code>tool_choice=auto</code> still permits tool calls. After a <code>required</code> loop,
+the model defaults to calling tools even when permitted not to. <code>none</code> explicitly prohibits
+any tool call, forcing a text-only closing response.</p>
+<h3 id="t2-proxy-failure-history">T2 proxy failure history<a class="headerlink" href="#t2-proxy-failure-history" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Run</th>
+<th>Tokens</th>
+<th>Outcome</th>
+<th>Root cause</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Run 1</td>
+<td>19,225</td>
+<td>❌</td>
+<td><code>auto</code> after 1 edit → text escape before variance</td>
+</tr>
+<tr>
+<td>Run 2</td>
+<td>30,824</td>
+<td>❌</td>
+<td>same</td>
+</tr>
+<tr>
+<td>Run 3</td>
+<td>48,878</td>
+<td>❌</td>
+<td>model wrote prose describing variance instead of calling <code>edit</code></td>
+</tr>
+<tr>
+<td>Run 4</td>
+<td>89,412</td>
+<td>❌</td>
+<td>incomplete median (missing <code>return sorted_vals[mid]</code>), re-edit broke indentation</td>
+</tr>
+<tr>
+<td>Run 5</td>
+<td>loop</td>
+<td>❌</td>
+<td>threshold=3, model used <code>write</code> once → never reached</td>
+</tr>
+<tr>
+<td>Run 6</td>
+<td>loop</td>
+<td>❌</td>
+<td><code>task_complete</code> injected but <code>name='invalid'</code> not checked</td>
+</tr>
+<tr>
+<td><strong>Run 7</strong></td>
+<td><strong>90,992</strong></td>
+<td><strong>✅</strong></td>
+<td><code>task_complete</code> + <code>tool_choice=none</code> working</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="the-edit-vs-write-discovery">The <code>edit</code> vs <code>write</code> discovery<a class="headerlink" href="#the-edit-vs-write-discovery" title="Permanent link">&para;</a></h2>
+<p>Run 4 (89k tokens) revealed a second problem independent of <code>tool_choice</code>:
+opencode's <code>edit</code> tool requires <code>oldString</code> and <code>newString</code> as JSON-encoded strings.
+When implementing a function stub, <code>oldString</code> is just <code>raise NotImplementedError(...)</code> —
+a single line with no surrounding context. The model must generate the entire multi-line
+function body as the <code>newString</code> value inside a JSON string:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nt">&quot;newString&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;    sorted_vals = sorted(values)\n    mid = len(sorted_vals) // 2\n    ...&quot;</span>
+</code></pre></div>
+<p>Every line needs explicit 4-space prefixes. Every newline is <code>\n</code>. The model silently truncated
+the body — the <code>return sorted_vals[mid]</code> line was missing from the median implementation.
+Tests failed on odd-length lists. The model panicked and re-edited with wrong indentation.</p>
+<p><strong>Why aider doesn't have this problem:</strong> aider uses SEARCH/REPLACE blocks in natural text.
+The <code>SEARCH</code> section includes the full function signature as context. The model generates the
+complete replacement as a code block — natural formatting, no JSON encoding, no indentation risk.</p>
+<p><strong>Fix:</strong> AGENTS.md updated to instruct the model to use <code>write</code> (full file rewrite) for stub
+implementations. When writing the whole file, the model generates code naturally with correct
+context and indentation. The T2 successful run used this approach.</p>
+<p><strong>T3 note:</strong> T3 used <code>edit</code> (targeted rename) correctly — <code>edit</code> is right for single-line
+changes where the <code>oldString</code> is a complete, unique identifier. The failure mode only occurs
+when <code>newString</code> is a multi-line function body.</p>
+<hr />
+<h2 id="key-findings">Key findings<a class="headerlink" href="#key-findings" title="Permanent link">&para;</a></h2>
+<h3 id="1-both-backends-solve-all-three-tiers-at-32b">1. Both backends solve all three tiers at 32B<a class="headerlink" href="#1-both-backends-solve-all-three-tiers-at-32b" title="Permanent link">&para;</a></h3>
+<p>No capability failure at this model size. T1/T2/T3 all pass with correct infrastructure.
+To find a failure point, run 7B (predicted failure: T3, missing shapes.py update).</p>
+<h3 id="2-opencode-token-cost-grows-superlinearly-with-task-complexity">2. opencode token cost grows superlinearly with task complexity<a class="headerlink" href="#2-opencode-token-cost-grows-superlinearly-with-task-complexity" title="Permanent link">&para;</a></h3>
+<p>The 5.4× T1 ratio becomes 19.7× at T3. This is not model inefficiency — it is a structural
+property of full-context history re-transmission. Every turn replays the entire conversation.</p>
+<p><strong>Implication:</strong> opencode's cost model is <code>O(turns² × file_size)</code>. For long multi-step tasks,
+this compounds fast. A 10-turn task costs disproportionately more than two 5-turn tasks.</p>
+<h3 id="3-framework-matters-more-than-model-for-token-cost">3. Framework matters more than model for token cost<a class="headerlink" href="#3-framework-matters-more-than-model-for-token-cost" title="Permanent link">&para;</a></h3>
+<p>The same qwen2.5-coder-32b model costs 5.9k tokens via aider and 91k tokens via opencode on
+the identical T2 task. The <strong>15.5× gap is entirely framework overhead</strong> — tool schemas
+re-transmitted every turn, full history accumulation, Responses API wrapper.</p>
+<h3 id="4-tool_choice-manipulation-is-a-proxy-antipattern">4. Tool_choice manipulation is a proxy antipattern<a class="headerlink" href="#4-tool_choice-manipulation-is-a-proxy-antipattern" title="Permanent link">&para;</a></h3>
+<p>Five iterations of <code>tool_choice</code> heuristics were required before landing on the correct
+approach (<code>task_complete</code> signal). The lesson: any proxy logic that tries to infer task
+completion from tool call counts will be fragile and task-specific. Give the model an
+explicit exit mechanism.</p>
+<h3 id="5-aider-duration-anomaly-on-t1-219s-vs-122s-for-opencode">5. aider duration anomaly on T1 (219s vs 122s for opencode)<a class="headerlink" href="#5-aider-duration-anomaly-on-t1-219s-vs-122s-for-opencode" title="Permanent link">&para;</a></h3>
+<p>aider T1 hit a cold-start penalty (219s vs 62s on T2). opencode T1 was 122s both times.
+The difference is that opencode re-uses the running vLLM server across runs; aider's duration
+included the Modal sandbox cold-start waiting for the vLLM server to warm.</p>
+<hr />
+<h2 id="next-steps">Next steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Every <code>\n</code> must be encoded as a literal backslash-n inside the JSON string.</li>
-<li>Every line of indentation must be produced as explicit spaces (4 per level) with no
-  surrounding context to anchor the model's whitespace.</li>
-<li>Any truncation or omission (e.g. forgetting the final <code>return sorted_vals[mid]</code>) is silent —
-  the proxy accepts a truncated newString and the file ends up with an incomplete body.</li>
+<li><strong>7B capability run:</strong> fire T1/T2/T3 against <code>qwen2.5-coder-7b</code> to find failure point</li>
+<li><strong>Token reduction for opencode:</strong> explore truncating old tool results in context to reduce
+  the <code>O(turns²)</code> growth — file reads older than N turns can be dropped without losing correctness</li>
+<li><strong>PR quality audit:</strong> verify T3 PR #57 — check all 9 tests pass and shapes.py is fully updated</li>
 </ul>
-<p>Observed failure mode across T2 runs (89k token run):</p>
-<ol>
-<li>Model calls <code>edit(oldString="raise NotImplementedError(...)", newString="    sorted_vals…\n  ")</code> — correct start, truncated end (missing <code>return sorted_vals[mid]</code>).</li>
-<li>Tests fail (function returns <code>None</code> for odd-length lists).</li>
-<li>Model panics and re-edits with wrong indentation, making things worse.</li>
-<li>Token count mushrooms across retries.</li>
-</ol>
-<p><strong>Root cause of the aider vs opencode performance gap on T2/T3:</strong> aider uses a SEARCH/REPLACE
-block format — the model generates the complete function (signature + docstring + body) as a
-natural code block.  This gives the model full context, avoids JSON encoding, and eliminates
-the indentation problem entirely.  Same model, same endpoint — aider succeeds because the
-editing <em>format</em> is better suited to code generation.</p>
-<p><strong>Fix:</strong> AGENTS.md updated to instruct the model: for stub implementation tasks use <code>write</code> to
-rewrite the complete file, not <code>edit</code> to replace individual lines.  <code>write</code> has the same
-structural advantage as aider's SEARCH/REPLACE — the model generates the full file content
-naturally, with correct indentation and no risk of truncating the body mid-line.</p>
-<p>For small targeted changes (single identifier rename, one-line fix) <code>edit</code> is still better —
-but the <code>oldString</code> should include the full function signature for reliable matching.</p>
-<hr />
-<h2 id="32-tool_choice-heuristics-dont-scale-use-an-explicit-done-signal">32. tool_choice heuristics don't scale — use an explicit done signal<a class="headerlink" href="#32-tool_choice-heuristics-dont-scale-use-an-explicit-done-signal" title="Permanent link">&para;</a></h2>
-<p><strong>Problem:</strong> The proxy manipulated <code>tool_choice</code> based on counts of edit/write/bash calls to
-decide when the model was "done" and could exit with a text response.  Every tier required its
-own tuned threshold, and any change to agent behaviour (e.g. switching from <code>edit</code> to <code>write</code>)
-broke the heuristic and caused either early exits or infinite loops:</p>
-<ul>
-<li>threshold = 1 edit → model exits after first edit, never writes second function</li>
-<li>threshold = 3 edits → model uses <code>write</code> (1 call), threshold never reached, infinite <code>git push</code> loop</li>
-<li>threshold: <code>write &gt;= 1</code> → exits after first <code>write</code>, misses second file in T3</li>
-<li>all variants break for real tasks with arbitrary file counts</li>
-</ul>
-<p><strong>Root cause:</strong> Proxy-side heuristics try to infer task completion from side effects (which
-tools were called, how many times).  Only the model knows when the task is actually done.</p>
-<p><strong>Fix:</strong> Inject a <code>task_complete(summary)</code> tool into every tool list.  Keep
-<code>tool_choice=required</code> forever — the model cannot escape with prose.  When <code>task_complete</code>
-appears in history, switch to <code>tool_choice=none</code> (not <code>auto</code> — <code>auto</code> still allows tool
-calls).  Session ends with a forced text-only response.</p>
-<p><strong>Implementation detail:</strong> opencode cannot execute unknown tools.  It stores them in
-conversation history as <code>name='invalid'</code>.  The proxy detects completion by checking for
-<code>name in ("task_complete", "invalid")</code> — not just <code>"task_complete"</code>.</p>
-<p><strong>Rule:</strong> Give the model an explicit exit mechanism rather than inferring completion.
-Any heuristic that counts tool calls is fragile and task-specific.</p>
-<hr />
-<h2 id="33-tool_choiceauto-does-not-stop-a-looping-model-use-none">33. <code>tool_choice=auto</code> does not stop a looping model — use <code>none</code><a class="headerlink" href="#33-tool_choiceauto-does-not-stop-a-looping-model-use-none" title="Permanent link">&para;</a></h2>
-<p><strong>Problem:</strong> After detecting task completion, the proxy switched to <code>tool_choice=auto</code>.  The
-assumption was that <code>auto</code> would let the model choose to stop.  Instead the model — which had
-been in a <code>required</code> loop calling <code>git push</code> — continued calling <code>bash</code> on every turn even in
-<code>auto</code> mode.  The loop continued until the agent timeout killed the sandbox.</p>
-<p><strong>Root cause:</strong> <code>tool_choice=auto</code> means "the model MAY call a tool."  It does not stop a
-model that is already in a repetitive calling pattern.  A 32B model trained to call tools
-will default to calling tools even when permitted not to.</p>
-<p><strong>Fix:</strong> Use <code>tool_choice=none</code> after the done signal.  <code>none</code> is the Chat Completions API
-value that explicitly prohibits any tool call on that turn, forcing the model to generate
-a plain-text response.  This is the only reliable way to break a looping model and extract
-a closing summary.</p>
-<p><strong>Rule:</strong> To stop a model that is looping: <code>tool_choice=none</code>, not <code>auto</code>.</p>
 
 
 
