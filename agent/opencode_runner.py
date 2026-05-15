@@ -289,11 +289,8 @@ def _convert_input_items(items: list) -> list:
 # reason to resend edit/write/patch/list/search schemas on every subsequent turn.
 _POST_EDIT_TOOLS: frozenset[str] = frozenset({"bash", "read", "grep", "glob"})
 
-# Minimum number of edit/write/patch calls that must appear in conversation
-# history before the proxy switches to tool_choice=auto.  Keeping it "required"
-# for several turns forces the model to complete all planned edits on multi-step
-# tasks (T2: median+variance = 2 edits; T3: rename + caller updates = 3+ edits)
-# before being allowed to escape with a plain text response.
+# Minimum number of incremental edit/patch calls before the proxy switches to
+# tool_choice=auto.  write calls are handled separately (see _past_edit_threshold).
 _MIN_EDITS_BEFORE_AUTO: int = int(os.environ.get("OPENCODE_MIN_EDITS_BEFORE_AUTO", "3"))
 
 # ---------------------------------------------------------------------------
@@ -375,20 +372,51 @@ class _ProxyHandler(http.server.BaseHTTPRequestHandler):
             #   - After threshold: "auto" lets the model return a final text
             #     response to end the session once all edits are done.
             raw_input_list = raw_input if isinstance(raw_input, list) else []
-            edit_call_count = sum(
+            write_count = sum(
                 1
                 for item in raw_input_list
                 if (
                     isinstance(item, dict)
                     and item.get("type") == "function_call"
-                    and item.get("name") in ("edit", "write", "patch")
+                    and item.get("name") == "write"
                 )
             )
-            # Switch to auto only after enough edits have been made.
-            # _MIN_EDITS_BEFORE_AUTO defaults to 3 so multi-step tasks (T2:
-            # median+variance, T3: rename+callers) can complete all edits before
-            # the model is allowed to escape with a text-only response.
-            past_edit_threshold = edit_call_count >= _MIN_EDITS_BEFORE_AUTO
+            edit_patch_count = sum(
+                1
+                for item in raw_input_list
+                if (
+                    isinstance(item, dict)
+                    and item.get("type") == "function_call"
+                    and item.get("name") in ("edit", "patch")
+                )
+            )
+            bash_count = sum(
+                1
+                for item in raw_input_list
+                if (
+                    isinstance(item, dict)
+                    and item.get("type") == "function_call"
+                    and item.get("name") == "bash"
+                )
+            )
+            # Switch to auto when the model has done enough substantive work:
+            #
+            #   write >= 1          — a full-file write means the implementation is
+            #                         complete in one shot (aider-style).  Allow the
+            #                         model to stop immediately.
+            #
+            #   edit_patch >= MIN   — enough incremental edits for multi-step tasks
+            #                         (old edit-based T2/T3 where the model edits one
+            #                         function at a time).
+            #
+            #   edit_patch >= 1     — at least one targeted edit AND the model has
+            # AND bash >= 1           already run a verification bash call (e.g.
+            #                         pytest).  Covers T1 (single-line fix + test).
+            past_edit_threshold = (
+                write_count >= 1
+                or edit_patch_count >= _MIN_EDITS_BEFORE_AUTO
+                or (edit_patch_count >= 1 and bash_count >= 1)
+            )
             converted = _convert_tools(req["tools"])
             if past_edit_threshold:
                 # Post-edit: drop all tools except verification tools.
