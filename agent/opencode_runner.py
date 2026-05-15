@@ -390,22 +390,14 @@ class _ProxyHandler(http.server.BaseHTTPRequestHandler):
         if req.get("tools"):
             raw_input_list = raw_input if isinstance(raw_input, list) else []
 
-            # Debug: print last 4 non-message item types so we can see how
-            # opencode represents function_call history in subsequent requests.
-            for _dbg in raw_input_list[-6:]:
-                if isinstance(_dbg, dict) and _dbg.get("type") not in ("message", "tool_result", None):
-                    print(
-                        f"[proxy-debug] type={_dbg.get('type')!r}"
-                        f" name={_dbg.get('name','')!r}"
-                        f" role={_dbg.get('role','')!r}",
-                        file=sys.stderr,
-                    )
-
             # Check whether task_complete has been called in history.
+            # When opencode receives a tool it cannot execute it sends it back
+            # with name='invalid' — so we check for both the real name and the
+            # sentinel opencode uses for unknown tools.
             task_done = any(
                 isinstance(item, dict)
                 and item.get("type") == "function_call"
-                and item.get("name") == "task_complete"
+                and item.get("name") in ("task_complete", "invalid")
                 for item in raw_input_list
             )
 
