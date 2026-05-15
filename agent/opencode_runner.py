@@ -407,7 +407,8 @@ class _ProxyHandler(http.server.BaseHTTPRequestHandler):
                 # Post-completion: narrow tool list to save tokens on the
                 # final summary turn (the model only needs read/bash to verify).
                 converted = [
-                    t for t in converted
+                    t
+                    for t in converted
                     if t.get("function", {}).get("name") in _POST_COMPLETE_TOOLS
                 ]
             else:

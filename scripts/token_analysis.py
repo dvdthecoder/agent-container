@@ -101,8 +101,7 @@ _TASKS: dict[str, str] = {
 TASK_TIER: str = os.environ.get("ANALYSIS_TASK_TIER", "tier1")
 if TASK_TIER not in _TASKS:
     print(
-        f"ERROR: ANALYSIS_TASK_TIER={TASK_TIER!r} is not valid. "
-        f"Choose from: {list(_TASKS)}",
+        f"ERROR: ANALYSIS_TASK_TIER={TASK_TIER!r} is not valid. Choose from: {list(_TASKS)}",
         file=sys.stderr,
     )
     sys.exit(1)
