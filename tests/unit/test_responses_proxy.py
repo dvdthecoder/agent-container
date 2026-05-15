@@ -212,31 +212,31 @@ class TestConvertTools:
 
 
 # ---------------------------------------------------------------------------
-# _POST_EDIT_TOOLS filtering (tested via the constant, not HTTP)
+# _POST_COMPLETE_TOOLS filtering (tested via the constant, not HTTP)
 # ---------------------------------------------------------------------------
 
 
 class TestPostEditToolFiltering:
-    """Validate the _POST_EDIT_TOOLS constant and the filtering logic used in
-    _handle_responses when has_edit_call is True."""
+    """Validate the _POST_COMPLETE_TOOLS constant and the filtering logic used
+    in _handle_responses after task_complete has been called."""
 
     def test_post_edit_tools_contains_verification_tools(self):
-        from agent.opencode_runner import _POST_EDIT_TOOLS
+        from agent.opencode_runner import _POST_COMPLETE_TOOLS
 
-        assert "bash" in _POST_EDIT_TOOLS
-        assert "read" in _POST_EDIT_TOOLS
-        assert "grep" in _POST_EDIT_TOOLS
-        assert "glob" in _POST_EDIT_TOOLS
+        assert "bash" in _POST_COMPLETE_TOOLS
+        assert "read" in _POST_COMPLETE_TOOLS
+        assert "grep" in _POST_COMPLETE_TOOLS
+        assert "glob" in _POST_COMPLETE_TOOLS
 
     def test_post_edit_tools_excludes_edit_write(self):
-        from agent.opencode_runner import _POST_EDIT_TOOLS
+        from agent.opencode_runner import _POST_COMPLETE_TOOLS
 
-        assert "edit" not in _POST_EDIT_TOOLS
-        assert "write" not in _POST_EDIT_TOOLS
-        assert "patch" not in _POST_EDIT_TOOLS
+        assert "edit" not in _POST_COMPLETE_TOOLS
+        assert "write" not in _POST_COMPLETE_TOOLS
+        assert "patch" not in _POST_COMPLETE_TOOLS
 
     def test_filter_keeps_only_verification_tools(self):
-        from agent.opencode_runner import _POST_EDIT_TOOLS
+        from agent.opencode_runner import _POST_COMPLETE_TOOLS
 
         all_tools = [
             {"type": "function", "function": {"name": "bash"}},
@@ -245,7 +245,7 @@ class TestPostEditToolFiltering:
             {"type": "function", "function": {"name": "write"}},
             {"type": "function", "function": {"name": "glob"}},
         ]
-        filtered = [t for t in all_tools if t["function"]["name"] in _POST_EDIT_TOOLS]
+        filtered = [t for t in all_tools if t["function"]["name"] in _POST_COMPLETE_TOOLS]
         names = {t["function"]["name"] for t in filtered}
         assert names == {"bash", "read", "glob"}
         assert "edit" not in names
