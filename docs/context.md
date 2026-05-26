@@ -115,56 +115,41 @@ full_prompt = f"{conventions}\n\n---\n\n{TASK}" if conventions else TASK
 
 ### Layer 2 — Structured task spec (YAML)
 
-**What:** An optional YAML file that provides machine-readable task structure alongside the human-readable task string.
+**What:** An optional YAML document that provides machine-readable task structure alongside the human-readable task string. Pass it as the `task` field — `resolved_prompt()` expands it; plain strings are passed through unchanged.
 
-**Format:**
+**Format (implemented keys):**
 
 ```yaml
-# task.yaml
+# Passed as the task string — resolved_prompt() expands this.
 
 task: |
   Fix the off-by-one bug in sum_to_n() in mathlib.py.
   The function uses range(1, n) but should use range(1, n + 1).
 
-acceptance:
-  # Agent knows it is done when ALL of these pass.
-  tests: "pytest tests/unit/test_mathlib.py -q"
-  diff_must_touch:
-    - "mathlib.py"           # run fails if this file was not modified
+acceptance_criteria: "All tests in pytest tests/unit/test_mathlib.py -q must pass."
 
 constraints:
   - "Do not change the function signature"
   - "No new external dependencies"
   - "All new code must have type annotations"
 
-security:
-  scan_secrets: true
-  allowed_paths:
-    - "src/**"
-    - "tests/**"
-  deny_patterns:
-    - "**/*.env"
-    - "**/*.pem"
-    - "**/secrets/**"
-
-context:
-  files:
-    - "mathlib.py"           # injected verbatim into initial prompt
-  # conventions auto-read from AGENTS.md — no need to specify here
+context_files:
+  - "mathlib.py"
 ```
 
-**`AgentTaskSpec` extension:**
+> **Not yet implemented:** `acceptance.tests` / `acceptance.diff_must_touch` (nested acceptance block),
+> `security.scan_secrets` / `security.allowed_paths` / `security.deny_patterns` (security block),
+> and `context.files` (nested context block) are **not** parsed by `_expand_task_spec`.
+> Use the flat keys above.
+
+**`AgentTaskSpec`** receives the YAML as a plain `task` string — the dataclass has no separate fields for spec structure. The following fields shown in earlier design notes are **not yet implemented**:
 
 ```python
-@dataclass
-class AgentTaskSpec:
-    # ... existing fields ...
-    spec_file: Path | None = None        # read task + structure from YAML
-    acceptance_tests: str | None = None  # test command (overrides auto-detect)
-    constraints: list[str] = field(default_factory=list)
-    context_files: list[str] = field(default_factory=list)
-    allowed_paths: list[str] = field(default_factory=list)
-    scan_secrets: bool = True
+# NOT YET IMPLEMENTED — planned additions to AgentTaskSpec
+spec_file: Path | None = None        # read task + structure from a YAML file
+acceptance_tests: str | None = None  # test command (overrides auto-detect)
+allowed_paths: list[str] = field(default_factory=list)  # scope guardrail
+scan_secrets: bool = True            # toggle secret scanning per-run
 ```
 
 **How the composite prompt is built:**
@@ -174,22 +159,22 @@ class AgentTaskSpec:
 
 ---
 
-Task: Fix the off-by-one bug in sum_to_n()...
+## Task
+Fix the off-by-one bug in sum_to_n()...
 
-Constraints:
+## Acceptance Criteria
+All tests in pytest tests/unit/test_mathlib.py -q must pass.
+
+## Constraints
 - Do not change the function signature
 - No new external dependencies
 - All new code must have type annotations
 
-Acceptance: All tests in pytest tests/unit/test_mathlib.py -q must pass.
-
-Relevant files:
---- mathlib.py ---
-def sum_to_n(n):
-    return sum(range(1, n))  # bug: should be range(1, n + 1)
+## Relevant Files
+- mathlib.py
 ```
 
-The agent reads this on turn 0. It knows conventions, constraints, success criteria, and the relevant code — without spending a single tool call on discovery.
+`context_files` are listed as paths, not injected verbatim. The agent uses the list to know which files are in scope and can read them with a single targeted tool call rather than exploring the repo. File content injection is **not yet implemented**.
 
 ---
 
@@ -203,12 +188,13 @@ The agent reads this on turn 0. It knows conventions, constraints, success crite
 
 | Category | Patterns | Severity | Action |
 |---|---|---|---|
-| Hardcoded secrets | `sk-`, `ghp_`, `AKIA[0-9A-Z]`, `password\s*=\s*["']` | Critical | Block PR, mark run failed |
-| Shell injection risk | `shell=True`, `os.system(` | Warning | Annotate PR body |
-| Dangerous eval | `eval(`, `exec(` | Warning | Annotate PR body |
-| Weak crypto | `md5(`, `sha1(`, `DES`, `RC4` | Warning | Annotate PR body |
-| Scope creep | Files modified outside `allowed_paths` | Critical | Block PR if `allowed_paths` set |
-| New dependencies | New lines in `requirements.txt`, `pyproject.toml` | Info | Annotate PR for human review |
+| Hardcoded secrets | `AKIA…`, `ghp_…`, `sk-…`, `xoxb-…`, `password\s*=\s*["']…` | Error | Block run, no PR |
+| Shell injection risk | `subprocess…shell=True`, `os.system(` | Warning | Logged; non-blocking |
+| Dangerous eval | `eval(`, `exec(` | Warning | Logged; non-blocking |
+| Unsafe deserialisation | `pickle.loads?(`, `yaml.load(` without `Loader=` | Warning | Logged; non-blocking |
+| Scope creep | Files modified outside `context_files` | Warning | Logged; non-blocking |
+| Weak crypto | `md5(`, `sha1(`, `DES`, `RC4` | Not implemented | — |
+| New dependencies | New lines in `requirements.txt`, `pyproject.toml` | Not implemented | — |
 
 **Architecture:**
 
@@ -216,26 +202,33 @@ The agent reads this on turn 0. It knows conventions, constraints, success crite
 # sandbox/diff_scanner.py
 
 @dataclass
-class ScanFinding:
-    severity: str      # "critical" | "warning" | "info"
-    category: str
-    message: str
-    line: str | None = None
+class Violation:
+    severity: str  # "error" | "warning"
+    rule: str
+    file: str
+    line_num: int
+    line: str
+    detail: str
 
 @dataclass
 class ScanResult:
-    findings: list[ScanFinding]
+    passed: bool
+    violations: list[Violation]
 
     @property
-    def has_critical(self) -> bool:
-        return any(f.severity == "critical" for f in self.findings)
+    def errors(self) -> list[Violation]: ...
 
-def scan_diff(diff: str, spec: AgentTaskSpec) -> ScanResult:
+    @property
+    def warnings(self) -> list[Violation]: ...
+
+def scan_diff(diff: str, context_files: list[str] | None = None) -> ScanResult:
     """Pure function — no I/O, no external calls."""
     ...
 ```
 
-Critical findings suppress the PR (`create_pr=False`) and mark the run failed with reason `"security_scan_failed"`. Warnings and info are appended to the PR body under a collapsible `<details>` block.
+`error`-severity findings (secrets) set `passed=False` and block the run. `warning`-severity findings (scope violations, OWASP patterns) are logged but do not block.
+
+> **Design doc vs. implementation:** the doc originally described severity levels as `"critical"` / `"warning"` / `"info"` and showed scope violations as critical (blocking). The implementation uses `"error"` / `"warning"`, and scope violations are warnings — the caller decides whether to escalate. `"info"` severity is not implemented.
 
 This is the frugal version of what Snyk or Semgrep do at runtime — applied only to the agent's diff, not the whole codebase.
 
@@ -297,9 +290,9 @@ To eat our own dogfood, `agent-container` itself should have an `AGENTS.md`:
 
 | Phase | Scope | Status |
 |---|---|---|
-| **Phase 1** | `AGENTS.md` auto-injection in both runners | Planned — [#154](https://github.com/dvdthecoder/agent-container/issues/154) |
-| **Phase 2** | Structured YAML task spec + `AgentTaskSpec` extension | Planned — [#154](https://github.com/dvdthecoder/agent-container/issues/154) |
-| **Phase 3** | Diff scanner — secret detection + scope guardrails | Planned — [#154](https://github.com/dvdthecoder/agent-container/issues/154) |
+| **Phase 1** | `AGENTS.md` auto-injection in both runners | Done |
+| **Phase 2** | YAML task spec parsing (`_expand_task_spec`, `resolved_prompt`, `resolved_context_files`) | Done — flat keys only; file content injection and `spec_file` field not yet implemented |
+| **Phase 3** | Diff scanner — secret detection + scope guardrails | Done |
 | **Phase 4** | `AGENTS.md` for this repo | Planned |
 
 ---
