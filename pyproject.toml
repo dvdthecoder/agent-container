@@ -29,7 +29,7 @@ dev = [
     "bandit[toml]>=1.9.4",
     "pip-audit>=2.10.1",
     "detect-secrets>=1.5",
-    "pre-commit>=4.5.1",
+    "pre-commit>=4.6.0",
     "mkdocs-material>=9.5",
 ]
 
