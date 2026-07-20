@@ -30,7 +30,7 @@ dev = [
     "pip-audit>=2.10.1",
     "detect-secrets>=1.5",
     "pre-commit>=4.6.0",
-    "mkdocs-material>=9.5",
+    "mkdocs-material>=9.7.7",
 ]
 
 [project.scripts]
