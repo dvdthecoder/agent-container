@@ -25,7 +25,7 @@ dev = [
     "pytest>=9.1.1",
     "pytest-asyncio>=1.4.0",
     "pytest-httpx",
-    "ruff>=0.15.21",
+    "ruff>=0.15.22",
     "bandit[toml]>=1.9.4",
     "pip-audit>=2.10.1",
     "detect-secrets>=1.5",
