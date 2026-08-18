@@ -2213,11 +2213,11 @@ The proxy had accumulated fragile heuristics that broke as task complexity incre
 <h3 id="the-fix-task_complete-explicit-signal">The fix: <code>task_complete</code> explicit signal<a class="headerlink" href="#the-fix-task_complete-explicit-signal" title="Permanent link">&para;</a></h3>
 <p>The proxy now injects a <code>task_complete(summary)</code> tool into every request. The model calls it
 when done. No counting, no guessing.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>tool_choice = &quot;required&quot;  always
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>tool_choice = "required"  always
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>                  ↓
 <a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>model calls task_complete()
 <a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>                  ↓
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>tool_choice = &quot;none&quot;       → model writes closing text → session ends
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>tool_choice = "none"       → model writes closing text → session ends
 </code></pre></div>
 <p><strong>Implementation detail:</strong> opencode cannot execute unknown tools. It stores them in conversation
 history as <code>name='invalid'</code>. The proxy detects completion by checking for
@@ -2287,7 +2287,7 @@ opencode's <code>edit</code> tool requires <code>oldString</code> and <code>newS
 When implementing a function stub, <code>oldString</code> is just <code>raise NotImplementedError(...)</code> —
 a single line with no surrounding context. The model must generate the entire multi-line
 function body as the <code>newString</code> value inside a JSON string:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nt">&quot;newString&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;    sorted_vals = sorted(values)\n    mid = len(sorted_vals) // 2\n    ...&quot;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nt">"newString"</span><span class="p">:</span><span class="w"> </span><span class="s2">"    sorted_vals = sorted(values)\n    mid = len(sorted_vals) // 2\n    ..."</span>
 </code></pre></div>
 <p>Every line needs explicit 4-space prefixes. Every newline is <code>\n</code>. The model silently truncated
 the body — the <code>return sorted_vals[mid]</code> line was missing from the median implementation.

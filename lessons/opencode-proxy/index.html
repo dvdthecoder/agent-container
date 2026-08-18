@@ -1838,7 +1838,7 @@ writes a multi-line <code>newString</code>, it generates the code as standalone 
 indentation.  The edit tool prepends the original line's indentation only to the first line of
 the replacement — all subsequent lines after <code>\n</code> land at column 0.</p>
 <p>Example: replacing <code>raise NotImplementedError(...)</code> (4-space indent inside a function) with:
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>newString: &quot;values.sort()\nmid = len(values) // 2\nif ...&quot;
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>newString: "values.sort()\nmid = len(values) // 2\nif ..."
 </code></pre></div>
 Result: <code>values.sort()</code> is correctly indented, <code>mid = ...</code> and <code>if ...</code> land at module level →
 <code>SyntaxError: return outside function</code>.</p>

@@ -1931,7 +1931,7 @@ is ~100 lines of pure JSON reshaping with no model-specific code.</p>
 <a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>  # write __pycache__/*.pyc patterns to .git/info/exclude (local-only, never committed)
 <a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>
 <a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>Step 2 — Agent runs
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>  aider --yes --map-tokens 1024 --message &quot;&lt;task&gt;&quot; /workspace   # or opencode equivalent
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>  aider --yes --map-tokens 1024 --message "&lt;task&gt;" /workspace   # or opencode equivalent
 <a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>  streams output live to dashboard via SSE
 <a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>
 <a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>Step 3 — Collect result
@@ -1940,7 +1940,7 @@ is ~100 lines of pure JSON reshaping with no model-specific code.</p>
 <a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>
 <a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>Step 4 — Open PR  (if create_pr=True)
 <a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>  git checkout -b agent/&lt;backend&gt;-&lt;timestamp&gt;
-<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>  git add -A &amp;&amp; git commit -m &quot;agent: &lt;task&gt;&quot;   # skipped if agent already committed
+<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>  git add -A &amp;&amp; git commit -m "agent: &lt;task&gt;"   # skipped if agent already committed
 <a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>  git push origin agent/&lt;backend&gt;-&lt;timestamp&gt;
 <a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>  curl POST &lt;provider_api&gt;/pulls           # GitHub or GitLab REST API
 <a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>
@@ -1955,7 +1955,7 @@ is ~100 lines of pure JSON reshaping with no model-specific code.</p>
 <a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>  timeout_tests      — test suite budget (default 120s)
 <a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>  total_timeout      — computed: sum of all three (Modal sandbox lifetime)
 <a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>  backend, create_pr, run_tests
-<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>  initiated_by (&quot;cli&quot; | &quot;dashboard&quot;)
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>  initiated_by ("cli" | "dashboard")
 <a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>  run_id (optional — dashboard pre-allocates; CLI auto-generates)
 <a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>        ↓
 <a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>ModalSandbox.run(spec)
@@ -1979,7 +1979,7 @@ full history in one list.</p>
 server implements this API — they all speak Chat Completions. The adapter bridges the gap:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>opencode → POST /v1/responses
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>                ↓  reshape: input[] → messages[], tools format, role names
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>                ↓  tool_choice: &quot;required&quot; (first turn) / &quot;auto&quot; (after edit)
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>                ↓  tool_choice: "required" (first turn) / "auto" (after edit)
 <a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>                ↓  parallel_tool_calls: false
 <a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>           POST /v1/chat/completions  →  vLLM
 <a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>                ↑  reshape: tool_calls → function_call items

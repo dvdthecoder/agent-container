@@ -1861,9 +1861,9 @@ you use.</p>
 </code></pre></div>
 <p>Or in Python:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">spec</span> <span class="o">=</span> <span class="n">AgentTaskSpec</span><span class="p">(</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    <span class="n">repo</span><span class="o">=</span><span class="s2">&quot;https://github.com/org/myapp&quot;</span><span class="p">,</span>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    <span class="n">task</span><span class="o">=</span><span class="s2">&quot;Fix the login bug&quot;</span><span class="p">,</span>
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    <span class="n">backend</span><span class="o">=</span><span class="s2">&quot;aider&quot;</span><span class="p">,</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    <span class="n">repo</span><span class="o">=</span><span class="s2">"https://github.com/org/myapp"</span><span class="p">,</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    <span class="n">task</span><span class="o">=</span><span class="s2">"Fix the login bug"</span><span class="p">,</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    <span class="n">backend</span><span class="o">=</span><span class="s2">"aider"</span><span class="p">,</span>
 <a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="p">)</span>
 </code></pre></div>
 <hr />
@@ -1882,7 +1882,7 @@ No function calling required at the inference level — works reliably with any 
 OpenAI-compatible endpoint out of the box.</p>
 <p>Invoked inside the container as:
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>aider<span class="w"> </span>--yes<span class="w"> </span>--model<span class="w"> </span>&lt;model&gt;<span class="w"> </span>--map-tokens<span class="w"> </span><span class="m">1024</span><span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">      </span>--message<span class="w"> </span><span class="s2">&quot;&lt;task&gt;&quot;</span><span class="w"> </span>/workspace
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">      </span>--message<span class="w"> </span><span class="s2">"&lt;task&gt;"</span><span class="w"> </span>/workspace
 <a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="c1"># OPENAI_BASE_URL and OPENAI_API_KEY are set in the container environment</span>
 </code></pre></div></p>
 <hr />
@@ -1905,7 +1905,7 @@ works end-to-end.</p>
 <p><strong>Best for:</strong> complex multi-step tasks where the agent needs to reason, run tests, and iterate.
 Requires a model with reliable tool calling (use <code>prod</code> or <code>minimax</code> profile).</p>
 <p>Invoked inside the container as:
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>python3<span class="w"> </span>/opencode_runner.py<span class="w"> </span><span class="s2">&quot;&lt;task prompt&gt;&quot;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>python3<span class="w"> </span>/opencode_runner.py<span class="w"> </span><span class="s2">"&lt;task prompt&gt;"</span>
 </code></pre></div></p>
 <hr />
 <h2 id="claude-code-cli">Claude Code CLI<a class="headerlink" href="#claude-code-cli" title="Permanent link">&para;</a></h2>
@@ -1914,7 +1914,7 @@ Requires a model with reliable tool calling (use <code>prod</code> or <code>mini
 <a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="nv">ANTHROPIC_API_KEY</span><span class="o">=</span>sk-ant-...
 </code></pre></div>
 <p>Invoked inside the container as:
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>claude<span class="w"> </span>--print<span class="w"> </span><span class="s2">&quot;&lt;task prompt&gt;&quot;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>claude<span class="w"> </span>--print<span class="w"> </span><span class="s2">"&lt;task prompt&gt;"</span>
 </code></pre></div></p>
 <div class="admonition warning">
 <p class="admonition-title">Privacy note</p>
@@ -1930,7 +1930,7 @@ Use <code>aider</code> or <code>opencode</code> for full air-gap with your self-
 <a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="nv">GOOGLE_CLOUD_PROJECT</span><span class="o">=</span>...
 </code></pre></div>
 <p>Invoked inside the container as:
-<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>gemini<span class="w"> </span>--yolo<span class="w"> </span>-p<span class="w"> </span><span class="s2">&quot;&lt;task prompt&gt;&quot;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>gemini<span class="w"> </span>--yolo<span class="w"> </span>-p<span class="w"> </span><span class="s2">"&lt;task prompt&gt;"</span>
 </code></pre></div></p>
 <hr />
 <h2 id="aider-vs-opencode">aider vs opencode<a class="headerlink" href="#aider-vs-opencode" title="Permanent link">&para;</a></h2>
