@@ -1939,71 +1939,57 @@
 </code></pre></div>
 <hr />
 <h3 id="layer-2-structured-task-spec-yaml">Layer 2 — Structured task spec (YAML)<a class="headerlink" href="#layer-2-structured-task-spec-yaml" title="Permanent link">&para;</a></h3>
-<p><strong>What:</strong> An optional YAML file that provides machine-readable task structure alongside the human-readable task string.</p>
-<p><strong>Format:</strong></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># task.yaml</span>
+<p><strong>What:</strong> An optional YAML document that provides machine-readable task structure alongside the human-readable task string. Pass it as the <code>task</code> field — <code>resolved_prompt()</code> expands it; plain strings are passed through unchanged.</p>
+<p><strong>Format (implemented keys):</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># Passed as the task string — resolved_prompt() expands this.</span>
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
 <a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="nt">task</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
 <a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">  </span><span class="no">Fix the off-by-one bug in sum_to_n() in mathlib.py.</span>
 <a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">  </span><span class="no">The function uses range(1, n) but should use range(1, n + 1).</span>
 <a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>
-<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="nt">acceptance</span><span class="p">:</span>
-<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="w">  </span><span class="c1"># Agent knows it is done when ALL of these pass.</span>
-<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="w">  </span><span class="nt">tests</span><span class="p">:</span><span class="w"> </span><span class="s">"pytest</span><span class="nv"> </span><span class="s">tests/unit/test_mathlib.py</span><span class="nv"> </span><span class="s">-q"</span>
-<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="w">  </span><span class="nt">diff_must_touch</span><span class="p">:</span>
-<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">"mathlib.py"</span><span class="w">           </span><span class="c1"># run fails if this file was not modified</span>
-<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>
-<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="nt">constraints</span><span class="p">:</span>
-<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">"Do</span><span class="nv"> </span><span class="s">not</span><span class="nv"> </span><span class="s">change</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">function</span><span class="nv"> </span><span class="s">signature"</span>
-<a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">"No</span><span class="nv"> </span><span class="s">new</span><span class="nv"> </span><span class="s">external</span><span class="nv"> </span><span class="s">dependencies"</span>
-<a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">"All</span><span class="nv"> </span><span class="s">new</span><span class="nv"> </span><span class="s">code</span><span class="nv"> </span><span class="s">must</span><span class="nv"> </span><span class="s">have</span><span class="nv"> </span><span class="s">type</span><span class="nv"> </span><span class="s">annotations"</span>
-<a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a>
-<a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a><span class="nt">security</span><span class="p">:</span>
-<a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a><span class="w">  </span><span class="nt">scan_secrets</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
-<a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a><span class="w">  </span><span class="nt">allowed_paths</span><span class="p">:</span>
-<a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">"src/**"</span>
-<a id="__codelineno-4-22" name="__codelineno-4-22" href="#__codelineno-4-22"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">"tests/**"</span>
-<a id="__codelineno-4-23" name="__codelineno-4-23" href="#__codelineno-4-23"></a><span class="w">  </span><span class="nt">deny_patterns</span><span class="p">:</span>
-<a id="__codelineno-4-24" name="__codelineno-4-24" href="#__codelineno-4-24"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">"**/*.env"</span>
-<a id="__codelineno-4-25" name="__codelineno-4-25" href="#__codelineno-4-25"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">"**/*.pem"</span>
-<a id="__codelineno-4-26" name="__codelineno-4-26" href="#__codelineno-4-26"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">"**/secrets/**"</span>
-<a id="__codelineno-4-27" name="__codelineno-4-27" href="#__codelineno-4-27"></a>
-<a id="__codelineno-4-28" name="__codelineno-4-28" href="#__codelineno-4-28"></a><span class="nt">context</span><span class="p">:</span>
-<a id="__codelineno-4-29" name="__codelineno-4-29" href="#__codelineno-4-29"></a><span class="w">  </span><span class="nt">files</span><span class="p">:</span>
-<a id="__codelineno-4-30" name="__codelineno-4-30" href="#__codelineno-4-30"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">"mathlib.py"</span><span class="w">           </span><span class="c1"># injected verbatim into initial prompt</span>
-<a id="__codelineno-4-31" name="__codelineno-4-31" href="#__codelineno-4-31"></a><span class="w">  </span><span class="c1"># conventions auto-read from AGENTS.md — no need to specify here</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="nt">acceptance_criteria</span><span class="p">:</span><span class="w"> </span><span class="s">"All</span><span class="nv"> </span><span class="s">tests</span><span class="nv"> </span><span class="s">in</span><span class="nv"> </span><span class="s">pytest</span><span class="nv"> </span><span class="s">tests/unit/test_mathlib.py</span><span class="nv"> </span><span class="s">-q</span><span class="nv"> </span><span class="s">must</span><span class="nv"> </span><span class="s">pass."</span>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="nt">constraints</span><span class="p">:</span>
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">"Do</span><span class="nv"> </span><span class="s">not</span><span class="nv"> </span><span class="s">change</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">function</span><span class="nv"> </span><span class="s">signature"</span>
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">"No</span><span class="nv"> </span><span class="s">new</span><span class="nv"> </span><span class="s">external</span><span class="nv"> </span><span class="s">dependencies"</span>
+<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">"All</span><span class="nv"> </span><span class="s">new</span><span class="nv"> </span><span class="s">code</span><span class="nv"> </span><span class="s">must</span><span class="nv"> </span><span class="s">have</span><span class="nv"> </span><span class="s">type</span><span class="nv"> </span><span class="s">annotations"</span>
+<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>
+<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="nt">context_files</span><span class="p">:</span>
+<a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">"mathlib.py"</span>
 </code></pre></div>
-<p><strong><code>AgentTaskSpec</code> extension:</strong></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nd">@dataclass</span>
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">AgentTaskSpec</span><span class="p">:</span>
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>    <span class="c1"># ... existing fields ...</span>
-<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>    <span class="n">spec_file</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>        <span class="c1"># read task + structure from YAML</span>
-<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>    <span class="n">acceptance_tests</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># test command (overrides auto-detect)</span>
-<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>    <span class="n">constraints</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
-<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>    <span class="n">context_files</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
-<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>    <span class="n">allowed_paths</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
-<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>    <span class="n">scan_secrets</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+<blockquote>
+<p><strong>Not yet implemented:</strong> <code>acceptance.tests</code> / <code>acceptance.diff_must_touch</code> (nested acceptance block),
+<code>security.scan_secrets</code> / <code>security.allowed_paths</code> / <code>security.deny_patterns</code> (security block),
+and <code>context.files</code> (nested context block) are <strong>not</strong> parsed by <code>_expand_task_spec</code>.
+Use the flat keys above.</p>
+</blockquote>
+<p><strong><code>AgentTaskSpec</code></strong> receives the YAML as a plain <code>task</code> string — the dataclass has no separate fields for spec structure. The following fields shown in earlier design notes are <strong>not yet implemented</strong>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># NOT YET IMPLEMENTED — planned additions to AgentTaskSpec</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">spec_file</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># read task + structure from a YAML file</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="n">acceptance_tests</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># test command (overrides auto-detect)</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="n">allowed_paths</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>  <span class="c1"># scope guardrail</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="n">scan_secrets</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># toggle secret scanning per-run</span>
 </code></pre></div>
 <p><strong>How the composite prompt is built:</strong></p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>[AGENTS.md content — if present in repo]
 <a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
 <a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>---
 <a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>
-<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>Task: Fix the off-by-one bug in sum_to_n()...
-<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>
-<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>Constraints:
-<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>- Do not change the function signature
-<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>- No new external dependencies
-<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>- All new code must have type annotations
-<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>
-<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>Acceptance: All tests in pytest tests/unit/test_mathlib.py -q must pass.
-<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a>
-<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a>Relevant files:
-<a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a>--- mathlib.py ---
-<a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a>def sum_to_n(n):
-<a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a>    return sum(range(1, n))  # bug: should be range(1, n + 1)
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>## Task
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>Fix the off-by-one bug in sum_to_n()...
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>## Acceptance Criteria
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>All tests in pytest tests/unit/test_mathlib.py -q must pass.
+<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>
+<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>## Constraints
+<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>- Do not change the function signature
+<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a>- No new external dependencies
+<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a>- All new code must have type annotations
+<a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a>
+<a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a>## Relevant Files
+<a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a>- mathlib.py
 </code></pre></div>
-<p>The agent reads this on turn 0. It knows conventions, constraints, success criteria, and the relevant code — without spending a single tool call on discovery.</p>
+<p><code>context_files</code> are listed as paths, not injected verbatim. The agent uses the list to know which files are in scope and can read them with a single targeted tool call rather than exploring the repo. File content injection is <strong>not yet implemented</strong>.</p>
 <hr />
 <h3 id="layer-3-diff-scanner-security-guardrails">Layer 3 — Diff scanner (security guardrails)<a class="headerlink" href="#layer-3-diff-scanner-security-guardrails" title="Permanent link">&para;</a></h3>
 <p><strong>What:</strong> A pure-function scanner that runs on the collected diff before <code>push_and_pr</code>. No external services, no new dependencies — regex over the diff text.</p>
@@ -2021,65 +2007,82 @@
 <tbody>
 <tr>
 <td>Hardcoded secrets</td>
-<td><code>sk-</code>, <code>ghp_</code>, <code>AKIA[0-9A-Z]</code>, <code>password\s*=\s*["']</code></td>
-<td>Critical</td>
-<td>Block PR, mark run failed</td>
+<td><code>AKIA…</code>, <code>ghp_…</code>, <code>sk-…</code>, <code>xoxb-…</code>, <code>password\s*=\s*["']…</code></td>
+<td>Error</td>
+<td>Block run, no PR</td>
 </tr>
 <tr>
 <td>Shell injection risk</td>
-<td><code>shell=True</code>, <code>os.system(</code></td>
+<td><code>subprocess…shell=True</code>, <code>os.system(</code></td>
 <td>Warning</td>
-<td>Annotate PR body</td>
+<td>Logged; non-blocking</td>
 </tr>
 <tr>
 <td>Dangerous eval</td>
 <td><code>eval(</code>, <code>exec(</code></td>
 <td>Warning</td>
-<td>Annotate PR body</td>
+<td>Logged; non-blocking</td>
+</tr>
+<tr>
+<td>Unsafe deserialisation</td>
+<td><code>pickle.loads?(</code>, <code>yaml.load(</code> without <code>Loader=</code></td>
+<td>Warning</td>
+<td>Logged; non-blocking</td>
+</tr>
+<tr>
+<td>Scope creep</td>
+<td>Files modified outside <code>context_files</code></td>
+<td>Warning</td>
+<td>Logged; non-blocking</td>
 </tr>
 <tr>
 <td>Weak crypto</td>
 <td><code>md5(</code>, <code>sha1(</code>, <code>DES</code>, <code>RC4</code></td>
-<td>Warning</td>
-<td>Annotate PR body</td>
-</tr>
-<tr>
-<td>Scope creep</td>
-<td>Files modified outside <code>allowed_paths</code></td>
-<td>Critical</td>
-<td>Block PR if <code>allowed_paths</code> set</td>
+<td>Not implemented</td>
+<td>—</td>
 </tr>
 <tr>
 <td>New dependencies</td>
 <td>New lines in <code>requirements.txt</code>, <code>pyproject.toml</code></td>
-<td>Info</td>
-<td>Annotate PR for human review</td>
+<td>Not implemented</td>
+<td>—</td>
 </tr>
 </tbody>
 </table>
 <p><strong>Architecture:</strong></p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1"># sandbox/diff_scanner.py</span>
 <a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
-<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="nd">@dataclass</span>
-<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="k">class</span><span class="w"> </span><span class="nc">ScanFinding</span><span class="p">:</span>
-<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>    <span class="n">severity</span><span class="p">:</span> <span class="nb">str</span>      <span class="c1"># "critical" | "warning" | "info"</span>
-<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>    <span class="n">category</span><span class="p">:</span> <span class="nb">str</span>
-<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>    <span class="n">message</span><span class="p">:</span> <span class="nb">str</span>
-<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>    <span class="n">line</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>
-<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="nd">@dataclass</span>
-<a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="k">class</span><span class="w"> </span><span class="nc">ScanResult</span><span class="p">:</span>
-<a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a>    <span class="n">findings</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ScanFinding</span><span class="p">]</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="nd">@dataclass</span>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="k">class</span><span class="w"> </span><span class="nc">Violation</span><span class="p">:</span>
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>    <span class="n">severity</span><span class="p">:</span> <span class="nb">str</span>  <span class="c1"># "error" | "warning"</span>
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>    <span class="n">rule</span><span class="p">:</span> <span class="nb">str</span>
+<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>    <span class="n">file</span><span class="p">:</span> <span class="nb">str</span>
+<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>    <span class="n">line_num</span><span class="p">:</span> <span class="nb">int</span>
+<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>    <span class="n">line</span><span class="p">:</span> <span class="nb">str</span>
+<a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a>    <span class="n">detail</span><span class="p">:</span> <span class="nb">str</span>
+<a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a>
 <a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a>
-<a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a>    <span class="nd">@property</span>
-<a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">has_critical</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a>        <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">severity</span> <span class="o">==</span> <span class="s2">"critical"</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">findings</span><span class="p">)</span>
-<a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a>
-<a id="__codelineno-7-18" name="__codelineno-7-18" href="#__codelineno-7-18"></a><span class="k">def</span><span class="w"> </span><span class="nf">scan_diff</span><span class="p">(</span><span class="n">diff</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">spec</span><span class="p">:</span> <span class="n">AgentTaskSpec</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ScanResult</span><span class="p">:</span>
-<a id="__codelineno-7-19" name="__codelineno-7-19" href="#__codelineno-7-19"></a><span class="w">    </span><span class="sd">"""Pure function — no I/O, no external calls."""</span>
-<a id="__codelineno-7-20" name="__codelineno-7-20" href="#__codelineno-7-20"></a>    <span class="o">...</span>
+<a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a><span class="nd">@dataclass</span>
+<a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a><span class="k">class</span><span class="w"> </span><span class="nc">ScanResult</span><span class="p">:</span>
+<a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a>    <span class="n">passed</span><span class="p">:</span> <span class="nb">bool</span>
+<a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a>    <span class="n">violations</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Violation</span><span class="p">]</span>
+<a id="__codelineno-7-18" name="__codelineno-7-18" href="#__codelineno-7-18"></a>
+<a id="__codelineno-7-19" name="__codelineno-7-19" href="#__codelineno-7-19"></a>    <span class="nd">@property</span>
+<a id="__codelineno-7-20" name="__codelineno-7-20" href="#__codelineno-7-20"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">errors</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Violation</span><span class="p">]:</span> <span class="o">...</span>
+<a id="__codelineno-7-21" name="__codelineno-7-21" href="#__codelineno-7-21"></a>
+<a id="__codelineno-7-22" name="__codelineno-7-22" href="#__codelineno-7-22"></a>    <span class="nd">@property</span>
+<a id="__codelineno-7-23" name="__codelineno-7-23" href="#__codelineno-7-23"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">warnings</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Violation</span><span class="p">]:</span> <span class="o">...</span>
+<a id="__codelineno-7-24" name="__codelineno-7-24" href="#__codelineno-7-24"></a>
+<a id="__codelineno-7-25" name="__codelineno-7-25" href="#__codelineno-7-25"></a>
+<a id="__codelineno-7-26" name="__codelineno-7-26" href="#__codelineno-7-26"></a><span class="k">def</span><span class="w"> </span><span class="nf">scan_diff</span><span class="p">(</span><span class="n">diff</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">context_files</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ScanResult</span><span class="p">:</span>
+<a id="__codelineno-7-27" name="__codelineno-7-27" href="#__codelineno-7-27"></a><span class="w">    </span><span class="sd">"""Pure function — no I/O, no external calls."""</span>
+<a id="__codelineno-7-28" name="__codelineno-7-28" href="#__codelineno-7-28"></a>    <span class="o">...</span>
 </code></pre></div>
-<p>Critical findings suppress the PR (<code>create_pr=False</code>) and mark the run failed with reason <code>"security_scan_failed"</code>. Warnings and info are appended to the PR body under a collapsible <code>&lt;details&gt;</code> block.</p>
+<p><code>error</code>-severity findings (secrets) set <code>passed=False</code> and block the run. <code>warning</code>-severity findings (scope violations, OWASP patterns) are logged but do not block.</p>
+<blockquote>
+<p><strong>Design doc vs. implementation:</strong> the doc originally described severity levels as <code>"critical"</code> / <code>"warning"</code> / <code>"info"</code> and showed scope violations as critical (blocking). The implementation uses <code>"error"</code> / <code>"warning"</code>, and scope violations are warnings — the caller decides whether to escalate. <code>"info"</code> severity is not implemented.</p>
+</blockquote>
 <p>This is the frugal version of what Snyk or Semgrep do at runtime — applied only to the agent's diff, not the whole codebase.</p>
 <hr />
 <h2 id="secure-coding-spec">Secure coding spec<a class="headerlink" href="#secure-coding-spec" title="Permanent link">&para;</a></h2>
@@ -2136,17 +2139,17 @@
 <tr>
 <td><strong>Phase 1</strong></td>
 <td><code>AGENTS.md</code> auto-injection in both runners</td>
-<td>Planned — <a href="https://github.com/dvdthecoder/agent-container/issues/154">#154</a></td>
+<td>Done</td>
 </tr>
 <tr>
 <td><strong>Phase 2</strong></td>
-<td>Structured YAML task spec + <code>AgentTaskSpec</code> extension</td>
-<td>Planned — <a href="https://github.com/dvdthecoder/agent-container/issues/154">#154</a></td>
+<td>YAML task spec parsing (<code>_expand_task_spec</code>, <code>resolved_prompt</code>, <code>resolved_context_files</code>)</td>
+<td>Done — flat keys only; file content injection and <code>spec_file</code> field not yet implemented</td>
 </tr>
 <tr>
 <td><strong>Phase 3</strong></td>
 <td>Diff scanner — secret detection + scope guardrails</td>
-<td>Planned — <a href="https://github.com/dvdthecoder/agent-container/issues/154">#154</a></td>
+<td>Done</td>
 </tr>
 <tr>
 <td><strong>Phase 4</strong></td>
