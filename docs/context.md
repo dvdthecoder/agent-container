@@ -146,10 +146,10 @@ context_files:
 
 ```python
 # NOT YET IMPLEMENTED — planned additions to AgentTaskSpec
-spec_file: Path | None = None        # read task + structure from a YAML file
+spec_file: Path | None = None  # read task + structure from a YAML file
 acceptance_tests: str | None = None  # test command (overrides auto-detect)
 allowed_paths: list[str] = field(default_factory=list)  # scope guardrail
-scan_secrets: bool = True            # toggle secret scanning per-run
+scan_secrets: bool = True  # toggle secret scanning per-run
 ```
 
 **How the composite prompt is built:**
@@ -201,6 +201,7 @@ All tests in pytest tests/unit/test_mathlib.py -q must pass.
 ```python
 # sandbox/diff_scanner.py
 
+
 @dataclass
 class Violation:
     severity: str  # "error" | "warning"
@@ -209,6 +210,7 @@ class Violation:
     line_num: int
     line: str
     detail: str
+
 
 @dataclass
 class ScanResult:
@@ -220,6 +222,7 @@ class ScanResult:
 
     @property
     def warnings(self) -> list[Violation]: ...
+
 
 def scan_diff(diff: str, context_files: list[str] | None = None) -> ScanResult:
     """Pure function — no I/O, no external calls."""

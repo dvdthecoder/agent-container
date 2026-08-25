@@ -128,13 +128,17 @@ repos = [
     "https://github.com/org/service-e",
 ]
 
+
 def run(repo: str):
-    return ModalSandbox(config).run(AgentTaskSpec(
-        repo=repo,
-        task="Add OWASP-recommended security headers to all HTTP responses",
-        backend="aider",
-        create_pr=True,
-    ))
+    return ModalSandbox(config).run(
+        AgentTaskSpec(
+            repo=repo,
+            task="Add OWASP-recommended security headers to all HTTP responses",
+            backend="aider",
+            create_pr=True,
+        )
+    )
+
 
 with ThreadPoolExecutor(max_workers=5) as pool:
     results = list(pool.map(run, repos))

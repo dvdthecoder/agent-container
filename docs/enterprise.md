@@ -46,11 +46,15 @@ repos = [
     "https://gitlab.company.com/team/service-c",
 ]
 
+
 def run(repo):
-    return ModalSandbox(config).run(AgentTaskSpec(
-        repo=repo,
-        task="Upgrade requests library to 2.32 and fix any breaking API changes",
-    ))
+    return ModalSandbox(config).run(
+        AgentTaskSpec(
+            repo=repo,
+            task="Upgrade requests library to 2.32 and fix any breaking API changes",
+        )
+    )
+
 
 with ThreadPoolExecutor(max_workers=10) as pool:
     results = list(pool.map(run, repos))
