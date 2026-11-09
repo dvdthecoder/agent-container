@@ -23,7 +23,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "pytest>=9.2.0",
-    "pytest-asyncio>=1.4.0",
+    "pytest-asyncio>=1.4.1.post1",
     "pytest-httpx",
     "ruff>=0.17.4",
     "bandit[toml]>=1.9.4",
